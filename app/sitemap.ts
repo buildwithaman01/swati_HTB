@@ -31,5 +31,48 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.9, // High priority for program pages
   }));
 
-  return [...routes, ...programs];
+  // Areas
+  const allAreas = [
+    "AG Colony", "Agam Kuan", "Anandpuri", "Anisabad", "Ashiana Nagar", "Bailey Road", "Bazar Samiti", "Bhootnath Road", "Bihta", "Boring Canal Road", "Boring Road", "Bypass Road", "Chhajjubagh", "Danapur", "Digha", "Exhibition Road", "Frazer Road", "Gandhi Maidan", "Gardanibagh", "Gola Road", "Hanuman Nagar", "Indrapuri", "Jagdeo Path", "Kadamkuan", "Kankarbagh", "Khajpura", "Kumhrar", "Kurji", "Lohanipur", "Machhua Toli", "Mahendru", "Mithapur", "Patliputra Colony", "Patna City", "Phulwari Sharif", "Rajabazar", "Rajbanshi Nagar", "Rajendra Nagar", "Rajiv Nagar", "Ramkrishna Nagar", "Rupaspur", "Saguna More", "Sandalpur", "Shastri Nagar", "Sheikhpura", "Sipara", "Srikrishna Nagar", "Yarpur"
+  ];
+  
+  const areaRoutes = [
+    {
+      url: `${baseUrl}/areas`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    },
+    ...allAreas.map((area) => ({
+      url: `${baseUrl}/areas/${area.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    }))
+  ];
+
+  // Blogs
+  const blogSlugs = [
+    "how-to-find-best-home-tutor-in-patna",
+    "jee-preparation-strategy-from-class-9",
+    "importance-of-female-tutors-for-girls",
+    "cbse-vs-icse-which-is-better-in-patna"
+  ];
+
+  const blogRoutes = [
+    {
+      url: `${baseUrl}/blogs`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly' as const,
+      priority: 0.8,
+    },
+    ...blogSlugs.map((slug) => ({
+      url: `${baseUrl}/blogs/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    }))
+  ];
+
+  return [...routes, ...programs, ...areaRoutes, ...blogRoutes];
 }
