@@ -50,7 +50,7 @@ export default function TrustBar() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
-  const containerVariants = {
+  const containerVariants: any = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -61,7 +61,7 @@ export default function TrustBar() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: any = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } },
   };

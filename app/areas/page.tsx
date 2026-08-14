@@ -14,7 +14,7 @@ const allAreas = [
   "AG Colony", "Agam Kuan", "Anandpuri", "Anisabad", "Ashiana Nagar", "Bailey Road", "Bazar Samiti", "Bhootnath Road", "Bihta", "Boring Canal Road", "Boring Road", "Bypass Road", "Chhajjubagh", "Danapur", "Digha", "Exhibition Road", "Frazer Road", "Gandhi Maidan", "Gardanibagh", "Gola Road", "Hanuman Nagar", "Indrapuri", "Jagdeo Path", "Kadamkuan", "Kankarbagh", "Khajpura", "Kumhrar", "Kurji", "Lohanipur", "Machhua Toli", "Mahendru", "Mithapur", "Patliputra Colony", "Patna City", "Phulwari Sharif", "Rajabazar", "Rajbanshi Nagar", "Rajendra Nagar", "Rajiv Nagar", "Ramkrishna Nagar", "Rupaspur", "Saguna More", "Sandalpur", "Shastri Nagar", "Sheikhpura", "Sipara", "Srikrishna Nagar", "Yarpur"
 ];
 
-const containerVariants = {
+const containerVariants: any = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -22,7 +22,7 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: any = {
   hidden: { opacity: 0, y: 15 },
   show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
 };

@@ -27,7 +27,7 @@ export default function BlogPostPage({ params }: { params: Promise<{ slug: strin
             {title}
           </h1>
           <div className="prose prose-lg text-[#1F2937]/80">
-            <p className="text-xl text-[#1F2937]/60 italic mb-8">This is a placeholder for the blog post content. In a production environment, this would fetch data from a CMS or database based on the slug: "{params.slug}".</p>
+            <p className="text-xl text-[#1F2937]/60 italic mb-8">This is a placeholder for the blog post content. In a production environment, this would fetch data from a CMS or database based on the slug: "{slug}".</p>
             <p>At Swati Home Tuition Bureau, we believe in providing the best educational resources and insights for parents and students in Patna.</p>
             <p>Stay tuned for more informative articles on study techniques, exam preparation, and navigating the academic journey successfully.</p>
           </div>

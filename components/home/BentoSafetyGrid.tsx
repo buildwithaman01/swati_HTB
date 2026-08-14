@@ -7,7 +7,7 @@ export default function BentoSafetyGrid() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
-  const container = {
+  const container: any = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -15,7 +15,7 @@ export default function BentoSafetyGrid() {
     },
   };
 
-  const item = {
+  const item: any = {
     hidden: { opacity: 0, y: 30 },
     show: { 
       opacity: 1, 
