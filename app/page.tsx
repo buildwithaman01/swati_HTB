@@ -9,6 +9,7 @@ import ProcessTimeline from "@/components/home/ProcessTimeline";
 import TuitionCalculator from "@/components/home/TuitionCalculator";
 import ServiceAreas from "@/components/home/ServiceAreas";
 import BlogsSection from "@/components/home/BlogsSection";
+import FAQSection from "@/components/home/FAQSection";
 
 export default function Home() {
   return (
@@ -23,6 +24,7 @@ export default function Home() {
       <Testimonials />
       <TuitionCalculator />
       <ServiceAreas />
+      <FAQSection />
       <BlogsSection />
     </>
   );

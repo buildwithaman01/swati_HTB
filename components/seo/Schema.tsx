@@ -15,6 +15,7 @@ export default function Schema() {
       "postalCode": "800001",
       "addressCountry": "IN"
     },
+    "hasMap": "https://share.google/tarSWReEvLi7cim5V",
     "geo": {
       "@type": "GeoCoordinates",
       "latitude": 25.611,

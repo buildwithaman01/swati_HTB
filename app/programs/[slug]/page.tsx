@@ -87,7 +87,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ slug: 
           "provider": {
             "@type": "EducationalOrganization",
             "name": "Swati Home Tuition Bureau",
-            "url": "https://swatihtb.in"
+            "url": "https://swatihometuition.in"
           }
         })}
       </Script>
