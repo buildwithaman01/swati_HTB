@@ -44,6 +44,9 @@ export const metadata: Metadata = {
     description: '100% Verified Home Tutors in Patna. Book a free demo class today.',
     images: ['/opengraph-image.png'],
   },
+  verification: {
+    google: 'ul-LQEK-lIiBVKErNdtu1ZBTfTMHS4ec4VaHYbkCU_o',
+  },
 };
 
 import Footer from "@/components/layout/Footer";
