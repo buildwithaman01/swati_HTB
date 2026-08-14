@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #0F3D3E;
+  --color-ivory: #FDFBF7;
+  --color-gold: #D4AF37;
+  --color-emerald: #2ECC71;
+  --color-background: #FDFBF7;
+  --color-dark: #0F172A;
+  --color-text: #1E293B;
+  --color-text-muted: #64748B;
+  
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+
+  --animate-marquee: marquee var(--duration) linear infinite;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+
+  @keyframes marquee-vertical {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
+}
+
+:root {
+  --background: #FAFAF8;
+  --foreground: #1E293B;
+}
+
+/* Natively scale down the entire UI (fonts, padding, margins) on desktop to mimic 90% zoom */
+@media (min-width: 1024px) {
+  html {
+    font-size: 90%; /* Scales down all tailwind 'rem' units */
+  }
+}
+
+/* Ensure premium feeling — no dark mode for public site as per decisions */
+/* Base heading styles */
+@layer base {
+  h1 {
+    font-family: var(--font-playfair);
+    color: #0F4C5C;
+  }
+
+  h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    color: #0F4C5C;
+    letter-spacing: -0.025em;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
