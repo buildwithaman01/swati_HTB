@@ -6,6 +6,7 @@ import Navbar from "@/components/layout/Navbar";
 import Schema from "@/components/seo/Schema";
 import { Toaster } from "sonner";
 import FloatingWhatsApp from "@/components/ui/FloatingWhatsApp";
+import MobileBottomBar from "@/components/layout/MobileBottomBar";
 import Script from "next/script";
 
 const inter = Inter({
@@ -83,7 +84,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CallbackCTA />
           <Footer />
         </SmoothScroll>
-        <FloatingWhatsApp />
+        <div className="hidden lg:block">
+          <FloatingWhatsApp />
+        </div>
+        <MobileBottomBar />
         <Toaster position="bottom-right" richColors />
       </body>
     </html>

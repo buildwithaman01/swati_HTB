@@ -93,10 +93,10 @@ export default function AcademicsGrid() {
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-100px" }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory hide-scrollbar md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8 md:pb-0 w-full"
         >
           {courses.map((course, idx) => (
-            <motion.div key={idx} variants={itemVariants} className="h-full">
+            <motion.div key={idx} variants={itemVariants} className="h-full min-w-[85vw] md:min-w-0 snap-center shrink-0">
               <Link href={`/programs/${course.slug}`}>
                 <div className="group h-full bg-white/5 backdrop-blur-md rounded-[2rem] p-8 border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.2)] hover:bg-white/10 hover:border-[#D4A017]/50 hover:-translate-y-2 transition-all duration-300 flex flex-col justify-between relative overflow-hidden">
                   

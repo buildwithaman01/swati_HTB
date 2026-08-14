@@ -40,11 +40,11 @@ export default function FindTutorPage() {
             <div className="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-full mb-8 border border-white/20 shadow-[0_0_30px_rgba(212,160,23,0.15)]">
               <Search className="w-8 h-8 text-[#D4A017]" />
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight mb-6 font-serif leading-[1.1]">
+            <h1 className="text-4xl md:text-7xl font-bold text-white tracking-tight mb-6 font-serif leading-[1.1]">
               Find Your <br />
               <span className="text-[#D4A017] italic">Perfect Tutor</span> Today.
             </h1>
-            <p className="text-xl md:text-2xl text-white/80 tracking-tight leading-relaxed max-w-2xl mx-auto font-medium">
+            <p className="text-lg md:text-2xl text-white/80 tracking-tight leading-relaxed max-w-2xl mx-auto font-medium px-4 md:px-0">
               We match your child with Patna's most elite, background-verified educators tailored to their specific learning style.
             </p>
           </motion.div>

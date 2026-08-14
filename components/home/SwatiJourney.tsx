@@ -95,7 +95,7 @@ export default function SwatiJourney() {
           
           {/* Sticky Left Sidebar (Index) */}
           <div className="hidden lg:block w-1/3 sticky top-32 h-[calc(100vh-8rem)]">
-            <h2 className="text-4xl font-bold tracking-tighter mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tighter mb-4">
               The Swati Promise.
             </h2>
             <p className="text-lg text-neutral-600 tracking-tight mb-12">
@@ -131,7 +131,7 @@ export default function SwatiJourney() {
           <div className="w-full lg:w-2/3 flex flex-col gap-24 lg:gap-40" ref={containerRef}>
             {/* Mobile Header (Hidden on Desktop) */}
             <div className="lg:hidden mb-8">
-              <h2 className="text-4xl font-bold tracking-tighter mb-4">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tighter mb-4">
                 The Swati Promise.
               </h2>
               <p className="text-lg text-neutral-600 tracking-tight">
@@ -146,8 +146,8 @@ export default function SwatiJourney() {
                     <span className="text-sm font-bold tracking-widest uppercase text-gold">Chapter {chapter.id}</span>
                     <div className="h-px bg-gold/30 w-12"></div>
                   </div>
-                  <h3 className="text-3xl md:text-4xl font-bold mb-4">{chapter.headline}</h3>
-                  <p className="text-neutral-600 text-lg leading-relaxed max-w-2xl">
+                  <h3 className="text-2xl md:text-4xl font-bold mb-2 md:mb-4">{chapter.headline}</h3>
+                  <p className="text-neutral-600 text-base md:text-lg leading-relaxed max-w-2xl">
                     {chapter.desc}
                   </p>
                 </div>

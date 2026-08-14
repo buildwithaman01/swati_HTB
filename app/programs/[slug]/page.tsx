@@ -110,7 +110,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ slug: 
 
       <div className="container mx-auto px-6 max-w-6xl py-16 relative z-20 pb-24">
         
-        <div className="grid md:grid-cols-2 gap-16 items-start">
+        <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-start">
           
           {/* Left Content */}
           <div className="bg-white p-10 md:p-14 rounded-[2.5rem] border border-neutral-200/60 shadow-[0_20px_60px_rgb(0,0,0,0.05)] relative overflow-hidden">
@@ -121,7 +121,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ slug: 
                 <GraduationCap className="w-6 h-6 text-[#D4A017]" />
               </div>
               
-              <h1 className="text-4xl md:text-5xl font-bold text-[#1F2937] tracking-tight mb-4 font-serif leading-[1.1]">
+              <h1 className="text-3xl md:text-5xl font-bold text-[#1F2937] tracking-tight mb-4 font-serif leading-[1.1]">
                 {program.title}
               </h1>
               <div className="text-xl font-bold text-[#0F4C5C] mb-8 uppercase tracking-wide text-sm">
@@ -148,13 +148,13 @@ export default async function ProgramPage({ params }: { params: Promise<{ slug: 
 
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/book-demo" className="flex-1">
-                  <button className="w-full bg-[#0F4C5C] hover:bg-[#0a3845] text-white px-8 py-5 rounded-2xl text-lg font-bold transition-all shadow-[0_10px_30px_rgba(15,76,92,0.3)] flex items-center justify-center gap-3 group">
+                  <button className="w-full bg-[#0F4C5C] hover:bg-[#0a3845] text-white px-6 md:px-8 py-4 md:py-5 rounded-2xl text-lg font-bold transition-all shadow-[0_10px_30px_rgba(15,76,92,0.3)] flex items-center justify-center gap-3 group">
                     Book a Free Demo Class
                     <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </Link>
                 <a href="https://wa.me/919229738307" target="_blank" rel="noopener noreferrer" className="flex-1">
-                  <button className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white px-8 py-5 rounded-2xl text-lg font-bold transition-all shadow-[0_10px_30px_rgba(37,211,102,0.3)] flex items-center justify-center gap-3 group">
+                  <button className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white px-6 md:px-8 py-4 md:py-5 rounded-2xl text-lg font-bold transition-all shadow-[0_10px_30px_rgba(37,211,102,0.3)] flex items-center justify-center gap-3 group">
                     WhatsApp Us
                     <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                   </button>
@@ -208,7 +208,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ slug: 
           </div>
 
           {/* Right Image */}
-          <div className="relative h-[800px] w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_60px_rgb(0,0,0,0.1)] border-8 border-white sticky top-32">
+          <div className="relative h-[400px] md:h-[800px] w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_60px_rgb(0,0,0,0.1)] border-8 border-white sticky top-32">
             <div className="absolute inset-0 bg-[#0F4C5C]/10 z-10 mix-blend-overlay"></div>
             <Image 
               src={program.image} 

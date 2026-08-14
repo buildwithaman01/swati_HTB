@@ -58,18 +58,18 @@ export default function BentoSafetyGrid() {
           </motion.p>
         </div>
 
-        {/* Bento Grid */}
+        {/* Bento Grid / Swipeable Carousel on Mobile */}
         <motion.div 
           ref={ref}
           variants={container}
           initial="hidden"
           animate={isInView ? "show" : "hidden"}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+          className="flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory hide-scrollbar md:grid-cols-2 lg:grid-cols-4 gap-6 pb-6 md:pb-0 w-full"
         >
           {/* Main Block: The Safety Shield */}
           <motion.div 
             variants={item}
-            className="md:col-span-2 lg:col-span-2 row-span-2 bg-[#0F4C5C] rounded-3xl p-8 md:p-12 text-white relative overflow-hidden group shadow-lg"
+            className="md:col-span-2 lg:col-span-2 row-span-2 bg-[#0F4C5C] rounded-3xl p-8 md:p-12 text-white relative overflow-hidden group shadow-lg min-w-[85vw] md:min-w-0 snap-center shrink-0"
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4A017] rounded-full blur-[100px] opacity-20 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none" />
             
@@ -101,7 +101,7 @@ export default function BentoSafetyGrid() {
           {/* Block: Teacher Passport */}
           <motion.div 
             variants={item}
-            className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group min-w-[75vw] md:min-w-0 snap-center shrink-0"
           >
             <div className="w-10 h-10 bg-[#FAF7F2] rounded-full flex items-center justify-center mb-4 border border-[#0F4C5C]/10">
               <svg className="w-5 h-5 text-[#0F4C5C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,7 +117,7 @@ export default function BentoSafetyGrid() {
           {/* Block: Subject Pre-Test */}
           <motion.div 
             variants={item}
-            className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group min-w-[75vw] md:min-w-0 snap-center shrink-0"
           >
             <div className="w-10 h-10 bg-[#FAF7F2] rounded-full flex items-center justify-center mb-4 border border-[#0F4C5C]/10">
               <svg className="w-5 h-5 text-[#0F4C5C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +133,7 @@ export default function BentoSafetyGrid() {
           {/* Block: Female Tutors (Col Span 2) */}
           <motion.div 
             variants={item}
-            className="md:col-span-2 lg:col-span-2 bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-center"
+            className="md:col-span-2 lg:col-span-2 bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group flex flex-col justify-center min-w-[85vw] md:min-w-0 snap-center shrink-0"
           >
             <div className="w-12 h-12 bg-[#FAF7F2] rounded-full flex items-center justify-center mb-4 border border-[#D4A017]/20">
               <svg className="w-6 h-6 text-[#0F4C5C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,7 +149,7 @@ export default function BentoSafetyGrid() {
           {/* Block: Progress Pulse */}
           <motion.div 
             variants={item}
-            className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow"
+            className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow min-w-[75vw] md:min-w-0 snap-center shrink-0"
           >
             <div className="w-10 h-10 bg-[#FAF7F2] rounded-full flex items-center justify-center mb-4 border border-[#0F4C5C]/10">
               <svg className="w-5 h-5 text-[#0F4C5C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@ export default function BentoSafetyGrid() {
           {/* Block: Replacement Guarantee */}
           <motion.div 
             variants={item}
-            className="bg-[#D4A017] rounded-3xl p-8 text-white shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
+            className="bg-[#D4A017] rounded-3xl p-8 text-white shadow-sm hover:shadow-md transition-shadow relative overflow-hidden min-w-[75vw] md:min-w-0 snap-center shrink-0"
           >
             <div className="absolute -bottom-10 -right-10 opacity-10">
                <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
@@ -186,7 +186,7 @@ export default function BentoSafetyGrid() {
           {/* Block: Mentor Match */}
           <motion.div 
             variants={item}
-            className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group min-w-[75vw] md:min-w-0 snap-center shrink-0"
           >
             <div className="w-10 h-10 bg-[#FAF7F2] rounded-full flex items-center justify-center mb-4 border border-[#0F4C5C]/10">
               <svg className="w-5 h-5 text-[#0F4C5C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +202,7 @@ export default function BentoSafetyGrid() {
           {/* Block: Parent Hotline */}
           <motion.div 
             variants={item}
-            className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group"
+            className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-md transition-shadow group min-w-[75vw] md:min-w-0 snap-center shrink-0"
           >
             <div className="w-10 h-10 bg-[#FAF7F2] rounded-full flex items-center justify-center mb-4 border border-[#0F4C5C]/10">
               <svg className="w-5 h-5 text-[#0F4C5C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
