@@ -72,7 +72,13 @@ export async function POST(req: NextRequest) {
     const waMessage = buildWhatsAppMessage(formType, fields);
     const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
 
-    return NextResponse.json({ success: true, whatsappUrl: waUrl });
+    return NextResponse.json({
+      success: true,
+      message: "Form submitted successfully",
+      whatsappUrl: waUrl,
+      debugEmail: emailResult,
+      debugKeySet: !!WEB3FORMS_KEY
+    });
   } catch (err) {
     console.error("[submit-form] Error:", err);
     return NextResponse.json({ success: false }, { status: 500 });
