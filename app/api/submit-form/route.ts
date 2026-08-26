@@ -5,17 +5,14 @@ import { NextRequest, NextResponse } from "next/server";
 // ─────────────────────────────────────────────────────────────────────────────
 const WHATSAPP_NUMBER = "919229738307";
 
-// Web3Forms — get free API key at https://web3forms.com (enter your Gmail, instant key)
-// Add to Vercel env vars: WEB3FORMS_KEY
-const WEB3FORMS_KEY = process.env.WEB3FORMS_KEY || "";
-
-// Google Apps Script webhook (optional — for Sheets logging)
-const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK_URL || "";
-
 // ─────────────────────────────────────────────────────────────────────────────
 // ROUTE HANDLER
 // ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  // Read env vars INSIDE the function so Vercel checks them at runtime, not build time
+  const WEB3FORMS_KEY = process.env.WEB3FORMS_KEY || "";
+  const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK_URL || "";
+
   try {
     const body = await req.json();
     const { formType, ...fields } = body;
