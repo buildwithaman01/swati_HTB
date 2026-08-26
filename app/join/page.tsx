@@ -50,7 +50,12 @@ export default function JoinPage() {
               access_key: result.web3formsData.access_key,
               subject: result.web3formsData.subject,
               from_name: "Swati HTB Website",
-              message: result.web3formsData.message
+              "Teacher Name": data.name || "-",
+              "WhatsApp Number": data.phone || "-",
+              "Gender": data.gender || "-",
+              "Highest Qualification": data.qualification || "-",
+              "Subjects Taught": data.subjects || "-",
+              "Location (Patna)": data.location || "-",
             })
           });
         } catch (e) {

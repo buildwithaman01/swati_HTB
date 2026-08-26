@@ -48,7 +48,12 @@ export default function BookDemoPage() {
               access_key: result.web3formsData.access_key,
               subject: result.web3formsData.subject,
               from_name: "Swati HTB Website",
-              message: result.web3formsData.message
+              "Parent/Student Name": data.name || "-",
+              "WhatsApp Number": data.phone || "-",
+              "Student Class": data.class || "-",
+              "Subjects Needed": data.subject || "-",
+              "Home Address": data.location || "-",
+              // Let Web3Forms auto-generate its beautiful HTML table
             })
           });
         } catch (e) {
