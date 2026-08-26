@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CONFIG — Update these values
+// CONFIG
 // ─────────────────────────────────────────────────────────────────────────────
-const GMAIL = "swatihometuitionbureau@gmail.com";
-const WHATSAPP_NUMBER = "919229738307"; // International format, no +
+const WHATSAPP_NUMBER = "919229738307";
 
-// Google Apps Script Web App URL — paste your deployed URL here after setup
-// See: /docs/google-sheets-setup.md
-const GOOGLE_SHEET_WEBHOOK =
-  process.env.GOOGLE_SHEET_WEBHOOK_URL || "";
+// Web3Forms — get free API key at https://web3forms.com (enter your Gmail, instant key)
+// Add to Vercel env vars: WEB3FORMS_KEY
+const WEB3FORMS_KEY = process.env.WEB3FORMS_KEY || "";
+
+// Google Apps Script webhook (optional — for Sheets logging)
+const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK_URL || "";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ROUTE HANDLER
@@ -19,68 +20,110 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { formType, ...fields } = body;
 
-    // 1. ── Send email via Formsubmit.co (no account needed, free)
-    //    First submission activates the email — you'll get a confirmation link
-    const formsubmitPayload = new FormData();
-    formsubmitPayload.append("_subject", 
-      formType === "book-demo" 
-        ? `🎓 New Demo Request — ${fields.name || "Unknown"}` 
-        : `👩‍🏫 New Teacher Application — ${fields.name || "Unknown"}`
-    );
-    formsubmitPayload.append("_template", "table");
-    formsubmitPayload.append("_captcha", "false");
-    formsubmitPayload.append("Form Type", formType === "book-demo" ? "Book Demo (Student)" : "Join as Teacher");
-    
-    // Append all submitted fields as rows in the email
-    for (const [key, value] of Object.entries(fields)) {
-      if (value) formsubmitPayload.append(key, String(value));
-    }
+    const isDemo = formType === "book-demo";
+    const subject = isDemo
+      ? `🎓 New Demo Request — ${fields.name || "Unknown"} | Swati HTB`
+      : `👩‍🏫 New Teacher Application — ${fields.name || "Unknown"} | Swati HTB`;
 
-    const emailPromise = fetch(`https://formsubmit.co/${GMAIL}`, {
-      method: "POST",
-      body: formsubmitPayload,
-    }).catch((err) => {
-      console.error("[Formsubmit] Email failed:", err);
-    });
+    // Build a clean HTML email body
+    const emailHtml = buildEmailHtml(formType, fields);
 
-    // 2. ── Send to Google Sheets (if webhook URL is configured)
+    // 1. ── Web3Forms (reliable, no activation, free 250/month)
+    const emailPromise = WEB3FORMS_KEY
+      ? fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            access_key: WEB3FORMS_KEY,
+            subject,
+            from_name: "Swati HTB Website",
+            message: emailHtml,
+            // Web3Forms sends to the email linked to this API key
+          }),
+        }).catch((err) => console.error("[Web3Forms] Failed:", err))
+      : Promise.resolve();
+
+    // 2. ── Google Sheets (if configured)
     const sheetPromise = GOOGLE_SHEET_WEBHOOK
       ? fetch(GOOGLE_SHEET_WEBHOOK, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             formType,
-            timestamp: new Date().toISOString(),
+            timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
             ...fields,
           }),
-        }).catch((err) => {
-          console.error("[Google Sheets] Write failed:", err);
-        })
+        }).catch((err) => console.error("[Sheets] Failed:", err))
       : Promise.resolve();
 
-    // Fire both in parallel — don't wait to slow down the user
     await Promise.allSettled([emailPromise, sheetPromise]);
 
-    // 3. ── Build WhatsApp notification message (returned to frontend)
-    //    The frontend opens this link in a new tab to ping your WhatsApp
+    // 3. ── Build WhatsApp message URL (returned to frontend — user clicks it, not auto-open)
     const waMessage = buildWhatsAppMessage(formType, fields);
     const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
 
-    return NextResponse.json({
-      success: true,
-      whatsappUrl: waUrl,
-    });
+    return NextResponse.json({ success: true, whatsappUrl: waUrl });
   } catch (err) {
-    console.error("[submit-form] Unexpected error:", err);
-    return NextResponse.json(
-      { success: false, error: "Something went wrong. Please try again." },
-      { status: 500 }
-    );
+    console.error("[submit-form] Error:", err);
+    return NextResponse.json({ success: false }, { status: 500 });
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HELPERS
+// EMAIL HTML
+// ─────────────────────────────────────────────────────────────────────────────
+function buildEmailHtml(formType: string, fields: Record<string, string>): string {
+  const isDemo = formType === "book-demo";
+  const rows = isDemo
+    ? [
+        ["Parent/Student Name", fields.name],
+        ["WhatsApp Number", fields.phone],
+        ["Student Class", fields.studentClass],
+        ["Subjects Needed", fields.subjects || "Not specified"],
+        ["Home Address", fields.address],
+      ]
+    : [
+        ["Full Name", fields.name],
+        ["WhatsApp Number", fields.phone],
+        ["Gender", fields.gender],
+        ["Qualification", fields.qualification],
+        ["Subjects", fields.subjects],
+        ["Location in Patna", fields.location],
+      ];
+
+  const tableRows = rows
+    .map(
+      ([label, value]) => `
+      <tr>
+        <td style="padding:10px 16px;background:#f8f8f8;font-weight:600;color:#555;border-bottom:1px solid #eee;width:35%">${label}</td>
+        <td style="padding:10px 16px;color:#111;border-bottom:1px solid #eee">${value || "—"}</td>
+      </tr>`
+    )
+    .join("");
+
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
+      <div style="background:#0F4C5C;padding:24px 32px;border-radius:8px 8px 0 0">
+        <h2 style="color:#fff;margin:0;font-size:20px">
+          ${isDemo ? "🎓 New Demo Class Request" : "👩‍🏫 New Teacher Application"}
+        </h2>
+        <p style="color:#ffffff99;margin:4px 0 0;font-size:14px">Swati Home Tuition Bureau — swatihometuition.in</p>
+      </div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid #eee;border-top:none">
+        ${tableRows}
+      </table>
+      <div style="padding:20px 16px;background:#fffbf0;border:1px solid #eee;border-top:none;border-radius:0 0 8px 8px">
+        <p style="margin:0;color:#555;font-size:14px">
+          ⏰ <strong>Action Required:</strong> Contact within 2 hours for best conversion.<br/>
+          📞 Reply to this email or WhatsApp: <strong>+91 92297 38307</strong>
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WHATSAPP MESSAGE
 // ─────────────────────────────────────────────────────────────────────────────
 function buildWhatsAppMessage(formType: string, fields: Record<string, string>): string {
   if (formType === "book-demo") {
@@ -91,22 +134,17 @@ function buildWhatsAppMessage(formType: string, fields: Record<string, string>):
       `📚 *Class:* ${fields.studentClass || "N/A"}\n` +
       `📖 *Subjects:* ${fields.subjects || "N/A"}\n` +
       `📍 *Address:* ${fields.address || "N/A"}\n\n` +
-      `_Reply within 2 hours to convert this lead._`
+      `_Reply within 2 hours._`
     );
   }
-
-  if (formType === "join-teacher") {
-    return (
-      `🔔 *NEW TEACHER APPLICATION — Swati HTB*\n\n` +
-      `👤 *Name:* ${fields.name || "N/A"}\n` +
-      `📞 *WhatsApp:* ${fields.phone || "N/A"}\n` +
-      `👤 *Gender:* ${fields.gender || "N/A"}\n` +
-      `🎓 *Qualification:* ${fields.qualification || "N/A"}\n` +
-      `📚 *Subjects:* ${fields.subjects || "N/A"}\n` +
-      `📍 *Location:* ${fields.location || "N/A"}\n\n` +
-      `_Review and call to complete verification._`
-    );
-  }
-
-  return `🔔 New form submission received on Swati HTB website.`;
+  return (
+    `🔔 *NEW TEACHER APPLICATION — Swati HTB*\n\n` +
+    `👤 *Name:* ${fields.name || "N/A"}\n` +
+    `📞 *WhatsApp:* ${fields.phone || "N/A"}\n` +
+    `👤 *Gender:* ${fields.gender || "N/A"}\n` +
+    `🎓 *Qualification:* ${fields.qualification || "N/A"}\n` +
+    `📚 *Subjects:* ${fields.subjects || "N/A"}\n` +
+    `📍 *Location:* ${fields.location || "N/A"}\n\n` +
+    `_Review and call to verify._`
+  );
 }
