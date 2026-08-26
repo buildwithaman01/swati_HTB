@@ -1,25 +1,54 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Shield, BookOpen, GraduationCap, ArrowRight, CheckCircle2, UserPlus } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function JoinPage() {
   const [loading, setLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    toast.success("Application Submitted!", {
-      description: "Our recruitment team will review your details and contact you on WhatsApp."
-    });
-    setLoading(false);
-    (e.target as HTMLFormElement).reset();
+
+    const form = formRef.current!;
+    const data = {
+      formType: "join-teacher",
+      name: (form.elements.namedItem("name") as HTMLInputElement)?.value,
+      phone: (form.elements.namedItem("phone") as HTMLInputElement)?.value,
+      gender: (form.elements.namedItem("gender") as HTMLSelectElement)?.value,
+      qualification: (form.elements.namedItem("qualification") as HTMLInputElement)?.value,
+      subjects: (form.elements.namedItem("subjects") as HTMLInputElement)?.value,
+      location: (form.elements.namedItem("location") as HTMLInputElement)?.value,
+    };
+
+    try {
+      const res = await fetch("/api/submit-form", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const json = await res.json();
+
+      if (json.success) {
+        toast.success("Application Submitted!", {
+          description: "Our recruitment team will review your details and contact you on WhatsApp."
+        });
+        form.reset();
+        if (json.whatsappUrl) {
+          window.open(json.whatsappUrl, "_blank", "noopener,noreferrer");
+        }
+      } else {
+        toast.error("Something went wrong. Please WhatsApp us directly.");
+      }
+    } catch {
+      toast.error("Network error. Please try again or WhatsApp us.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -117,20 +146,20 @@ export default function JoinPage() {
               <h3 className="text-3xl font-bold text-[#1F2937] mb-3 font-serif">Teacher Application</h3>
               <p className="text-[#1F2937]/60 text-base mb-10 font-medium">Submit your initial details. Our recruitment team will contact you on WhatsApp.</p>
               
-              <form className="space-y-6" onSubmit={handleSubmit}>
+              <form ref={formRef} className="space-y-6" onSubmit={handleSubmit}>
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Full Name</label>
-                  <input required type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="Enter your full name" />
+                  <input required name="name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="Enter your full name" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">WhatsApp Number</label>
-                    <input required type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="+91" />
+                    <input required name="phone" type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="+91" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Gender</label>
-                    <select required className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all appearance-none cursor-pointer">
+                    <select required name="gender" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all appearance-none cursor-pointer">
                       <option value="">Select...</option>
                       <option value="female">Female</option>
                       <option value="male">Male</option>
@@ -140,17 +169,17 @@ export default function JoinPage() {
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Highest Qualification</label>
-                  <input required type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. B.Tech from NIT Patna" />
+                  <input required name="qualification" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. B.Tech from NIT Patna" />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Subjects you can teach</label>
-                  <input required type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Physics for JEE, Class 10 Maths" />
+                  <input required name="subjects" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Physics for JEE, Class 10 Maths" />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Current Location (in Patna)</label>
-                  <input required type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Rajendra Nagar" />
+                  <input required name="location" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Rajendra Nagar" />
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 mt-8">

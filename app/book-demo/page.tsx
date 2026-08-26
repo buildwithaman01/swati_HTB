@@ -1,23 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { Phone, Mail, MapPin, Clock, ArrowRight, CheckCircle2, GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function BookDemoPage() {
   const [loading, setLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    toast.success("Demo request submitted! We will contact you within 2 hours.");
-    setLoading(false);
-    (e.target as HTMLFormElement).reset();
+
+    const form = formRef.current!;
+    const data = {
+      formType: "book-demo",
+      name: (form.elements.namedItem("name") as HTMLInputElement)?.value,
+      phone: (form.elements.namedItem("phone") as HTMLInputElement)?.value,
+      studentClass: (form.elements.namedItem("studentClass") as HTMLSelectElement)?.value,
+      subjects: (form.elements.namedItem("subjects") as HTMLInputElement)?.value,
+      address: (form.elements.namedItem("address") as HTMLTextAreaElement)?.value,
+    };
+
+    try {
+      const res = await fetch("/api/submit-form", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const json = await res.json();
+
+      if (json.success) {
+        toast.success("Request submitted! We will contact you within 2 hours. ✅");
+        form.reset();
+        // Open WhatsApp to ping admin — opens in new tab silently
+        if (json.whatsappUrl) {
+          window.open(json.whatsappUrl, "_blank", "noopener,noreferrer");
+        }
+      } else {
+        toast.error("Something went wrong. Please WhatsApp us directly.");
+      }
+    } catch {
+      toast.error("Network error. Please try again or WhatsApp us.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -62,22 +91,22 @@ export default function BookDemoPage() {
             
             <h3 className="text-3xl font-bold text-[#1F2937] mb-8 font-serif relative z-10">Student Details</h3>
             
-            <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
+            <form ref={formRef} className="space-y-6 relative z-10" onSubmit={handleSubmit}>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Parent/Student Name</label>
-                  <input required type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="Enter full name" />
+                  <input required name="name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="Enter full name" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">WhatsApp Number</label>
-                  <input required type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="+91" />
+                  <input required name="phone" type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="+91" />
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Student's Class</label>
-                  <select required className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all appearance-none cursor-pointer">
+                  <select required name="studentClass" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all appearance-none cursor-pointer">
                     <option value="">Select class...</option>
                     <option value="11-12">Class 11-12</option>
                     <option value="9-10">Class 9-10</option>
@@ -88,13 +117,13 @@ export default function BookDemoPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Specific Subjects (Optional)</label>
-                  <input type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Only Physics & Maths" />
+                  <input name="subjects" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Only Physics & Maths" />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Full Address in Patna</label>
-                <textarea required rows={3} className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30 resize-none" placeholder="House No, Street, Landmark, Area"></textarea>
+                <textarea required name="address" rows={3} className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30 resize-none" placeholder="House No, Street, Landmark, Area"></textarea>
               </div>
 
               <button 
