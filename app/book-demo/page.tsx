@@ -15,32 +15,54 @@ export default function BookDemoPage() {
     e.preventDefault();
     setLoading(true);
 
-    const form = formRef.current!;
-    const data = {
-      formType: "book-demo",
-      name: (form.elements.namedItem("name") as HTMLInputElement)?.value,
-      phone: (form.elements.namedItem("phone") as HTMLInputElement)?.value,
-      studentClass: (form.elements.namedItem("studentClass") as HTMLSelectElement)?.value,
-      subjects: (form.elements.namedItem("subjects") as HTMLInputElement)?.value,
-      address: (form.elements.namedItem("address") as HTMLTextAreaElement)?.value,
-    };
-
+    const formData = new FormData(formRef.current!);
+    
     try {
+      const data = {
+        formType: "book-demo",
+        name: formData.get("name"),
+        phone: formData.get("phone"),
+        class: formData.get("studentClass"),
+        subject: formData.get("subjects"),
+        location: formData.get("address"),
+      };
+
       const res = await fetch("/api/submit-form", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
-      const json = await res.json();
+      const result = await res.json();
+      
+      // Send to Web3Forms directly from the browser to bypass Cloudflare bot blocks
+      if (result.web3formsData) {
+        try {
+          await fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({
+              access_key: result.web3formsData.access_key,
+              subject: result.web3formsData.subject,
+              from_name: "Swati HTB Website",
+              message: result.web3formsData.message
+            })
+          });
+        } catch (e) {
+          console.error("Web3Forms frontend submit failed:", e);
+        }
+      }
 
-      if (json.success) {
-        setWhatsappUrl(json.whatsappUrl || "");
+      if (result.success && result.whatsappUrl) {
+        setWhatsappUrl(result.whatsappUrl);
         setSubmitted(true);
       } else {
-        toast.error("Something went wrong. Please WhatsApp us directly.");
+        alert("Something went wrong. Please try again.");
       }
-    } catch {
+    } catch (error) {
       toast.error("Network error. Please try again or WhatsApp us.");
     } finally {
       setLoading(false);

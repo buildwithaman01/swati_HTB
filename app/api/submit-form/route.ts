@@ -25,44 +25,7 @@ export async function POST(req: NextRequest) {
     // Build a clean HTML email body
     const emailHtml = buildEmailHtml(formType, fields);
 
-    // 1. ── Web3Forms (reliable, no activation, free 250/month)
-    let emailResult = "skipped (no key)";
-    if (WEB3FORMS_KEY) {
-      try {
-        const emailRes = await fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Accept": "application/json",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-          },
-          body: JSON.stringify({
-            access_key: WEB3FORMS_KEY,
-            subject,
-            from_name: "Swati HTB Website",
-            message: emailHtml,
-          }),
-        });
-        
-        const responseText = await emailRes.text();
-        try {
-          const emailJson = JSON.parse(responseText);
-          emailResult = JSON.stringify(emailJson);
-          console.log("[Web3Forms] JSON Response:", emailResult);
-        } catch (e) {
-          emailResult = `HTML/Non-JSON response: ${responseText.substring(0, 100)}`;
-          console.error("[Web3Forms] Non-JSON Response:", responseText.substring(0, 500));
-        }
-      } catch (err) {
-        console.error("[Web3Forms] Fetch error:", err);
-        emailResult = "fetch error";
-      }
-    } else {
-      console.warn("[Web3Forms] WEB3FORMS_KEY env var is NOT set — email skipped");
-    }
-
-
-    // 2. ── Google Sheets (if configured)
+    // 1. ── Google Sheets (if configured)
     if (GOOGLE_SHEET_WEBHOOK) {
       fetch(GOOGLE_SHEET_WEBHOOK, {
         method: "POST",
@@ -75,17 +38,21 @@ export async function POST(req: NextRequest) {
       }).catch((err) => console.error("[Sheets] Failed:", err));
     }
 
-
-    // 3. ── Build WhatsApp message URL (returned to frontend — user clicks it, not auto-open)
+    // 2. ── Build WhatsApp message URL
     const waMessage = buildWhatsAppMessage(formType, fields);
     const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
 
+    // 3. ── Return data to frontend (Frontend will send to Web3Forms directly to bypass Cloudflare bot block)
     return NextResponse.json({
       success: true,
-      message: "Form submitted successfully",
+      message: "Form processed successfully",
       whatsappUrl: waUrl,
-      debugEmail: emailResult,
-      debugKeySet: !!WEB3FORMS_KEY
+      // Pass email data to frontend
+      web3formsData: WEB3FORMS_KEY ? {
+        access_key: WEB3FORMS_KEY,
+        subject,
+        message: emailHtml,
+      } : null
     });
   } catch (err) {
     console.error("[submit-form] Error:", err);
