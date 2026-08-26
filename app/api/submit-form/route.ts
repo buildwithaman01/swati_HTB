@@ -29,8 +29,10 @@ export async function POST(req: NextRequest) {
     const emailHtml = buildEmailHtml(formType, fields);
 
     // 1. ── Web3Forms (reliable, no activation, free 250/month)
-    const emailPromise = WEB3FORMS_KEY
-      ? fetch("https://api.web3forms.com/submit", {
+    let emailResult = "skipped (no key)";
+    if (WEB3FORMS_KEY) {
+      try {
+        const emailRes = await fetch("https://api.web3forms.com/submit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -38,25 +40,33 @@ export async function POST(req: NextRequest) {
             subject,
             from_name: "Swati HTB Website",
             message: emailHtml,
-            // Web3Forms sends to the email linked to this API key
           }),
-        }).catch((err) => console.error("[Web3Forms] Failed:", err))
-      : Promise.resolve();
+        });
+        const emailJson = await emailRes.json();
+        emailResult = JSON.stringify(emailJson);
+        console.log("[Web3Forms] Response:", emailResult);
+      } catch (err) {
+        console.error("[Web3Forms] Fetch error:", err);
+        emailResult = "fetch error";
+      }
+    } else {
+      console.warn("[Web3Forms] WEB3FORMS_KEY env var is NOT set — email skipped");
+    }
+
 
     // 2. ── Google Sheets (if configured)
-    const sheetPromise = GOOGLE_SHEET_WEBHOOK
-      ? fetch(GOOGLE_SHEET_WEBHOOK, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            formType,
-            timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-            ...fields,
-          }),
-        }).catch((err) => console.error("[Sheets] Failed:", err))
-      : Promise.resolve();
+    if (GOOGLE_SHEET_WEBHOOK) {
+      fetch(GOOGLE_SHEET_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formType,
+          timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+          ...fields,
+        }),
+      }).catch((err) => console.error("[Sheets] Failed:", err));
+    }
 
-    await Promise.allSettled([emailPromise, sheetPromise]);
 
     // 3. ── Build WhatsApp message URL (returned to frontend — user clicks it, not auto-open)
     const waMessage = buildWhatsAppMessage(formType, fields);
