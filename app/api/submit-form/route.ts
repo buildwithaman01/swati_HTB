@@ -31,7 +31,10 @@ export async function POST(req: NextRequest) {
       try {
         const emailRes = await fetch("https://api.web3forms.com/submit", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
           body: JSON.stringify({
             access_key: WEB3FORMS_KEY,
             subject,
@@ -39,9 +42,16 @@ export async function POST(req: NextRequest) {
             message: emailHtml,
           }),
         });
-        const emailJson = await emailRes.json();
-        emailResult = JSON.stringify(emailJson);
-        console.log("[Web3Forms] Response:", emailResult);
+        
+        const responseText = await emailRes.text();
+        try {
+          const emailJson = JSON.parse(responseText);
+          emailResult = JSON.stringify(emailJson);
+          console.log("[Web3Forms] JSON Response:", emailResult);
+        } catch (e) {
+          emailResult = `HTML/Non-JSON response: ${responseText.substring(0, 100)}`;
+          console.error("[Web3Forms] Non-JSON Response:", responseText.substring(0, 500));
+        }
       } catch (err) {
         console.error("[Web3Forms] Fetch error:", err);
         emailResult = "fetch error";
