@@ -1,12 +1,8 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import SmoothScroll from "@/components/shared/SmoothScroll";
-import Navbar from "@/components/layout/Navbar";
 import Schema from "@/components/seo/Schema";
 import { Toaster } from "sonner";
-import FloatingWhatsApp from "@/components/ui/FloatingWhatsApp";
-import MobileBottomBar from "@/components/layout/MobileBottomBar";
 import Script from "next/script";
 
 const inter = Inter({
@@ -50,9 +46,6 @@ export const metadata: Metadata = {
   },
 };
 
-import Footer from "@/components/layout/Footer";
-import CallbackCTA from "@/components/layout/CallbackCTA";
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -76,18 +69,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </Script>
       </head>
       <body className="min-h-full flex flex-col bg-[#FAFAF8]">
-        <SmoothScroll>
-          <Navbar />
-          <main className="flex-grow">
-            {children}
-          </main>
-          <CallbackCTA />
-          <Footer />
-        </SmoothScroll>
-        <div className="hidden lg:block">
-          <FloatingWhatsApp />
-        </div>
-        <MobileBottomBar />
+        {children}
         <Toaster position="bottom-right" richColors />
       </body>
     </html>
