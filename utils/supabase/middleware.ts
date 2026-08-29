@@ -42,7 +42,8 @@ export async function updateSession(request: NextRequest) {
 
   // Basic role check: if admin route, ensure user is a selected admin.
   if (user && isAdmin && !isLoginPage) {
-    const adminEmails = (process.env.ADMIN_EMAILS || "swatihometuitionbureau@gmail.com").split(',').map(e => e.trim().toLowerCase());
+    const defaultAdmins = "swatihometuitionbureau@gmail.com,swatihometuitionbeauro@gmail.com";
+    const adminEmails = (process.env.ADMIN_EMAILS || defaultAdmins).split(',').map(e => e.trim().toLowerCase());
     if (!adminEmails.includes(user.email?.toLowerCase() || "")) {
       // User is logged in but not an authorized admin
       const url = request.nextUrl.clone();
