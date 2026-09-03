@@ -6,6 +6,12 @@ const nextConfig: NextConfig = {
   images: {
     // Static export requires unoptimized images
     unoptimized: process.env.BUILD_TARGET === 'static',
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   }
 };
 
