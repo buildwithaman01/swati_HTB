@@ -35,7 +35,7 @@ export default async function AdminFinance() {
       .select(`*, teacher:teachers(full_name, teacher_id)`)
       .order("created_at", { ascending: false })
       .limit(30),
-    supabase.rpc("monthly_revenue_summary").catch(() => ({ data: null })),
+    supabase.rpc("monthly_revenue_summary")
   ]);
 
   async function recordPayment(formData: FormData) {
