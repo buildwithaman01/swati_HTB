@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/utils/supabase/server";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIG
@@ -22,10 +23,55 @@ export async function POST(req: NextRequest) {
       ? `🎓 New Demo Request — ${fields.name || "Unknown"} | Swati HTB`
       : `👩‍🏫 New Teacher Application — ${fields.name || "Unknown"} | Swati HTB`;
 
-    // Build a clean HTML email body
+    // 1. ── Supabase Database Insertion
+    try {
+      const supabase = await createAdminClient();
+      
+      if (isDemo) {
+        // Parse subjects into array safely
+        const subjectsArray = fields.subjects ? fields.subjects.split(",").map((s: string) => s.trim()) : [];
+        
+        await supabase.from("students").insert({
+          full_name: fields.name || "Unknown",
+          parent_name: fields.name || "Unknown",
+          parent_phone: fields.phone || "Unknown",
+          class_studying: fields.studentClass || null,
+          subjects_needed: subjectsArray,
+          address: fields.address || null,
+          enrollment_status: "enquiry"
+        });
+      } else if (formType === "join-tutor") {
+        // Parse subjects into array safely
+        const subjectsArray = fields.subjects ? fields.subjects.split(",").map((s: string) => s.trim()) : [];
+        
+        // Ensure gender matches enum (male, female, other)
+        let gender = "other";
+        if (fields.gender?.toLowerCase() === "male") gender = "male";
+        if (fields.gender?.toLowerCase() === "female") gender = "female";
+
+        await supabase.from("teachers").insert({
+          full_name: fields.name || "Unknown",
+          phone: fields.phone || "Unknown",
+          gender: gender,
+          qualification: fields.qualification || "Not provided",
+          subjects: subjectsArray,
+          locality: fields.location || null,
+          verification_status: "pending"
+        });
+      }
+    } catch (dbError) {
+      console.error("[Supabase Insert Error]:", dbError);
+      // We continue even if DB fails, so they still get the WhatsApp redirect
+    }
+
+    // 2. ── Build WhatsApp message URL
+    const waMessage = buildWhatsAppMessage(formType, fields);
+    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
+
+    // 3. ── Build a clean HTML email body for Web3Forms
     const emailHtml = buildEmailHtml(formType, fields);
 
-    // 1. ── Google Sheets (if configured)
+    // 4. ── Google Sheets (if configured)
     if (GOOGLE_SHEET_WEBHOOK) {
       fetch(GOOGLE_SHEET_WEBHOOK, {
         method: "POST",
@@ -38,11 +84,7 @@ export async function POST(req: NextRequest) {
       }).catch((err) => console.error("[Sheets] Failed:", err));
     }
 
-    // 2. ── Build WhatsApp message URL
-    const waMessage = buildWhatsAppMessage(formType, fields);
-    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
-
-    // 3. ── Return data to frontend (Frontend will send to Web3Forms directly to bypass Cloudflare bot block)
+    // 5. ── Return data to frontend (Frontend will send to Web3Forms directly)
     return NextResponse.json({
       success: true,
       message: "Form processed successfully",
