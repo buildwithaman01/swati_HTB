@@ -59,7 +59,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Teachers */}
         <div className="bg-white rounded-3xl border border-neutral-200/60 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-neutral-100 flex justify-between items-center">
@@ -73,15 +73,15 @@ export default async function AdminDashboard() {
             {recentTeachers?.map(t => (
               <div key={t.id} className="px-6 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
+                  <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">
                     {t.full_name.charAt(0)}
                   </div>
-                  <div>
-                    <p className="font-semibold text-sm text-[#1F2937]">{t.full_name}</p>
-                    <p className="text-xs text-neutral-400 font-mono">{t.teacher_id} · {t.locality || "—"}</p>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-[#1F2937] truncate">{t.full_name}</p>
+                    <p className="text-xs text-neutral-400 font-mono truncate">{t.teacher_id} · {t.locality || "—"}</p>
                   </div>
                 </div>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_COLORS[t.verification_status] || "bg-gray-100 text-gray-500"}`}>
+                <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_COLORS[t.verification_status] || "bg-gray-100 text-gray-500"}`}>
                   {t.verification_status}
                 </span>
               </div>
@@ -102,20 +102,48 @@ export default async function AdminDashboard() {
             {recentStudents?.map(s => (
               <div key={s.id} className="px-6 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
+                  <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
                     {s.full_name.charAt(0)}
                   </div>
-                  <div>
-                    <p className="font-semibold text-sm text-[#1F2937]">{s.full_name}</p>
-                    <p className="text-xs text-neutral-400">{s.student_id} · Class {s.class_studying || "?"} · {s.parent_name}</p>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-[#1F2937] truncate">{s.full_name}</p>
+                    <p className="text-xs text-neutral-400 truncate">{s.student_id} · {s.parent_name}</p>
                   </div>
                 </div>
-                <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_COLORS[s.enrollment_status] || "bg-gray-100 text-gray-500"}`}>
+                <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_COLORS[s.enrollment_status] || "bg-gray-100 text-gray-500"}`}>
                   {s.enrollment_status}
                 </span>
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-3xl border border-neutral-200/60 shadow-sm overflow-hidden p-6">
+           <h2 className="font-bold text-[#1F2937] mb-4">Quick Actions</h2>
+           <div className="space-y-3">
+             <Link href="/admin/sessions" className="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors border border-neutral-200/60">
+                <Clock className="w-5 h-5 text-[#0F4C5C]" />
+                <div>
+                  <p className="text-sm font-bold text-[#1F2937]">View Sessions Log</p>
+                  <p className="text-xs text-neutral-500">Track all logged classes</p>
+                </div>
+             </Link>
+             <Link href="/admin/assignments" className="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors border border-neutral-200/60">
+                <BookOpen className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <p className="text-sm font-bold text-[#1F2937]">Create Assignment</p>
+                  <p className="text-xs text-neutral-500">Assign teacher to student</p>
+                </div>
+             </Link>
+             <Link href="/admin/finance" className="flex items-center gap-3 p-3 bg-neutral-50 rounded-xl hover:bg-neutral-100 transition-colors border border-neutral-200/60">
+                <IndianRupee className="w-5 h-5 text-emerald-600" />
+                <div>
+                  <p className="text-sm font-bold text-[#1F2937]">Record Payment</p>
+                  <p className="text-xs text-neutral-500">Log monthly fees</p>
+                </div>
+             </Link>
+           </div>
         </div>
       </div>
     </div>

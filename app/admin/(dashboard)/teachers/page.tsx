@@ -1,32 +1,66 @@
-﻿import { createAdminClient } from "@/utils/supabase/server";
-import { CheckCircle2, XCircle, Search, MoreVertical } from "lucide-react";
+import { createAdminClient } from "@/utils/supabase/server";
+import { CheckCircle2, XCircle, Search, MoreVertical, Plus, Filter, UserCheck, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 
-export default async function AdminTeachers() {
+export default async function AdminTeachers({
+  searchParams,
+}: {
+  searchParams: { q?: string; status?: string };
+}) {
   const supabase = await createAdminClient();
   
-  const { data: teachers } = await supabase
-    .from("teachers")
-    .select("*")
-    .order("created_at", { ascending: false });
+  let query = supabase.from("teachers").select("*").order("created_at", { ascending: false });
 
-  // Server Action to approve teacher
-  async function approveTeacher(formData: FormData) {
-    "use server";
-    const id = formData.get("id") as string;
-    const adminSupabase = await createAdminClient();
-    await adminSupabase.from("teachers").update({ verification_status: "approved", badge_level: "verified", is_active: true }).eq("id", id);
-    revalidatePath("/admin/teachers");
+  if (searchParams.q) {
+    query = query.or(`full_name.ilike.%${searchParams.q}%,teacher_id.ilike.%${searchParams.q}%,phone.ilike.%${searchParams.q}%,locality.ilike.%${searchParams.q}%`);
   }
+
+  if (searchParams.status && searchParams.status !== "all") {
+    query = query.eq("verification_status", searchParams.status);
+  }
+
+  const { data: teachers } = await query;
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Teachers</h1>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4" />
-          <input type="text" placeholder="Search teachers..." className="pl-10 pr-4 py-2 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Teachers</h1>
+          <p className="text-sm text-neutral-500 mt-1">Manage teacher profiles and verification</p>
+        </div>
+        <Link href="/admin/teachers/new" className="bg-[#0F4C5C] hover:bg-[#0a3a47] text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm">
+          <Plus size={18} /> Add Teacher
+        </Link>
+      </div>
+
+      {/* Filters and Search */}
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-200/60 flex flex-col sm:flex-row gap-4">
+        <form className="flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4" />
+            <input 
+              type="text" 
+              name="q"
+              defaultValue={searchParams.q}
+              placeholder="Search by name, ID, phone, or area..." 
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 text-sm" 
+            />
+          </div>
+          {searchParams.status && <input type="hidden" name="status" value={searchParams.status} />}
+          <button type="submit" className="bg-neutral-100 hover:bg-neutral-200 text-[#1F2937] px-4 rounded-xl text-sm font-semibold transition-colors">
+            Search
+          </button>
+        </form>
+
+        <div className="flex items-center gap-2">
+          <Filter className="text-neutral-400 w-4 h-4 ml-2" />
+          <div className="flex bg-neutral-100 p-1 rounded-xl">
+            <FilterLink current={searchParams.status} value="" label="All" q={searchParams.q} />
+            <FilterLink current={searchParams.status} value="pending" label="Pending" q={searchParams.q} />
+            <FilterLink current={searchParams.status} value="approved" label="Approved" q={searchParams.q} />
+            <FilterLink current={searchParams.status} value="rejected" label="Rejected" q={searchParams.q} />
+          </div>
         </div>
       </div>
 
@@ -35,64 +69,94 @@ export default async function AdminTeachers() {
           <thead>
             <tr className="bg-neutral-50/50 border-b border-neutral-200/60 text-xs uppercase tracking-wider text-neutral-500">
               <th className="px-6 py-4 font-semibold">Teacher</th>
-              <th className="px-6 py-4 font-semibold">ID</th>
-              <th className="px-6 py-4 font-semibold">Location</th>
-              <th className="px-6 py-4 font-semibold">Status</th>
+              <th className="px-6 py-4 font-semibold">Contact & Area</th>
+              <th className="px-6 py-4 font-semibold">Badge & Status</th>
               <th className="px-6 py-4 font-semibold text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-200/60">
-            {teachers?.map((t) => (
-              <tr key={t.id} className="hover:bg-neutral-50/50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#0F4C5C] text-white flex items-center justify-center font-bold text-sm">
-                      {t.profile_photo_url ? <img src={t.profile_photo_url} className="w-full h-full rounded-full object-cover"/> : t.full_name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#1F2937] text-sm">{t.full_name}</p>
-                      <p className="text-xs text-neutral-500">{t.qualification}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-sm font-mono text-[#0F4C5C] font-semibold">{t.teacher_id}</td>
-                <td className="px-6 py-4 text-sm text-neutral-600">{t.locality || "—"}</td>
-                <td className="px-6 py-4">
-                  {t.verification_status === "approved" ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-xs font-semibold">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Approved
-                    </span>
-                  ) : t.verification_status === "pending" ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold">
-                      <Clock className="w-3.5 h-3.5" /> Pending
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
-                      <XCircle className="w-3.5 h-3.5" /> Rejected
-                    </span>
-                  )}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    {t.verification_status === "pending" && (
-                      <form action={approveTeacher}>
-                        <input type="hidden" name="id" value={t.id} />
-                        <button className="text-xs font-bold text-emerald-600 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors border border-emerald-200">
-                          Approve
-                        </button>
-                      </form>
-                    )}
-                    <Link href={`/teacher/${t.profile_slug}`} target="_blank" className="text-xs font-bold text-[#0F4C5C] hover:bg-[#0F4C5C]/5 px-3 py-1.5 rounded-lg transition-colors border border-[#0F4C5C]/20">
-                      View
-                    </Link>
-                  </div>
+            {teachers?.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-12 text-center text-neutral-500">
+                  <ShieldAlert className="w-12 h-12 text-neutral-200 mx-auto mb-3" />
+                  <p className="font-medium text-sm">No teachers found matching your criteria.</p>
                 </td>
               </tr>
-            ))}
+            ) : (
+              teachers?.map((t) => (
+                <tr key={t.id} className="hover:bg-neutral-50/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-[#0F4C5C] text-white flex items-center justify-center font-bold text-sm shrink-0">
+                        {t.profile_photo_url ? <img src={t.profile_photo_url} className="w-full h-full rounded-full object-cover"/> : t.full_name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#1F2937] text-sm">{t.full_name}</p>
+                        <p className="text-xs text-neutral-500 font-mono mt-0.5">{t.teacher_id}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-semibold text-[#1F2937]">{t.phone}</p>
+                    <p className="text-xs text-neutral-500 truncate max-w-[200px]">{t.locality || "Area not specified"}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-1.5 items-start">
+                      {t.verification_status === "approved" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
+                          <CheckCircle2 className="w-3 h-3" /> Approved
+                        </span>
+                      ) : t.verification_status === "pending" ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
+                          <Clock className="w-3 h-3" /> Pending
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+                          <XCircle className="w-3 h-3" /> Rejected
+                        </span>
+                      )}
+                      
+                      {t.badge_level !== 'pending' && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-[10px] uppercase font-bold tracking-wider border border-indigo-100">
+                          {t.badge_level}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <Link href={`/admin/teachers/${t.id}`} className="inline-flex items-center gap-2 text-xs font-bold bg-white text-[#1F2937] hover:bg-neutral-50 border border-neutral-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                      <UserCheck className="w-3.5 h-3.5" /> Review & Edit
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
     </div>
+  );
+}
+
+function FilterLink({ current, value, label, q }: { current?: string; value: string; label: string; q?: string }) {
+  const isActive = (current === value) || (!current && value === "");
+  const params = new URLSearchParams();
+  if (value) params.set("status", value);
+  if (q) params.set("q", q);
+  
+  const href = `/admin/teachers${params.toString() ? `?${params.toString()}` : ""}`;
+  
+  return (
+    <Link 
+      href={href}
+      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+        isActive 
+          ? "bg-white text-[#1F2937] shadow-sm border border-neutral-200/60" 
+          : "text-neutral-500 hover:text-[#1F2937] hover:bg-neutral-200/50"
+      }`}
+    >
+      {label}
+    </Link>
   );
 }
 

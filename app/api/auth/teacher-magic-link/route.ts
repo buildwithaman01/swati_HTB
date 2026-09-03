@@ -1,4 +1,4 @@
-﻿import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
@@ -11,19 +11,19 @@ export async function POST(request: Request) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
-      emailRedirectTo: `${origin}/api/auth/callback?next=/portal/dashboard`,
+      emailRedirectTo: `${origin}/api/auth/callback?next=/teacher/dashboard`,
     },
   });
 
   if (error) {
     return NextResponse.redirect(
-      new URL(`/portal/login?message=${encodeURIComponent(error.message)}`, request.url),
+      new URL(`/teacher/login?message=${encodeURIComponent(error.message)}`, request.url),
       301
     );
   }
 
   return NextResponse.redirect(
-    new URL(`/portal/login?success=${encodeURIComponent("Check your email for the magic link!")}`, request.url),
+    new URL(`/teacher/login?success=${encodeURIComponent("Check your email for the magic link!")}`, request.url),
     301
   );
 }

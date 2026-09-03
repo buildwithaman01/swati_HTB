@@ -1,40 +1,74 @@
-﻿import { createAdminClient } from "@/utils/supabase/server";
-import { Search, MoreVertical, GraduationCap } from "lucide-react";
+import { createAdminClient } from "@/utils/supabase/server";
+import { Search, GraduationCap, Plus, Filter, UserCheck, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 
-export default async function AdminStudents() {
+export default async function AdminStudents({
+  searchParams,
+}: {
+  searchParams: { q?: string; status?: string };
+}) {
   const supabase = await createAdminClient();
   
-  const { data: students } = await supabase
-    .from("students")
-    .select("*")
-    .order("created_at", { ascending: false });
+  let query = supabase.from("students").select("*").order("created_at", { ascending: false });
 
-  async function updateStatus(formData: FormData) {
-    "use server";
-    const id = formData.get("id") as string;
-    const status = formData.get("status") as string;
-    const adminSupabase = await createAdminClient();
-    await adminSupabase.from("students").update({ enrollment_status: status }).eq("id", id);
-    revalidatePath("/admin/students");
+  if (searchParams.q) {
+    query = query.or(`full_name.ilike.%${searchParams.q}%,student_id.ilike.%${searchParams.q}%,parent_phone.ilike.%${searchParams.q}%,locality.ilike.%${searchParams.q}%`);
   }
 
+  if (searchParams.status && searchParams.status !== "all") {
+    query = query.eq("enrollment_status", searchParams.status);
+  }
+
+  const { data: students } = await query;
+
   const STATUS_COLORS: Record<string, string> = {
-    enquiry: "bg-purple-100 text-purple-700",
-    demo: "bg-amber-100 text-amber-700",
-    enrolled: "bg-emerald-100 text-emerald-700",
-    paused: "bg-gray-100 text-gray-700",
-    dropped: "bg-red-100 text-red-700"
+    enquiry: "bg-purple-100 text-purple-700 border-purple-200",
+    demo: "bg-amber-100 text-amber-700 border-amber-200",
+    enrolled: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    paused: "bg-gray-100 text-gray-700 border-gray-200",
+    dropped: "bg-red-100 text-red-700 border-red-200"
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Students</h1>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4" />
-          <input type="text" placeholder="Search students..." className="pl-10 pr-4 py-2 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Students</h1>
+          <p className="text-sm text-neutral-500 mt-1">Manage students, enquiries, and active enrollments</p>
+        </div>
+        <Link href="/admin/students/new" className="bg-[#0F4C5C] hover:bg-[#0a3a47] text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm">
+          <Plus size={18} /> Add Student
+        </Link>
+      </div>
+
+      {/* Filters and Search */}
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-neutral-200/60 flex flex-col sm:flex-row gap-4">
+        <form className="flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 w-4 h-4" />
+            <input 
+              type="text" 
+              name="q"
+              defaultValue={searchParams.q}
+              placeholder="Search by name, ID, parent phone, or area..." 
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 text-sm" 
+            />
+          </div>
+          {searchParams.status && <input type="hidden" name="status" value={searchParams.status} />}
+          <button type="submit" className="bg-neutral-100 hover:bg-neutral-200 text-[#1F2937] px-4 rounded-xl text-sm font-semibold transition-colors">
+            Search
+          </button>
+        </form>
+
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+          <Filter className="text-neutral-400 w-4 h-4 ml-2 shrink-0" />
+          <div className="flex bg-neutral-100 p-1 rounded-xl shrink-0">
+            <FilterLink current={searchParams.status} value="" label="All" q={searchParams.q} />
+            <FilterLink current={searchParams.status} value="enquiry" label="Enquiry" q={searchParams.q} />
+            <FilterLink current={searchParams.status} value="demo" label="Demo" q={searchParams.q} />
+            <FilterLink current={searchParams.status} value="enrolled" label="Enrolled" q={searchParams.q} />
+          </div>
         </div>
       </div>
 
@@ -43,62 +77,81 @@ export default async function AdminStudents() {
           <thead>
             <tr className="bg-neutral-50/50 border-b border-neutral-200/60 text-xs uppercase tracking-wider text-neutral-500">
               <th className="px-6 py-4 font-semibold">Student</th>
-              <th className="px-6 py-4 font-semibold">Parent Contact</th>
-              <th className="px-6 py-4 font-semibold">Class/Board</th>
+              <th className="px-6 py-4 font-semibold">Parent & Contact</th>
+              <th className="px-6 py-4 font-semibold">Academic</th>
               <th className="px-6 py-4 font-semibold">Status</th>
               <th className="px-6 py-4 font-semibold text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-200/60">
-            {students?.map((s) => (
-              <tr key={s.id} className="hover:bg-neutral-50/50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
-                      {s.full_name.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#1F2937] text-sm">{s.full_name}</p>
-                      <p className="text-xs text-neutral-500">{s.student_id}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4">
-                  <p className="text-sm font-semibold text-[#1F2937]">{s.parent_name}</p>
-                  <p className="text-xs text-neutral-500">{s.parent_phone}</p>
-                </td>
-                <td className="px-6 py-4">
-                  <p className="text-sm text-[#1F2937]">{s.class_studying || "—"}</p>
-                  <p className="text-xs text-neutral-500">{s.board || "—"}</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${STATUS_COLORS[s.enrollment_status] || "bg-gray-100 text-gray-700"}`}>
-                    {s.enrollment_status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <form action={updateStatus} className="inline-flex gap-2">
-                    <input type="hidden" name="id" value={s.id} />
-                    <select name="status" onChange={(e) => e.target.form?.requestSubmit()} className="text-xs font-medium border border-neutral-200 rounded-lg px-2 py-1.5 focus:outline-none">
-                      <option value="" disabled selected>Update...</option>
-                      <option value="enquiry">Enquiry</option>
-                      <option value="demo">Demo</option>
-                      <option value="enrolled">Enrolled</option>
-                    </select>
-                  </form>
+            {(!students || students.length === 0) ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-neutral-500">
+                  <AlertCircle className="w-12 h-12 text-neutral-200 mx-auto mb-3" />
+                  <p className="font-medium text-sm">No students found matching your criteria.</p>
                 </td>
               </tr>
-            ))}
+            ) : (
+              students.map((s) => (
+                <tr key={s.id} className="hover:bg-neutral-50/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
+                        {s.full_name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-[#1F2937] text-sm">{s.full_name}</p>
+                        <p className="text-xs text-neutral-500 font-mono mt-0.5">{s.student_id}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-semibold text-[#1F2937]">{s.parent_name}</p>
+                    <p className="text-xs text-neutral-500 mt-0.5">{s.parent_phone}</p>
+                    <p className="text-xs text-neutral-400 mt-0.5 truncate max-w-[150px]">{s.locality || "Area not set"}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <p className="text-sm font-medium text-[#1F2937]">{s.class_studying ? `Class ${s.class_studying}` : "—"}</p>
+                    <p className="text-xs text-neutral-500 mt-0.5">{s.board || "—"}</p>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${STATUS_COLORS[s.enrollment_status] || "bg-gray-100 text-gray-700"}`}>
+                      {s.enrollment_status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <Link href={`/admin/students/${s.id}`} className="inline-flex items-center gap-2 text-xs font-bold bg-white text-[#1F2937] hover:bg-neutral-50 border border-neutral-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                      <UserCheck className="w-3.5 h-3.5" /> Details
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
-        
-        {(!students || students.length === 0) && (
-          <div className="text-center py-12">
-            <GraduationCap className="w-12 h-12 text-neutral-200 mx-auto mb-3" />
-            <p className="text-neutral-500 font-medium text-sm">No students found.</p>
-          </div>
-        )}
       </div>
     </div>
+  );
+}
+
+function FilterLink({ current, value, label, q }: { current?: string; value: string; label: string; q?: string }) {
+  const isActive = (current === value) || (!current && value === "");
+  const params = new URLSearchParams();
+  if (value) params.set("status", value);
+  if (q) params.set("q", q);
+  
+  const href = `/admin/students${params.toString() ? `?${params.toString()}` : ""}`;
+  
+  return (
+    <Link 
+      href={href}
+      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors whitespace-nowrap ${
+        isActive 
+          ? "bg-white text-[#1F2937] shadow-sm border border-neutral-200/60" 
+          : "text-neutral-500 hover:text-[#1F2937] hover:bg-neutral-200/50"
+      }`}
+    >
+      {label}
+    </Link>
   );
 }
