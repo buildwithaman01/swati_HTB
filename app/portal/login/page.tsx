@@ -1,87 +1,136 @@
-﻿import Link from "next/link";
-import { Shield, Mail } from "lucide-react";
-import { headers } from "next/headers";
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
+"use client";
+import { useState } from "react";
+import { ArrowRight, Mail, Lock, Eye, EyeOff, Users } from "lucide-react";
 
-export default async function TeacherLogin({ searchParams }: { searchParams: { message: string, success: string } }) {
-  // If already logged in, redirect
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    redirect("/portal/dashboard");
+export default function ParentLogin() {
+  const [mode, setMode] = useState<"magic" | "password">("magic");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleMagicLink(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement).value;
+    const res = await fetch("/api/auth/parent-magic-link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    setLoading(false);
+    if (res.ok) setSent(true);
+    else { const d = await res.json(); setError(d.error || "Failed to send link."); }
+  }
+
+  async function handlePassword(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement).value;
+    const password = (e.currentTarget.elements.namedItem("password") as HTMLInputElement).value;
+    const res = await fetch("/api/auth/parent-password-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    setLoading(false);
+    if (res.redirected) window.location.href = res.url;
+    else { const d = await res.json().catch(() => ({})); setError(d.error || "Invalid credentials."); }
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-sm border border-neutral-200/60">
-        <div className="flex justify-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-[#0F4C5C] flex items-center justify-center text-white shadow-md">
-            <Shield className="w-6 h-6" />
-          </div>
-        </div>
-        <h1 className="text-2xl font-bold text-center text-[#1F2937] mb-2 font-serif">Teacher Portal</h1>
-        <p className="text-center text-[#1F2937]/60 text-sm mb-8">Sign in to manage your students and earnings</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-[#0F4C5C] p-4">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[60%] bg-indigo-500/10 blur-[120px] rounded-full" />
+      </div>
 
-        {searchParams?.message && (
-          <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100 text-center font-medium">
-            {searchParams.message}
+      <div className="relative w-full max-w-md">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl mb-4 border border-white/20">
+            <Users className="w-8 h-8 text-white" />
           </div>
-        )}
-        
-        {searchParams?.success && (
-          <div className="p-4 mb-6 bg-emerald-50 text-emerald-700 rounded-xl text-sm border border-emerald-100 text-center font-medium">
-            {searchParams.success}
-          </div>
-        )}
-
-        <div className="space-y-4">
-          {/* Google OAuth */}
-          <form action="/api/auth/teacher-oauth" method="post">
-            <input type="hidden" name="provider" value="google" />
-            <button
-              type="submit"
-              className="w-full flex items-center justify-center gap-3 bg-white border border-neutral-200 hover:bg-neutral-50 text-[#1F2937] font-bold py-3 px-4 rounded-xl transition-colors shadow-sm"
-            >
-              <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg"><g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)"><path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 52.749 L -8.284 52.749 C -8.574 53.879 -9.254 54.819 -10.204 55.449 L -10.204 57.779 L -6.324 57.779 C -4.054 55.699 -2.764 52.549 -3.264 51.509 Z"/><path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.279 L -10.204 57.949 C -11.274 58.669 -12.654 59.109 -14.754 59.109 C -18.804 59.109 -22.254 56.379 -23.494 52.709 L -27.494 52.709 L -27.494 55.819 C -25.134 60.509 -20.314 63.239 -14.754 63.239 Z"/><path fill="#FBBC05" d="M -23.494 52.709 C -23.814 51.759 -24.004 50.749 -24.004 49.709 C -24.004 48.669 -23.814 47.659 -23.494 46.709 L -23.494 43.599 L -27.494 43.599 C -28.324 45.249 -28.804 47.109 -28.804 49.059 C -28.804 51.009 -28.324 52.869 -27.494 54.519 L -23.494 52.709 Z"/><path fill="#EA4335" d="M -14.754 40.179 C -12.984 40.179 -11.404 40.789 -10.154 41.989 L -6.744 38.579 C -8.804 36.659 -11.514 35.509 -14.754 35.509 C -20.314 35.509 -25.134 38.239 -27.494 42.929 L -23.494 46.039 C -22.254 42.369 -18.804 39.639 -14.754 40.179 Z"/></g></svg>
-              Continue with Google
-            </button>
-          </form>
-
-          <div className="relative flex items-center py-2">
-            <div className="flex-grow border-t border-neutral-200"></div>
-            <span className="flex-shrink-0 mx-4 text-neutral-400 text-xs font-semibold uppercase tracking-wider">Or</span>
-            <div className="flex-grow border-t border-neutral-200"></div>
-          </div>
-
-          {/* Magic Link */}
-          <form action="/api/auth/teacher-magic-link" method="post" className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#1F2937] mb-1" htmlFor="email">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  required
-                  placeholder="you@example.com"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-colors"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-[#0F4C5C] hover:bg-[#0a3844] text-white font-bold py-3 rounded-xl transition-colors shadow-md"
-            >
-              Send Magic Link
-            </button>
-          </form>
+          <h1 className="text-3xl font-bold text-white font-serif">Parent Portal</h1>
+          <p className="text-white/60 mt-2 text-sm">Track your child's progress & sessions</p>
         </div>
 
-        <p className="text-center text-xs text-[#1F2937]/40 mt-8">
-          <Link href="/" className="hover:underline">Return to main website</Link>
-        </p>
+        <div className="bg-white rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.3)] overflow-hidden">
+          <div className="flex border-b border-neutral-100">
+            <button onClick={() => { setMode("magic"); setError(""); setSent(false); }}
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${mode === "magic" ? "bg-[#0F4C5C] text-white" : "text-neutral-500 hover:text-[#0F4C5C]"}`}>
+              📧 Magic Link
+            </button>
+            <button onClick={() => { setMode("password"); setError(""); setSent(false); }}
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${mode === "password" ? "bg-[#0F4C5C] text-white" : "text-neutral-500 hover:text-[#0F4C5C]"}`}>
+              🔐 Password
+            </button>
+          </div>
+
+          <div className="p-8">
+            {mode === "magic" ? (
+              sent ? (
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail className="w-8 h-8 text-emerald-600" />
+                  </div>
+                  <h2 className="text-xl font-bold text-[#1F2937] mb-2">Check your email!</h2>
+                  <p className="text-sm text-neutral-500">We sent a login link to your registered email address.</p>
+                  <button onClick={() => setSent(false)} className="mt-4 text-sm text-[#0F4C5C] font-bold hover:underline">Try again</button>
+                </div>
+              ) : (
+                <form onSubmit={handleMagicLink} className="space-y-4">
+                  <p className="text-sm text-neutral-500 mb-4">Enter your registered email to receive a one-click login link.</p>
+                  <div>
+                    <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">Email Address</label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                      <input type="email" name="email" required placeholder="your@email.com"
+                        className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
+                    </div>
+                  </div>
+                  {error && <p className="text-red-600 text-sm bg-red-50 p-3 rounded-xl">{error}</p>}
+                  <button type="submit" disabled={loading}
+                    className="w-full bg-[#0F4C5C] disabled:opacity-60 hover:bg-[#0a3a47] text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+                    {loading ? "Sending..." : <>Send Magic Link <ArrowRight className="w-4 h-4" /></>}
+                  </button>
+                </form>
+              )
+            ) : (
+              <form onSubmit={handlePassword} className="space-y-4">
+                <p className="text-sm text-neutral-500 mb-4">Sign in with your email and password provided by our team.</p>
+                <div>
+                  <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                    <input type="email" name="email" required placeholder="your@email.com"
+                      className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                    <input type={showPassword ? "text" : "password"} name="password" required placeholder="Enter password"
+                      className="w-full pl-10 pr-10 py-3 border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+                {error && <p className="text-red-600 text-sm bg-red-50 p-3 rounded-xl">{error}</p>}
+                <button type="submit" disabled={loading}
+                  className="w-full bg-[#0F4C5C] disabled:opacity-60 hover:bg-[#0a3a47] text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+                  {loading ? "Signing in..." : <>Sign In <ArrowRight className="w-4 h-4" /></>}
+                </button>
+              </form>
+            )}
+          </div>
+
+          <div className="px-8 pb-6 border-t border-neutral-100 pt-4 text-center">
+            <p className="text-xs text-neutral-400">Don't have an account? Our team will set it up for you when your child enrolls.</p>
+          </div>
+        </div>
       </div>
     </div>
   );

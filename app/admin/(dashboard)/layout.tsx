@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogOut, Users, BookOpen, CreditCard, LayoutDashboard, Settings, IndianRupee, FileText } from "lucide-react";
+import { LogOut, Users, BookOpen, CreditCard, LayoutDashboard, Settings, IndianRupee, FileText, Star } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,6 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavItem href="/admin/sessions" icon={<BookOpen size={20} />} label="Sessions Log" />
           <NavItem href="/admin/finance" icon={<IndianRupee className="w-5 h-5" />} label="Finance & Fees" />
           <NavItem href="/admin/reports" icon={<FileText className="w-5 h-5" />} label="Progress Reports" />
+          <NavItem href="/admin/reviews" icon={<Star className="w-5 h-5" />} label="Reviews" />
         </nav>
 
         <div className="p-4 border-t border-white/10">

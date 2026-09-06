@@ -1,106 +1,152 @@
-﻿import { createClient } from "@/utils/supabase/server";
-import { BookOpen, Clock, CreditCard, ChevronRight } from "lucide-react";
-import Link from "next/link";
+import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { Calendar, IndianRupee, BookOpen, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react";
 
-export default async function PortalDashboard() {
+export default async function ParentDashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-
   if (!user) redirect("/portal/login");
 
-  // Get teacher profile
-  const { data: teacher } = await supabase
-    .from("teachers")
-    .select("*, assignments(*)")
-    .eq("auth_user_id", user.id)
+  const { data: student } = await supabase
+    .from("students")
+    .select("id, full_name, class_studying, board, parent_name, enrollment_status")
+    .or(`parent_email.eq.${user.email},email.eq.${user.email}`)
     .single();
 
-  if (!teacher) {
-    return (
-      <div className="bg-white p-8 rounded-3xl text-center">
-        <h2 className="text-xl font-bold text-[#1F2937]">Profile Not Found</h2>
-        <p className="text-[#1F2937]/60 mt-2">Your email isn't linked to an approved teacher profile.</p>
-      </div>
-    );
-  }
+  if (!student) redirect("/portal/login");
 
-  const activeAssignments = (teacher.assignments || []).filter((a: any) => a.status === 'active');
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
+
+  const [{ data: assignment }, { data: sessions }, { data: reports }, { data: payments }] = await Promise.all([
+    supabase.from("assignments").select(`*, teacher:teacher_id(full_name, badge_level)`).eq("student_id", student.id).eq("status", "active").single(),
+    supabase.from("sessions").select("*").eq("student_id", student.id).gte("session_date", startOfMonth),
+    supabase.from("progress_reports").select("*").eq("student_id", student.id).eq("admin_approved", true).order("created_at", { ascending: false }).limit(1),
+    supabase.from("payments").select("*").eq("student_id", student.id).order("created_at", { ascending: false }).limit(1),
+  ]);
+
+  const completedSessions = sessions?.filter(s => s.status === "completed").length || 0;
+  const totalSessions = sessions?.length || 0;
+  const latestReport = reports?.[0];
+  const latestPayment = payments?.[0];
+  const teacher = assignment?.teacher as any;
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-end">
-        <div>
-          <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Welcome, {teacher.full_name.split(' ')[0]}</h1>
-          <p className="text-[#1F2937]/60 mt-1">Here is your teaching summary for {new Date().toLocaleString('default', { month: 'long' })}</p>
-        </div>
-        <span className={`px-4 py-1.5 rounded-full text-sm font-semibold border ${teacher.verification_status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-          {teacher.verification_status === 'approved' ? '✅ Verified Profile' : '⏳ Pending Approval'}
-        </span>
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard title="Active Students" value={activeAssignments.length} icon={<BookOpen size={24} />} color="text-[#0F4C5C]" bg="bg-[#0F4C5C]/10" />
-        <StatCard title="Classes this month" value={0} icon={<Clock size={24} />} color="text-amber-600" bg="bg-amber-100" />
-        <StatCard title="Est. Earnings" value="₹0" icon={<CreditCard size={24} />} color="text-emerald-600" bg="bg-emerald-100" />
+      <div>
+        <h1 className="text-2xl font-bold font-serif text-[#1F2937]">Hello, {student.parent_name}!</h1>
+        <p className="text-sm text-neutral-500 mt-1">Here's {student.full_name}'s tuition summary for this month.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quick Actions */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
-          <h2 className="text-lg font-bold text-[#1F2937] mb-4">Quick Actions</h2>
-          <div className="space-y-3">
-            <ActionLink href="/portal/sessions" title="Log a Class" desc="Record attendance and topics covered" icon={<Clock size={20} />} />
-            <ActionLink href="/portal/students" title="My Students" desc="View student details and progress" icon={<BookOpen size={20} />} />
-            <ActionLink href={`/teacher/${teacher.profile_slug}`} title="View Public Profile" desc="See how parents view your profile" icon={<ChevronRight size={20} />} target="_blank" />
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-2xl p-5 border border-neutral-200/60 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+              <Calendar className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-[#1F2937]">{completedSessions}<span className="text-sm font-normal text-neutral-400">/{totalSessions}</span></p>
+          <p className="text-xs text-neutral-500 mt-1 font-medium">Sessions This Month</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 border border-neutral-200/60 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-[#1F2937]">{totalSessions > 0 ? Math.round(completedSessions / totalSessions * 100) : 100}%</p>
+          <p className="text-xs text-neutral-500 mt-1 font-medium">Attendance Rate</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 border border-neutral-200/60 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center">
+              <IndianRupee className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-bold text-[#1F2937]">₹{assignment ? Number(assignment.monthly_fee).toLocaleString("en-IN") : "—"}</p>
+          <p className="text-xs text-neutral-500 mt-1 font-medium">Monthly Fee</p>
+        </div>
+
+        <div className="bg-white rounded-2xl p-5 border border-neutral-200/60 shadow-sm">
+          {latestPayment ? (
+            <>
+              <div className={`w-8 h-8 ${latestPayment.status === "received" ? "bg-emerald-100 text-emerald-600" : "bg-red-100 text-red-600"} rounded-xl flex items-center justify-center mb-3`}>
+                {latestPayment.status === "received" ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+              </div>
+              <p className={`text-sm font-bold capitalize ${latestPayment.status === "received" ? "text-emerald-600" : "text-red-600"}`}>{latestPayment.status}</p>
+              <p className="text-xs text-neutral-500 mt-1 font-medium">{latestPayment.payment_month} Payment</p>
+            </>
+          ) : (
+            <>
+              <div className="w-8 h-8 bg-neutral-100 rounded-xl flex items-center justify-center mb-3">
+                <IndianRupee className="w-4 h-4 text-neutral-400" />
+              </div>
+              <p className="text-sm font-bold text-neutral-400">No record</p>
+              <p className="text-xs text-neutral-500 mt-1">Payment Status</p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Current Teacher */}
+      {assignment && teacher && (
+        <div className="bg-white rounded-2xl border border-neutral-200/60 shadow-sm p-6">
+          <h2 className="text-sm font-bold text-neutral-500 uppercase tracking-wide mb-4 flex items-center gap-2">
+            <BookOpen className="w-4 h-4" /> Current Teacher
+          </h2>
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-[#0F4C5C] rounded-2xl flex items-center justify-center text-white font-bold text-xl">
+              {teacher.full_name?.charAt(0) || "T"}
+            </div>
+            <div>
+              <h3 className="font-bold text-[#1F2937] text-lg">{teacher.full_name}</h3>
+              <p className="text-sm text-neutral-500">{assignment.subject} · {assignment.classes_per_week}x/week · {assignment.session_duration_mins} min</p>
+              <span className={`inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded-full ${
+                teacher.badge_level === "elite" ? "bg-amber-100 text-amber-700" :
+                teacher.badge_level === "certified" ? "bg-blue-100 text-blue-700" :
+                "bg-emerald-100 text-emerald-700"
+              }`}>
+                {teacher.badge_level === "elite" ? "🏆 Elite" : teacher.badge_level === "certified" ? "⭐ Certified" : "✅ Verified"} Teacher
+              </span>
+            </div>
+            <div className="ml-auto text-right">
+              <p className="text-sm font-bold text-neutral-600">Schedule</p>
+              <p className="text-xs text-neutral-400 mt-1">{(assignment.session_days || []).join(", ") || "TBD"}</p>
+              <p className="text-xs text-neutral-400">{assignment.session_time ? `at ${assignment.session_time}` : ""}</p>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Recent Classes */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
-          <h2 className="text-lg font-bold text-[#1F2937] mb-4">Recent Classes</h2>
-          <div className="text-center py-8">
-            <Clock className="w-12 h-12 text-neutral-200 mx-auto mb-3" />
-            <p className="text-neutral-500 font-medium text-sm">No classes logged yet.</p>
-            <Link href="/portal/sessions" className="text-[#0F4C5C] text-sm font-semibold hover:underline mt-2 inline-block">
-              Log your first class
-            </Link>
+      {/* Latest Progress Report */}
+      {latestReport && (
+        <div className="bg-white rounded-2xl border border-neutral-200/60 shadow-sm p-6">
+          <h2 className="text-sm font-bold text-neutral-500 uppercase tracking-wide mb-4">Latest Progress Report — {latestReport.report_month}</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            {latestReport.test_score_before != null && (
+              <div className="text-center p-3 bg-neutral-50 rounded-xl">
+                <p className="text-2xl font-bold text-neutral-600">{latestReport.test_score_before}%</p>
+                <p className="text-xs text-neutral-400 mt-1">Score Before</p>
+              </div>
+            )}
+            {latestReport.test_score_after != null && (
+              <div className="text-center p-3 bg-emerald-50 rounded-xl">
+                <p className="text-2xl font-bold text-emerald-600">{latestReport.test_score_after}%</p>
+                <p className="text-xs text-neutral-400 mt-1">Score After</p>
+              </div>
+            )}
           </div>
+          {latestReport.tutor_message && (
+            <div className="bg-[#0F4C5C]/5 rounded-xl p-4">
+              <p className="text-xs font-bold text-[#0F4C5C] mb-1">Message from Teacher</p>
+              <p className="text-sm text-neutral-700 italic">"{latestReport.tutor_message}"</p>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
-  );
-}
-
-function StatCard({ title, value, icon, color, bg }: { title: string; value: string | number; icon: React.ReactNode; color: string; bg: string }) {
-  return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-neutral-200/60">
-      <div className="flex items-center gap-4">
-        <div className={`p-4 rounded-2xl ${bg} ${color}`}>
-          {icon}
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-[#1F2937]/50 uppercase tracking-wide">{title}</p>
-          <p className="text-3xl font-bold text-[#1F2937] mt-1">{value}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ActionLink({ href, title, desc, icon, target }: { href: string, title: string, desc: string, icon: React.ReactNode, target?: string }) {
-  return (
-    <Link href={href} target={target} className="flex items-center justify-between p-4 rounded-2xl hover:bg-neutral-50 transition-colors border border-transparent hover:border-neutral-200 group">
-      <div className="flex items-center gap-4">
-        <div className="p-2 rounded-xl bg-[#0F4C5C]/5 text-[#0F4C5C] group-hover:bg-[#0F4C5C] group-hover:text-white transition-colors">
-          {icon}
-        </div>
-        <div>
-          <h3 className="font-bold text-[#1F2937] text-sm">{title}</h3>
-          <p className="text-xs text-[#1F2937]/60">{desc}</p>
-        </div>
-      </div>
-      <ChevronRight className="w-5 h-5 text-neutral-400 group-hover:text-[#0F4C5C] transition-colors" />
-    </Link>
   );
 }

@@ -2,7 +2,8 @@ import { createAdminClient } from "@/utils/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
-import { ArrowLeft, User, Phone, MapPin, GraduationCap, CheckCircle2, XCircle, Clock, ShieldCheck, Mail, Map, BookOpen, AlertTriangle, FileText, Save, Check, X } from "lucide-react";
+import { ArrowLeft, User, Phone, MapPin, GraduationCap, CheckCircle2, XCircle, Clock, ShieldCheck, Mail, Map, BookOpen, AlertTriangle, FileText, Save, Check, X, MessageCircle, KeyRound } from "lucide-react";
+import AccountManagementCard from "./AccountManagementCard";
 
 export default async function TeacherDetail({ params }: { params: { id: string } }) {
   const supabase = await createAdminClient();
@@ -325,6 +326,16 @@ export default async function TeacherDetail({ params }: { params: { id: string }
 
             </div>
           </form>
+
+          {/* Account Management */}
+          <AccountManagementCard 
+            teacherId={teacher.id}
+            teacherName={teacher.full_name}
+            teacherEmail={teacher.email || ""}
+            teacherPhone={teacher.whatsapp || teacher.phone || ""}
+            authUserId={teacher.auth_user_id || null}
+            verificationStatus={teacher.verification_status}
+          />
 
           {/* Docs / Verification Data (Read only) */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
