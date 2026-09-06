@@ -2,7 +2,8 @@ import { createAdminClient } from "@/utils/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
-import { ArrowLeft, User, Phone, MapPin, GraduationCap, FileText, Save, Home, BookOpen, AlertCircle, Calendar } from "lucide-react";
+import { ArrowLeft, User, Phone, MapPin, GraduationCap, FileText, Save, Home, BookOpen, AlertCircle, Calendar, MessageCircle } from "lucide-react";
+import StudentAccountManagementCard from "./StudentAccountManagementCard";
 
 export default async function StudentDetail({ params }: { params: { id: string } }) {
   const supabase = await createAdminClient();
@@ -26,6 +27,30 @@ export default async function StudentDetail({ params }: { params: { id: string }
       )
     `)
     .eq("student_id", student.id);
+
+  // Fetch payments
+  const { data: payments } = await supabase
+    .from("payments")
+    .select("*")
+    .eq("student_id", student.id)
+    .order("created_at", { ascending: false });
+
+  // Fetch sessions
+  const { data: sessions } = await supabase
+    .from("sessions")
+    .select("*, teachers:teacher_id(full_name)")
+    .eq("student_id", student.id)
+    .order("session_date", { ascending: false })
+    .limit(20);
+
+  // Check if auth user exists
+  let authUserId = null;
+  const targetEmail = student.parent_email || student.email;
+  if (targetEmail) {
+    const { data: authData } = await supabase.auth.admin.listUsers();
+    const user = authData.users.find((u) => u.email === targetEmail);
+    if (user) authUserId = user.id;
+  }
 
   async function updateStudentStatus(formData: FormData) {
     "use server";
@@ -128,6 +153,14 @@ export default async function StudentDetail({ params }: { params: { id: string }
               </div>
             </div>
           </div>
+
+          <StudentAccountManagementCard 
+            studentId={student.id}
+            studentName={student.full_name}
+            parentEmail={student.parent_email || student.email || ""}
+            parentPhone={student.parent_whatsapp || student.parent_phone || ""}
+            authUserId={authUserId}
+          />
 
           {/* Status Box */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
@@ -296,6 +329,88 @@ export default async function StudentDetail({ params }: { params: { id: string }
               </div>
             )}
           </div>
+          {/* Financials & Payments */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-bold text-[#1F2937] flex items-center gap-2">
+                <span className="text-[#0F4C5C]">₹</span> Payment History
+              </h2>
+              {student.parent_phone && (
+                <a 
+                  href={`https://wa.me/${student.parent_phone?.replace(/\D/g, "")}?text=${encodeURIComponent(`🔔 *Fee Reminder*\n\nDear Parent/Guardian of ${student.full_name},\n\nThis is a gentle reminder regarding the pending tuition fee for the current month.\n\nPlease clear the dues at your earliest convenience to ensure uninterrupted classes.\n\nThank you,\nSwati Home Tuition Bureau`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" /> Send Reminder
+                </a>
+              )}
+            </div>
+            {!payments || payments.length === 0 ? (
+              <p className="text-sm text-neutral-500 text-center py-4">No payments recorded yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-neutral-100 text-neutral-500 uppercase tracking-wider text-[10px] font-bold">
+                      <th className="py-2">Month</th>
+                      <th className="py-2">Amount</th>
+                      <th className="py-2">Status</th>
+                      <th className="py-2">Mode</th>
+                      <th className="py-2 text-right">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-neutral-100">
+                    {payments.map(p => (
+                      <tr key={p.id}>
+                        <td className="py-2 font-semibold text-[#1F2937]">{p.payment_month}</td>
+                        <td className="py-2">₹{p.amount}</td>
+                        <td className="py-2">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            p.status === 'received' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {p.status}
+                          </span>
+                        </td>
+                        <td className="py-2 text-neutral-500 capitalize">{p.payment_mode}</td>
+                        <td className="py-2 text-right text-neutral-500">{new Date(p.created_at).toLocaleDateString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Recent Sessions */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
+            <h2 className="text-lg font-bold text-[#1F2937] flex items-center gap-2 mb-6">
+              <Calendar className="w-5 h-5 text-[#0F4C5C]" /> Recent Sessions (Last 20)
+            </h2>
+            {!sessions || sessions.length === 0 ? (
+              <p className="text-sm text-neutral-500 text-center py-4">No sessions recorded yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {sessions.map(s => (
+                  <div key={s.id} className="flex justify-between items-center p-3 rounded-xl bg-neutral-50 border border-neutral-100">
+                    <div>
+                      <p className="text-sm font-semibold text-[#1F2937]">{new Date(s.session_date).toLocaleDateString("en-IN", { weekday: 'short', month: 'short', day: 'numeric'})}</p>
+                      <p className="text-xs text-neutral-500">{s.teachers?.full_name}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        s.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {s.status.replace("_", " ")}
+                      </span>
+                      {s.duration_mins && <p className="text-xs text-neutral-500 mt-1">{s.duration_mins} mins</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
 
       </div>

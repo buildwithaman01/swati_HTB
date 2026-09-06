@@ -1,7 +1,7 @@
-﻿import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2, XCircle, Shield, ExternalLink } from "lucide-react";
+import { CheckCircle2, XCircle, Shield, ExternalLink, Star, Quote } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Verify Teacher — Swati Home Tuition Bureau",
@@ -20,9 +20,17 @@ export default async function VerifyPage({ params }: { params: { id: string } })
 
   const { data: teacher } = await supabaseAdmin
     .from("teachers")
-    .select("teacher_id, full_name, badge_level, verification_status, is_active, profile_photo_url, subjects, areas_serviceable, gender, approved_date, profile_slug")
+    .select("*")
     .eq("teacher_id", teacherId)
     .single();
+
+  const { data: reviews } = await supabaseAdmin
+    .from("reviews")
+    .select("rating, review_text, parent_name, locality, created_at")
+    .eq("teacher_id", teacher?.id)
+    .eq("is_verified", true)
+    .eq("is_public", true)
+    .order("created_at", { ascending: false });
 
   const isValid = !!(teacher && teacher.verification_status === "approved" && teacher.is_active);
 
@@ -70,16 +78,53 @@ export default async function VerifyPage({ params }: { params: { id: string } })
               <div className="space-y-3 pt-3 border-t border-neutral-100">
                 <Row label="Teacher ID" value={teacher.teacher_id} />
                 <Row label="Subjects" value={(teacher.subjects || []).join(", ") || "—"} />
+                <Row label="Classes" value={(teacher.classes_taught || []).join(", ") || "—"} />
+                <Row label="Boards" value={(teacher.board_expertise || []).join(", ") || "—"} />
                 <Row label="Service Areas" value={(teacher.areas_serviceable || []).join(", ") || "—"} />
+                <Row label="Languages" value={(teacher.languages || []).join(", ") || "—"} />
                 {teacher.gender && <Row label="Gender" value={teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1)} />}
                 {teacher.approved_date && (
                   <Row label="Approved Since" value={new Date(teacher.approved_date).toLocaleDateString("en-IN", { month: "long", year: "numeric" })} />
                 )}
               </div>
 
+              {teacher.bio && (
+                <div className="pt-3 border-t border-neutral-100">
+                  <span className="text-xs font-semibold text-[#1F2937]/40 uppercase tracking-wide block mb-2">About</span>
+                  <p className="text-sm text-[#1F2937] leading-relaxed whitespace-pre-wrap">{teacher.bio}</p>
+                </div>
+              )}
+
+              {/* Reviews Section */}
+              <div className="pt-3 border-t border-neutral-100">
+                <h3 className="text-sm font-semibold text-[#1F2937]/40 uppercase tracking-wide mb-4 flex items-center gap-2">
+                  Parent Reviews <span className="bg-neutral-100 text-[#1F2937] px-2 py-0.5 rounded-full">{reviews?.length || 0}</span>
+                </h3>
+                
+                {!reviews || reviews.length === 0 ? (
+                  <p className="text-[#1F2937]/50 text-sm text-center py-2">No public reviews available yet.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {reviews.map((r, i) => (
+                      <div key={i} className="bg-neutral-50 p-4 rounded-2xl">
+                        <div className="flex gap-1 mb-2">
+                          {[1,2,3,4,5].map(star => (
+                            <Star key={star} className={`w-3.5 h-3.5 ${star <= r.rating ? 'fill-amber-400 text-amber-400' : 'text-neutral-200'}`} />
+                          ))}
+                        </div>
+                        <p className="text-sm text-[#1F2937] italic mb-2">"{r.review_text}"</p>
+                        <p className="text-xs font-bold text-[#0F4C5C]">
+                          — {r.parent_name} {r.locality ? `(${r.locality})` : ''}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {teacher.profile_slug && (
                 <Link href={`/teacher/${teacher.profile_slug}`}
-                  className="flex items-center justify-center gap-2 w-full bg-[#0F4C5C] hover:bg-[#0a3844] text-white font-bold py-3 rounded-2xl transition-colors">
+                  className="flex items-center justify-center gap-2 w-full bg-[#0F4C5C] hover:bg-[#0a3844] text-white font-bold py-3 rounded-2xl transition-colors mt-6">
                   View Full Profile <ExternalLink className="w-4 h-4" />
                 </Link>
               )}

@@ -2,6 +2,7 @@ import { createAdminClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { BookOpen, Plus, Users, ChevronRight, IndianRupee, Clock, CheckCircle2, PauseCircle, XCircle } from "lucide-react";
 import Link from "next/link";
+import AssignmentActions from "./AssignmentActions";
 
 export default async function AdminAssignments() {
   const supabase = await createAdminClient();
@@ -270,7 +271,7 @@ export default async function AdminAssignments() {
                         <p className="text-xs text-emerald-600 font-medium">Teacher: ₹{Number(a.teacher_earning).toLocaleString("en-IN")}</p>
                         <p className="text-xs text-purple-600">Bureau: ₹{Number(a.bureau_commission_amt).toLocaleString("en-IN")}</p>
                       </td>
-                      {/* Status */}
+                      {/* Status & Actions */}
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${cfg.color}`}>
                           {cfg.icon} {cfg.label}
@@ -278,6 +279,16 @@ export default async function AdminAssignments() {
                         {a.start_date && (
                           <p className="text-xs text-neutral-400 mt-1">Since {new Date(a.start_date).toLocaleDateString("en-IN")}</p>
                         )}
+                        <AssignmentActions
+                          assignmentId={a.id}
+                          teacherId={(a.teacher as any)?.id}
+                          studentId={(a.student as any)?.id}
+                          teacherName={(a.teacher as any)?.full_name}
+                          parentName={(a.student as any)?.parent_name}
+                          teacherPhone={(a.teacher as any)?.whatsapp || (a.teacher as any)?.phone}
+                          parentPhone={(a.student as any)?.parent_whatsapp || (a.student as any)?.parent_phone}
+                          subject={a.subject}
+                        />
                       </td>
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">

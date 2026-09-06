@@ -27,6 +27,9 @@ export default async function TeacherProfilePage() {
     const areas = String(formData.get("areas")).split(",").map(s => s.trim()).filter(Boolean);
     const subjects = String(formData.get("subjects")).split(",").map(s => s.trim()).filter(Boolean);
     const classes = String(formData.get("classes")).split(",").map(s => s.trim()).filter(Boolean);
+    const boards = String(formData.get("boards")).split(",").map(s => s.trim()).filter(Boolean);
+    const languages = String(formData.get("languages")).split(",").map(s => s.trim()).filter(Boolean);
+    const bio = String(formData.get("bio") || "");
     const profile_photo_url = String(formData.get("profile_photo_url") || "");
 
     await supabase.from("teachers").update({
@@ -34,6 +37,9 @@ export default async function TeacherProfilePage() {
       areas_serviceable: areas,
       subjects,
       classes_taught: classes,
+      board_expertise: boards,
+      languages,
+      bio,
       profile_photo_url
     }).eq("email", user.email);
 
@@ -131,6 +137,45 @@ export default async function TeacherProfilePage() {
                 defaultValue={(teacher.classes_taught || []).join(", ")}
                 placeholder="e.g. Class 10, Class 11, Class 12"
                 className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" 
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
+                <BookOpen className="w-3 h-3" /> Board Expertise (Comma separated)
+              </label>
+              <input 
+                type="text" 
+                name="boards" 
+                defaultValue={(teacher.board_expertise || []).join(", ")}
+                placeholder="e.g. CBSE, ICSE, State Board"
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" 
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
+                <User className="w-3 h-3" /> Languages Spoken (Comma separated)
+              </label>
+              <input 
+                type="text" 
+                name="languages" 
+                defaultValue={(teacher.languages || []).join(", ")}
+                placeholder="e.g. English, Hindi"
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" 
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
+                <User className="w-3 h-3" /> Professional Bio
+              </label>
+              <textarea 
+                name="bio" 
+                rows={4}
+                defaultValue={teacher.bio || ""}
+                placeholder="Tell parents and students about your teaching style, experience, and what makes you a great tutor..."
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 resize-none" 
               />
             </div>
           </div>

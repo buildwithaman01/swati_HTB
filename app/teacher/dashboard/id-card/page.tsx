@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { Download, ShieldCheck, ShieldAlert } from "lucide-react";
+import IDCardDownloader from "./IDCardDownloader";
 
 export default async function TeacherIDCardPage() {
   const supabase = await createClient();
@@ -29,12 +30,14 @@ export default async function TeacherIDCardPage() {
 
       <div className="flex flex-col lg:flex-row gap-8 items-start">
         {/* ID Card Display */}
-        <div className="bg-white p-4 rounded-3xl shadow-sm border border-neutral-200/60 inline-block">
-          <div className="w-[300px] bg-neutral-50 rounded-2xl overflow-hidden border border-neutral-200">
+        <div className="bg-white p-4 rounded-3xl shadow-sm border border-neutral-200/60 inline-block w-full max-w-[332px]">
+          <div id="virtual-id-card" className="w-[300px] bg-neutral-50 rounded-2xl overflow-hidden border border-neutral-200">
             {/* ID Header */}
-            <div className={`h-24 p-4 text-center text-white flex flex-col justify-center ${isVerified ? 'bg-[#0F4C5C]' : 'bg-neutral-400'}`}>
-              <h2 className="font-serif font-bold tracking-tight text-xl">SwatiHTB</h2>
-              <p className="text-[10px] uppercase tracking-widest opacity-80 mt-1">Home Tuition Bureau</p>
+            <div className={`h-24 p-4 text-center text-white flex flex-col items-center justify-center ${isVerified ? 'bg-[#0F4C5C]' : 'bg-neutral-400'}`}>
+              <div className="w-40 h-10 relative mt-1">
+                <img src="/images/logo12.png" alt="Swati Home Tuition Bureau" className="w-full h-full object-contain filter brightness-0 invert" />
+              </div>
+              <p className="text-[10px] uppercase tracking-widest opacity-80 mt-2">Home Tuition Bureau</p>
             </div>
             
             {/* Photo & Badge */}
@@ -84,6 +87,7 @@ export default async function TeacherIDCardPage() {
               </div>
             </div>
           </div>
+          <IDCardDownloader targetId="virtual-id-card" teacherName={teacher.full_name} />
         </div>
 
         {/* Instructions */}
