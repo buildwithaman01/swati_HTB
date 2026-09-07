@@ -22,9 +22,9 @@ export default function BookDemoPage() {
         formType: "book-demo",
         name: formData.get("name"),
         phone: formData.get("phone"),
-        class: formData.get("studentClass"),
-        subject: formData.get("subjects"),
-        location: formData.get("address"),
+        studentClass: formData.get("studentClass"),
+        subjects: formData.get("subjects"),
+        address: formData.get("address"),
       };
 
       const res = await fetch("/api/submit-form", {
@@ -48,12 +48,11 @@ export default function BookDemoPage() {
               access_key: result.web3formsData.access_key,
               subject: result.web3formsData.subject,
               from_name: "Swati HTB Website",
-              "Parent/Student Name": data.name || "-",
-              "WhatsApp Number": data.phone || "-",
-              "Student Class": data.class || "-",
-              "Subjects Needed": data.subject || "-",
-              "Home Address": data.location || "-",
-              // Let Web3Forms auto-generate its beautiful HTML table
+              "Parent_Student_Name": data.name || "-",
+              "WhatsApp_Number": data.phone || "-",
+              "Student_Class": data.studentClass || "-",
+              "Subjects_Needed": data.subjects || "-",
+              "Home_Address": data.address || "-",
             })
           });
         } catch (e) {
