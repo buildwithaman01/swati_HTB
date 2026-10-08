@@ -8,14 +8,21 @@ export default async function SessionsPage() {
 
   if (!user) return null;
 
-  // Get teacher ID
+  // 1. Fixed Auth Lookup
   const { data: teacher } = await supabase
     .from("teachers")
     .select("id")
-    .eq("email", user.email)
+    .eq("auth_user_id", user.id)
     .single();
 
-  if (!teacher) return null;
+  const resolvedTeacherId = teacher?.id ?? (await supabase
+    .from("teachers")
+    .select("id")
+    .eq("email", user.email)
+    .single()
+  ).data?.id;
+
+  if (!resolvedTeacherId) return null;
 
   // Get assignments
   const { data: assignments } = await supabase
@@ -24,7 +31,7 @@ export default async function SessionsPage() {
       id, student_id,
       students:student_id ( full_name )
     `)
-    .eq("teacher_id", teacher.id)
+    .eq("teacher_id", resolvedTeacherId)
     .eq("status", "active");
 
   // Get recent sessions
@@ -34,7 +41,7 @@ export default async function SessionsPage() {
       *,
       students:student_id ( full_name )
     `)
-    .eq("teacher_id", teacher.id)
+    .eq("teacher_id", resolvedTeacherId)
     .order("session_date", { ascending: false })
     .limit(10);
 
@@ -45,13 +52,20 @@ export default async function SessionsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: teacher } = await supabase
+    const { data: teacherResult } = await supabase
+      .from("teachers")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .single();
+      
+    const resolvedFormTeacherId = teacherResult?.id ?? (await supabase
       .from("teachers")
       .select("id")
       .eq("email", user.email)
-      .single();
+      .single()
+    ).data?.id;
 
-    if (!teacher) return;
+    if (!resolvedFormTeacherId) return;
 
     const assignmentStr = String(formData.get("assignment_id"));
     const [assignment_id, student_id] = assignmentStr.split("|");
@@ -71,7 +85,7 @@ export default async function SessionsPage() {
     await supabase.from("sessions").insert({
       assignment_id,
       student_id,
-      teacher_id: teacher.id,
+      teacher_id: resolvedFormTeacherId,
       session_date,
       session_start,
       session_end,

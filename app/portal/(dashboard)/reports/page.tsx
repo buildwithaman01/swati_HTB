@@ -9,15 +9,22 @@ export default async function ParentReports() {
 
   const { data: student } = await supabase
     .from("students").select("id, full_name")
-    .or(`parent_email.eq.${user.email},email.eq.${user.email}`).single();
+    .or(`parent_email.eq.${user.email},email.eq.${user.email},parent_auth_user_id.eq.${user.id}`).single();
 
   if (!student) redirect("/portal/login");
+
+  const { data: assignments } = await supabase
+    .from("assignments")
+    .select("id")
+    .eq("student_id", student.id);
+
+  const assignmentIds = assignments?.map(a => a.id) || [];
 
   const { data: reports } = await supabase
     .from("progress_reports")
     .select("*")
-    .eq("student_id", student.id)
-    .eq("admin_approved", true)
+    .in("assignment_id", assignmentIds)
+    .eq("sent_to_parent", true)
     .order("created_at", { ascending: false });
 
   return (

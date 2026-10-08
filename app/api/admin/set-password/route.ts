@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminAuthClient } from "@/utils/supabase/admin";
+import { createAdminClient } from "@/utils/supabase/server";
 
 // Admin sets or resets a teacher/parent password directly
 export async function POST(req: NextRequest) {
   try {
-    const { targetEmail, targetAuthUserId, newPassword, createIfMissing, targetType } = await req.json();
+    const { targetEmail, targetAuthUserId, newPassword, createIfMissing, targetType, targetId } = await req.json();
     const supabase = createAdminAuthClient();
 
     // Validate caller is admin (check via service role — the client is already admin-level)
@@ -27,7 +28,18 @@ export async function POST(req: NextRequest) {
         email_confirm: true, // auto-confirm, no email verification needed
       });
       if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-      return NextResponse.json({ success: true, action: "created", authUserId: data.user.id });
+      
+      // If we just created the user, we need to link it back to the database record!
+      const authUserId = data.user.id;
+      const db = await createAdminClient();
+      
+      if (targetType === "teacher" && targetId) {
+        await db.from("teachers").update({ auth_user_id: authUserId }).eq("id", targetId);
+      } else if (targetType === "parent" && targetId) {
+        await db.from("students").update({ parent_auth_user_id: authUserId }).eq("id", targetId);
+      }
+
+      return NextResponse.json({ success: true, action: "created", authUserId });
     }
 
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });

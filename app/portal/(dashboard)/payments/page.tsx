@@ -9,7 +9,7 @@ export default async function ParentPayments() {
 
   const { data: student } = await supabase
     .from("students").select("id, full_name")
-    .or(`parent_email.eq.${user.email},email.eq.${user.email}`).single();
+    .or(`parent_email.eq.${user.email},email.eq.${user.email},parent_auth_user_id.eq.${user.id}`).single();
 
   if (!student) redirect("/portal/login");
 

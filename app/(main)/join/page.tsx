@@ -2,33 +2,62 @@
 
 import { useState, useRef } from "react";
 import { toast } from "sonner";
-import { Shield, BookOpen, GraduationCap, ArrowRight, CheckCircle2, UserPlus, MessageCircle } from "lucide-react";
+import { 
+  Shield, 
+  BookOpen, 
+  GraduationCap, 
+  ArrowRight, 
+  ArrowLeft,
+  CheckCircle2, 
+  UserPlus, 
+  MessageCircle,
+  FileText,
+  UploadCloud,
+  Check,
+  Video
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const steps = [
+  { id: 1, title: "Personal Details", icon: UserPlus },
+  { id: 2, title: "Professional Profile", icon: BookOpen },
+  { id: 3, title: "Verification & KYC", icon: Shield }
+];
+
 export default function JoinPage() {
+  const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
+  // Auto-scroll to top when step changes
+  const handleNext = () => {
+    setCurrentStep(prev => Math.min(prev + 1, 3));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  const handleBack = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (currentStep !== 3) {
+      handleNext();
+      return;
+    }
+
     setLoading(true);
-
     const form = formRef.current!;
-    const formData = new FormData(formRef.current!);
+    const formData = new FormData(form);
     
-    try {
-      const data = {
-        formType: "join-tutor",
-        name: formData.get("name"),
-        phone: formData.get("phone"),
-        gender: formData.get("gender"),
-        qualification: formData.get("qualification"),
-        subjects: formData.get("subjects"),
-        location: formData.get("location"),
-      };
+    // Convert to plain object for API
+    const data = Object.fromEntries(formData.entries());
+    data.formType = "join-tutor-wizard";
 
+    try {
       const res = await fetch("/api/submit-form", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -37,35 +66,10 @@ export default function JoinPage() {
 
       const result = await res.json();
       
-      // Send to Web3Forms directly from the browser to bypass Cloudflare bot blocks
-      if (result.web3formsData) {
-        try {
-          await fetch("https://api.web3forms.com/submit", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Accept": "application/json"
-            },
-            body: JSON.stringify({
-              access_key: result.web3formsData.access_key,
-              subject: result.web3formsData.subject,
-              from_name: "Swati HTB Website",
-              "Teacher Name": data.name || "-",
-              "WhatsApp Number": data.phone || "-",
-              "Gender": data.gender || "-",
-              "Highest Qualification": data.qualification || "-",
-              "Subjects Taught": data.subjects || "-",
-              "Location (Patna)": data.location || "-",
-            })
-          });
-        } catch (e) {
-          console.error("Web3Forms frontend submit failed:", e);
-        }
-      }
-
       if (result.success && result.whatsappUrl) {
         setWhatsappUrl(result.whatsappUrl);
         setSubmitted(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         toast.error("Something went wrong. Please WhatsApp us directly.");
       }
@@ -92,207 +96,318 @@ export default function JoinPage() {
             transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <div className="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-full mb-8 border border-white/20 shadow-[0_0_30px_rgba(212,160,23,0.15)]">
-              <UserPlus className="w-8 h-8 text-[#D4A017]" />
+              <GraduationCap className="w-8 h-8 text-[#D4A017]" />
             </div>
-            <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tight mb-6 font-serif leading-[1.1]">
-              Teach with Patna's <br />
-              <span className="text-[#D4A017] italic">Most Trusted Bureau</span>
+            <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight mb-6 font-serif leading-[1.1]">
+              Become a Verified <br />
+              <span className="text-[#D4A017] italic">Swati Home Tutor</span>
             </h1>
-            <p className="text-xl md:text-2xl text-white/80 tracking-tight leading-relaxed max-w-2xl mx-auto font-medium">
-              We are actively looking for passionate educators, top university alumni, and subject matter experts to join our elite network.
+            <p className="text-lg md:text-xl text-white/80 tracking-tight leading-relaxed max-w-2xl mx-auto font-medium">
+              Join Patna's most premium home tuition network. Earn premium fees, get guaranteed students, and build your reputation.
             </p>
           </motion.div>
         </div>
       </section>
 
-      <div className="container mx-auto px-6 max-w-6xl py-16 relative z-20 pb-24">
-        <div className="grid md:grid-cols-2 gap-16 items-start">
-          
-          {/* Left Content - Information */}
-          <motion.div 
-            initial={{ opacity: 0, x: -40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="pt-16 md:pt-24"
-          >
-            <h2 className="text-4xl font-bold text-[#1F2937] mb-10 font-serif leading-tight">
-              Why Partner With Us?
-            </h2>
+      <div className="container mx-auto px-4 md:px-6 max-w-4xl py-12 relative z-20 -mt-20">
+        
+        <AnimatePresence mode="wait">
+          {submitted ? (
+            /* ── SUCCESS CARD ── */
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-neutral-200/60 shadow-2xl relative overflow-hidden flex flex-col items-center text-center mx-auto max-w-2xl"
+            >
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#FAF7F2] rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-            <div className="space-y-10 mb-12">
-              <div className="flex gap-6 group">
-                <div className="w-16 h-16 rounded-2xl bg-[#FAF7F2] border border-neutral-200/60 shadow-sm flex items-center justify-center flex-shrink-0 group-hover:bg-[#0F4C5C] group-hover:border-[#0F4C5C] transition-colors duration-300">
-                  <Shield className="w-8 h-8 text-[#0F4C5C] group-hover:text-[#D4A017] transition-colors duration-300" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-[#1F2937] mb-3 font-serif">Strict Verification</h3>
-                  <p className="text-[#1F2937]/70 text-lg leading-relaxed">You must provide government ID (Aadhaar) and local address proof before any student assignment.</p>
-                </div>
+              <div className="w-24 h-24 rounded-full bg-emerald-50 border-4 border-emerald-200 flex items-center justify-center mb-6 relative z-10">
+                <CheckCircle2 className="w-12 h-12 text-emerald-500" />
               </div>
 
-              <div className="flex gap-6 group">
-                <div className="w-16 h-16 rounded-2xl bg-[#FAF7F2] border border-neutral-200/60 shadow-sm flex items-center justify-center flex-shrink-0 group-hover:bg-[#0F4C5C] group-hover:border-[#0F4C5C] transition-colors duration-300">
-                  <BookOpen className="w-8 h-8 text-[#0F4C5C] group-hover:text-[#D4A017] transition-colors duration-300" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-[#1F2937] mb-3 font-serif">Subject Matter Testing</h3>
-                  <p className="text-[#1F2937]/70 text-lg leading-relaxed">Tutors applying for JEE/NEET or Class 11-12 Boards must pass a screening test with our academic heads.</p>
-                </div>
-              </div>
+              <h3 className="text-3xl font-bold text-[#1F2937] mb-3 font-serif relative z-10">
+                Application Submitted! 🎉
+              </h3>
+              <p className="text-[#1F2937]/60 text-lg leading-relaxed max-w-sm relative z-10">
+                Thank you! Our team will verify your KYC documents and run background checks. We will contact you within <strong>24-48 hours</strong>.
+              </p>
 
-              <div className="flex gap-6 group">
-                <div className="w-16 h-16 rounded-2xl bg-[#FAF7F2] border border-neutral-200/60 shadow-sm flex items-center justify-center flex-shrink-0 group-hover:bg-[#0F4C5C] group-hover:border-[#0F4C5C] transition-colors duration-300">
-                  <GraduationCap className="w-8 h-8 text-[#0F4C5C] group-hover:text-[#D4A017] transition-colors duration-300" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-[#1F2937] mb-3 font-serif">Premium Compensation</h3>
-                  <p className="text-[#1F2937]/70 text-lg leading-relaxed">We work with Patna's premium localities allowing you to earn top-tier tuition fees.</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-8 bg-[#0F4C5C]/5 rounded-3xl border border-[#0F4C5C]/10 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#D4A017]/10 rounded-full blur-[40px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-              <h4 className="font-bold text-[#0F4C5C] mb-3 text-xl font-serif">Note for Female Tutors</h4>
-              <p className="text-[#1F2937]/70 text-base leading-relaxed">Due to high demand from parents, we are actively prioritizing the onboarding of verified female tutors for students in Class 1 to 10.</p>
-            </div>
-          </motion.div>
+              <div className="w-full border-t border-neutral-100 my-8 relative z-10" />
 
-          {/* Right Content — Form or Success Card */}
-          <AnimatePresence mode="wait">
-            {submitted ? (
-              /* ── SUCCESS CARD ── */
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-neutral-200/60 shadow-[0_20px_60px_rgb(0,0,0,0.05)] relative overflow-hidden flex flex-col items-center text-center"
-              >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#FAF7F2] rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-
-                <div className="w-24 h-24 rounded-full bg-emerald-50 border-4 border-emerald-200 flex items-center justify-center mb-6 relative z-10">
-                  <CheckCircle2 className="w-12 h-12 text-emerald-500" />
-                </div>
-
-                <h3 className="text-3xl font-bold text-[#1F2937] mb-3 font-serif relative z-10">
-                  Application Received! 🎉
-                </h3>
-                <p className="text-[#1F2937]/60 text-lg leading-relaxed max-w-sm relative z-10">
-                  Thank you for applying! Our recruitment team will review your details and contact you on WhatsApp within <strong>24 hours</strong>.
+              <div className="relative z-10 w-full bg-[#f0fdf4] border border-emerald-200 rounded-2xl p-6">
+                <p className="text-sm font-semibold text-emerald-800 mb-1">Want to connect faster?</p>
+                <p className="text-sm text-emerald-700 mb-4">
+                  Message us on WhatsApp to speed up your verification process.
                 </p>
-
-                <div className="w-full border-t border-neutral-100 my-8 relative z-10" />
-
-                {/* Optional WhatsApp CTA */}
-                <div className="relative z-10 w-full bg-[#f0fdf4] border border-emerald-200 rounded-2xl p-6">
-                  <p className="text-sm font-semibold text-emerald-800 mb-1">Want to connect faster?</p>
-                  <p className="text-sm text-emerald-700 mb-4">
-                    You can also message us directly on WhatsApp for a quicker response from our team.
-                  </p>
-                  <a
-                    href={whatsappUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-base px-7 py-4 rounded-2xl shadow-[0_8px_24px_rgba(37,211,102,0.3)] transition-all group"
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                    Message us on WhatsApp
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </a>
-                </div>
-
-                <button
-                  onClick={() => setSubmitted(false)}
-                  className="mt-6 text-sm text-[#1F2937]/40 hover:text-[#0F4C5C] underline underline-offset-4 transition-colors relative z-10"
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center w-full gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-base px-7 py-4 rounded-2xl shadow-[0_8px_24px_rgba(37,211,102,0.3)] transition-all group"
                 >
-                  Submit another application
-                </button>
-              </motion.div>
-            ) : (
-              /* ── FORM ── */
-              <motion.div
-                key="form"
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="bg-white p-8 md:p-12 rounded-[2.5rem] border border-neutral-200/60 shadow-[0_20px_60px_rgb(0,0,0,0.05)] relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#FAF7F2] rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                
-                <div className="relative z-10">
-                  <h3 className="text-3xl font-bold text-[#1F2937] mb-3 font-serif">Teacher Application</h3>
-                  <p className="text-[#1F2937]/60 text-base mb-10 font-medium">Submit your initial details. Our recruitment team will contact you on WhatsApp.</p>
+                  <MessageCircle className="w-5 h-5" />
+                  Message us on WhatsApp
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </a>
+              </div>
+            </motion.div>
+          ) : (
+            /* ── WIZARD FORM ── */
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-[2rem] border border-neutral-200/60 shadow-2xl overflow-hidden"
+            >
+              {/* Progress Header */}
+              <div className="bg-[#FAF7F2] p-6 md:px-12 md:py-8 border-b border-neutral-200/60 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div className="w-full">
+                  <div className="flex justify-between mb-2">
+                    {steps.map((step) => (
+                      <div key={step.id} className="flex flex-col items-center gap-2 relative z-10 w-1/3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors duration-300 ${
+                          currentStep >= step.id 
+                            ? "bg-[#0F4C5C] text-white shadow-md" 
+                            : "bg-white text-[#1F2937]/30 border border-neutral-200"
+                        }`}>
+                          {currentStep > step.id ? <Check className="w-5 h-5" /> : step.id}
+                        </div>
+                        <span className={`text-xs md:text-sm font-semibold text-center ${
+                          currentStep >= step.id ? "text-[#0F4C5C]" : "text-[#1F2937]/40"
+                        }`}>
+                          {step.title}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Progress Line */}
+                  <div className="relative mt-[-2.75rem] mx-auto w-[66%] h-1 bg-neutral-200 rounded-full z-0">
+                    <div 
+                      className="absolute top-0 left-0 h-full bg-[#0F4C5C] rounded-full transition-all duration-500 ease-out"
+                      style={{ width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Content */}
+              <div className="p-6 md:p-12">
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
                   
-                  <form ref={formRef} className="space-y-6" onSubmit={handleSubmit}>
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Full Name</label>
-                      <input required name="name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="Enter your full name" />
+                  {/* STEP 1: PERSONAL DETAILS */}
+                  <div className={currentStep === 1 ? "block" : "hidden"}>
+                    <div className="mb-8">
+                      <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#1F2937]">Personal Details</h2>
+                      <p className="text-[#1F2937]/60 mt-2">Let's start with your basic contact information.</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">WhatsApp Number</label>
-                        <input required name="phone" type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="+91" />
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Full Name *</label>
+                        <input required={currentStep === 1} name="name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="Enter your full name" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Gender</label>
-                        <select required name="gender" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all appearance-none cursor-pointer">
-                          <option value="">Select...</option>
-                          <option value="female">Female</option>
-                          <option value="male">Male</option>
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Date of Birth *</label>
+                        <input required={currentStep === 1} name="dob" type="date" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Gender *</label>
+                        <select required={currentStep === 1} name="gender" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all">
+                          <option value="">Select gender...</option>
+                          <option value="Female">Female</option>
+                          <option value="Male">Male</option>
                         </select>
                       </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Father / Husband Name *</label>
+                        <input required={currentStep === 1} name="guardian_name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="Enter name" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">WhatsApp Number *</label>
+                        <input required={currentStep === 1} name="whatsapp" type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="+91" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Email Address *</label>
+                        <input required={currentStep === 1} name="email" type="email" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="your@email.com" />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Current Address in Patna *</label>
+                        <textarea required={currentStep === 1} name="current_address" rows={2} className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="Full local address..."></textarea>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* STEP 2: PROFESSIONAL PROFILE */}
+                  <div className={currentStep === 2 ? "block" : "hidden"}>
+                    <div className="mb-8">
+                      <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#1F2937]">Professional Profile</h2>
+                      <p className="text-[#1F2937]/60 mt-2">Tell us about your teaching experience and expertise.</p>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Highest Qualification</label>
-                      <input required name="qualification" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. B.Tech from NIT Patna" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Highest Qualification *</label>
+                        <select required={currentStep === 2} name="qualification" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all">
+                          <option value="">Select...</option>
+                          <option value="BA/BSc/BCom">BA / BSc / BCom</option>
+                          <option value="MA/MSc/MCom">MA / MSc / MCom</option>
+                          <option value="BTech/BE">B.Tech / B.E</option>
+                          <option value="BEd/MEd">B.Ed / M.Ed</option>
+                          <option value="PhD">PhD</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">College / University Name *</label>
+                        <input required={currentStep === 2} name="college" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="e.g. Patna University" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Subjects You Can Teach *</label>
+                        <input required={currentStep === 2} name="subjects" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="e.g. Maths, Science, Physics" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Classes You Can Teach *</label>
+                        <input required={currentStep === 2} name="classes" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="e.g. Class 1-8, JEE, NEET" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Teaching Experience (Years) *</label>
+                        <input required={currentStep === 2} name="experience" type="number" min="0" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="0" />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Preferred Mode *</label>
+                        <select required={currentStep === 2} name="mode" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all">
+                          <option value="">Select...</option>
+                          <option value="Home Visit">Home Visit Only</option>
+                          <option value="Online">Online Only</option>
+                          <option value="Both">Both (Home & Online)</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Areas in Patna (Serviceable) *</label>
+                        <input required={currentStep === 2} name="areas" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="e.g. Boring Road, Kankarbagh, Bailey Road" />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase flex items-center gap-2">
+                          <Video className="w-4 h-4" /> Demo Video Link (Highly Recommended)
+                        </label>
+                        <input name="video_url" type="url" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="Paste YouTube or Google Drive link..." />
+                        <p className="text-xs text-[#1F2937]/50 mt-1">Tutors with demo videos are verified and assigned students 3x faster.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* STEP 3: VERIFICATION & KYC */}
+                  <div className={currentStep === 3 ? "block" : "hidden"}>
+                    <div className="mb-8">
+                      <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#1F2937]">Verification & KYC</h2>
+                      <p className="text-[#1F2937]/60 mt-2">Swati HTB is a premium agency. We require strict ID verification to ensure student safety.</p>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Subjects you can teach</label>
-                      <input required name="subjects" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Physics for JEE, Class 10 Maths" />
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-8 flex gap-4 items-start">
+                      <Shield className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-bold text-amber-900">Why do we need this?</h4>
+                        <p className="text-sm text-amber-800 mt-1 leading-relaxed">
+                          Your Aadhaar and ID documents are stored in a highly secure, private vault. They are never shared publicly. We only use them to perform a background check before sending you to a student's home.
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Current Location (in Patna)</label>
-                      <input required name="location" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Rajendra Nagar" />
-                    </div>
+                    <div className="space-y-8">
+                      <div className="space-y-4">
+                        <h4 className="font-bold text-[#1F2937] border-b pb-2">1. Identity Verification</h4>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Aadhaar Number *</label>
+                          <input required={currentStep === 3} name="aadhaar_number" type="text" maxLength={12} className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] tracking-widest font-mono focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="XXXX XXXX XXXX" />
+                        </div>
+                        {/* File Upload placeholders for the UI, will be implemented with API later */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="border-2 border-dashed border-neutral-300 rounded-xl p-6 text-center hover:bg-neutral-50 transition-colors cursor-pointer">
+                            <UploadCloud className="w-8 h-8 mx-auto text-neutral-400 mb-2" />
+                            <p className="text-sm font-bold text-[#1F2937]">Upload Aadhaar Front</p>
+                            <p className="text-xs text-neutral-500 mt-1">JPEG/PNG max 2MB</p>
+                            <input type="file" name="aadhaar_front" accept="image/*" className="hidden" />
+                          </div>
+                          <div className="border-2 border-dashed border-neutral-300 rounded-xl p-6 text-center hover:bg-neutral-50 transition-colors cursor-pointer">
+                            <UploadCloud className="w-8 h-8 mx-auto text-neutral-400 mb-2" />
+                            <p className="text-sm font-bold text-[#1F2937]">Upload Aadhaar Back</p>
+                            <p className="text-xs text-neutral-500 mt-1">JPEG/PNG max 2MB</p>
+                            <input type="file" name="aadhaar_back" accept="image/*" className="hidden" />
+                          </div>
+                        </div>
+                      </div>
 
-                    <div className="flex flex-col sm:flex-row gap-4 mt-8">
+                      <div className="space-y-4">
+                        <h4 className="font-bold text-[#1F2937] border-b pb-2">2. Local References</h4>
+                        <p className="text-xs text-neutral-500 mb-3">Please provide 2 local references in Patna (Not immediate family).</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <input required={currentStep === 3} name="ref1_name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-sm" placeholder="Reference 1 Name" />
+                          <input required={currentStep === 3} name="ref1_phone" type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-sm" placeholder="Reference 1 Phone" />
+                          <input required={currentStep === 3} name="ref2_name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-sm" placeholder="Reference 2 Name" />
+                          <input required={currentStep === 3} name="ref2_phone" type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-sm" placeholder="Reference 2 Phone" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="font-bold text-[#1F2937] border-b pb-2">3. Bureau Agreements</h4>
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                          <input required={currentStep === 3} type="checkbox" name="agreement_1" className="mt-1 w-5 h-5 rounded border-gray-300 text-[#0F4C5C] focus:ring-[#0F4C5C]" />
+                          <span className="text-sm text-[#1F2937] leading-snug group-hover:text-black">
+                            <strong>Strict Anti-Bypass Policy:</strong> I agree that all financial transactions with parents will be routed through Swati HTB. I understand that accepting direct payment from a parent will result in immediate termination and blacklisting.
+                          </span>
+                        </label>
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                          <input required={currentStep === 3} type="checkbox" name="agreement_2" className="mt-1 w-5 h-5 rounded border-gray-300 text-[#0F4C5C] focus:ring-[#0F4C5C]" />
+                          <span className="text-sm text-[#1F2937] leading-snug group-hover:text-black">
+                            I confirm that all information provided is true. I understand my profile will undergo background verification before I am assigned any students.
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Navigation Buttons */}
+                  <div className="flex flex-col-reverse md:flex-row justify-between gap-4 pt-8 border-t border-neutral-100">
+                    {currentStep > 1 ? (
                       <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex-1 bg-[#0F4C5C] disabled:opacity-70 disabled:cursor-not-allowed hover:bg-[#0a3845] text-white font-bold text-lg py-5 rounded-2xl shadow-[0_10px_30px_rgba(15,76,92,0.3)] transition-all flex items-center justify-center gap-3 group"
+                        type="button"
+                        onClick={handleBack}
+                        className="px-6 py-4 rounded-xl font-bold text-[#1F2937]/70 hover:bg-neutral-100 transition-colors flex items-center justify-center gap-2"
                       >
-                        {loading ? (
-                          <>
-                            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            Submitting...
-                          </>
-                        ) : (
-                          <>
-                            Submit Application <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                          </>
-                        )}
+                        <ArrowLeft className="w-5 h-5" /> Back
                       </button>
-                      <a href="https://wa.me/919229738307" target="_blank" rel="noopener noreferrer" className="flex-1">
-                        <button type="button" className="w-full h-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-lg py-5 rounded-2xl shadow-[0_10px_30px_rgba(37,211,102,0.3)] transition-all flex items-center justify-center gap-3 group">
-                          WhatsApp Us <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                        </button>
-                      </a>
-                    </div>
-                  </form>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    ) : (
+                      <div></div> // empty div for flex spacing
+                    )}
 
-        </div>
+                    <button
+                      type={currentStep === 3 ? "submit" : "button"}
+                      onClick={currentStep !== 3 ? handleNext : undefined}
+                      disabled={loading}
+                      className="px-8 py-4 rounded-xl font-bold text-white bg-[#0F4C5C] hover:bg-[#0a3845] shadow-lg disabled:opacity-70 flex items-center justify-center gap-2 transition-all group"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Submitting...
+                        </>
+                      ) : currentStep === 3 ? (
+                        <>Submit Application <Check className="w-5 h-5" /></>
+                      ) : (
+                        <>Continue to Next Step <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></>
+                      )}
+                    </button>
+                  </div>
+
+                </form>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </div>
   );
 }
+

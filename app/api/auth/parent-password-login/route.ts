@@ -13,8 +13,9 @@ export async function POST(req: NextRequest) {
     const { data: student } = await supabase
       .from("students")
       .select("id")
-      .or(`parent_email.eq.${email},email.eq.${email}`)
-      .single();
+      .eq("parent_auth_user_id", data.user.id)
+      .limit(1)
+      .maybeSingle();
 
     if (!student) {
       await supabase.auth.signOut();

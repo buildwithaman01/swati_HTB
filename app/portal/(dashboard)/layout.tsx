@@ -9,12 +9,13 @@ export default async function ParentPortalLayout({ children }: { children: React
 
   if (!user) redirect("/portal/login");
 
-  // Find student by parent email
+  // Find student by parent auth id
   const { data: student } = await supabase
     .from("students")
     .select("id, full_name, class_studying, parent_name, enrollment_status")
-    .or(`parent_email.eq.${user.email},email.eq.${user.email}`)
-    .single();
+    .eq("parent_auth_user_id", user.id)
+    .limit(1)
+    .maybeSingle();
 
   if (!student) redirect("/portal/login");
 

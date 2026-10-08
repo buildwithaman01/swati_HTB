@@ -15,6 +15,7 @@ export default async function AdminDashboard() {
     { data: recentTeachers },
     { data: recentStudents },
     { data: payments },
+    { data: recentSessionsData }
   ] = await Promise.all([
     supabase.from("teachers").select("*", { count: "exact", head: true }),
     supabase.from("teachers").select("*", { count: "exact", head: true }).eq("verification_status", "pending"),
@@ -25,8 +26,24 @@ export default async function AdminDashboard() {
     supabase.from("teachers").select("id, full_name, teacher_id, verification_status, locality, badge_level, created_at").order("created_at", { ascending: false }).limit(5),
     supabase.from("students").select("id, full_name, student_id, enrollment_status, class_studying, parent_name, created_at").order("created_at", { ascending: false }).limit(5),
     supabase.from("payments").select("amount, payment_month, status").eq("payment_month", new Date().toISOString().slice(0, 7)),
+    supabase.from("sessions").select("assignment_id, session_date").order("session_date", { ascending: false })
   ]);
 
+  // Identify active assignments with 0 sessions in the last 14 days
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+  // Group sessions by assignment
+  const lastSessionByAssignment = recentSessionsData?.reduce((acc: any, session: any) => {
+    if (!acc[session.assignment_id] || new Date(session.session_date) > new Date(acc[session.assignment_id])) {
+      acc[session.assignment_id] = session.session_date;
+    }
+    return acc;
+  }, {}) || {};
+
+  // Alert assignments = active minus those with a recent session
+  // Since we only got count for active assignments, we'll approximate alerts for now or just flag if there are pending payouts
+  
   const monthlyRevenue = payments?.filter(p => p.status === "received").reduce((s, p) => s + Number(p.amount), 0) ?? 0;
 
   const STATUS_COLORS: Record<string, string> = {
@@ -55,7 +72,7 @@ export default async function AdminDashboard() {
         <StatCard title="Active Assignments" value={activeAssignments || 0} sub="Ongoing sessions" icon={<BookOpen size={22} />} color="text-indigo-600" bg="bg-indigo-100" href="/admin/assignments" />
         <StatCard title="Enrolled Students" value={activeStudents || 0} sub={`of ${totalStudents || 0} total`} icon={<UserPlus size={22} />} color="text-emerald-600" bg="bg-emerald-100" href="/admin/students" />
         <StatCard title="Revenue This Month" value={`₹${monthlyRevenue.toLocaleString("en-IN")}`} sub="Payments received" icon={<IndianRupee size={22} />} color="text-purple-600" bg="bg-purple-100" href="/admin/finance" />
-        <StatCard title="Pending Payouts" value="Check →" sub="Teacher commissions" icon={<CreditCard size={22} />} color="text-rose-600" bg="bg-rose-100" href="/admin/finance" />
+        <StatCard title="Session Activity" value="Logs" sub="Track logged classes" icon={<Clock size={22} />} color="text-rose-600" bg="bg-rose-100" href="/admin/sessions" />
       </div>
 
       {/* Recent Activity */}

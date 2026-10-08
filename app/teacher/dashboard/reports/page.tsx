@@ -9,13 +9,21 @@ export default async function TeacherReportsPage() {
 
   if (!user) return null;
 
+  // 1. Fixed Auth Lookup
   const { data: teacher } = await supabase
     .from("teachers")
     .select("id")
-    .eq("email", user.email)
+    .eq("auth_user_id", user.id)
     .single();
 
-  if (!teacher) return null;
+  const resolvedTeacherId = teacher?.id ?? (await supabase
+    .from("teachers")
+    .select("id")
+    .eq("email", user.email)
+    .single()
+  ).data?.id;
+
+  if (!resolvedTeacherId) return null;
 
   // Get teacher's assignments
   const { data: assignments } = await supabase
@@ -25,7 +33,7 @@ export default async function TeacherReportsPage() {
       subject,
       student:students (full_name, class_studying, parent_name)
     `)
-    .eq("teacher_id", teacher.id)
+    .eq("teacher_id", resolvedTeacherId)
     .eq("status", "active");
 
   // Get past reports

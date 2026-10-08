@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       ? `🎓 New Demo Request — ${fields.name || "Unknown"} | Swati HTB`
       : `👩‍🏫 New Teacher Application — ${fields.name || "Unknown"} | Swati HTB`;
 
-    // 1. ── Supabase Database Insertion
+    // 1. ── Supabase Database Insertion & Vtiger CRM
     try {
       const supabase = await createAdminClient();
       
@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
         // Parse subjects into array safely
         const subjectsArray = fields.subjects ? fields.subjects.split(",").map((s: string) => s.trim()) : [];
         
+        // A) Insert into Supabase (status: enquiry)
         await supabase.from("students").insert({
           full_name: fields.name || "Unknown",
           parent_name: fields.name || "Unknown",
@@ -40,7 +41,26 @@ export async function POST(req: NextRequest) {
           address: fields.address || null,
           enrollment_status: "enquiry"
         });
-      } else if (formType === "join-tutor") {
+
+        // B) Push to Vtiger CRM as Lead
+        try {
+          await fetch("https://crm.swatihometuition.in/create_lead_api.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              lastname: fields.name || "Unknown",
+              phone: fields.phone || "Unknown",
+              class: fields.studentClass || "",
+              locality: fields.address || "",
+              subjects: fields.subjects || "",
+              requirements: "",
+            }),
+          });
+        } catch (crmErr) {
+          console.error("[Vtiger CRM Insert Error]:", crmErr);
+        }
+
+      } else if (formType === "join-tutor" || formType === "join-tutor-wizard") {
         // Parse subjects into array safely
         const subjectsArray = fields.subjects ? fields.subjects.split(",").map((s: string) => s.trim()) : [];
         
@@ -51,11 +71,11 @@ export async function POST(req: NextRequest) {
 
         await supabase.from("teachers").insert({
           full_name: fields.name || "Unknown",
-          phone: fields.phone || "Unknown",
+          phone: fields.whatsapp || fields.phone || "Unknown",
           gender: gender,
           qualification: fields.qualification || "Not provided",
           subjects: subjectsArray,
-          locality: fields.location || null,
+          locality: fields.areas || fields.location || null,
           verification_status: "pending"
         });
       }
@@ -115,6 +135,20 @@ function buildEmailHtml(formType: string, fields: Record<string, string>): strin
         ["Subjects Needed", fields.subjects || "Not specified"],
         ["Home Address", fields.address],
       ]
+    : formType === "join-tutor-wizard"
+    ? [
+        ["Full Name", fields.name],
+        ["WhatsApp Number", fields.whatsapp],
+        ["Gender", fields.gender],
+        ["Qualification", fields.qualification],
+        ["College", fields.college],
+        ["Subjects", fields.subjects],
+        ["Classes", fields.classes],
+        ["Experience", `${fields.experience} Years`],
+        ["Preferred Mode", fields.mode],
+        ["Serviceable Areas", fields.areas],
+        ["Demo Video", fields.video_url || "Not provided"],
+      ]
     : [
         ["Full Name", fields.name],
         ["WhatsApp Number", fields.phone],
@@ -170,6 +204,18 @@ function buildWhatsAppMessage(formType: string, fields: Record<string, string>):
       `_Reply within 2 hours._`
     );
   }
+  if (formType === "join-tutor-wizard") {
+    return (
+      `🔔 *NEW TEACHER APPLICATION (WIZARD)*\n\n` +
+      `👤 *Name:* ${fields.name || "N/A"}\n` +
+      `📞 *WhatsApp:* ${fields.whatsapp || "N/A"}\n` +
+      `🎓 *Qual:* ${fields.qualification || "N/A"}\n` +
+      `📚 *Subjects:* ${fields.subjects || "N/A"}\n` +
+      `📍 *Areas:* ${fields.areas || "N/A"}\n\n` +
+      `_Check Admin Panel for full details._`
+    );
+  }
+
   return (
     `🔔 *NEW TEACHER APPLICATION — Swati HTB*\n\n` +
     `👤 *Name:* ${fields.name || "N/A"}\n` +

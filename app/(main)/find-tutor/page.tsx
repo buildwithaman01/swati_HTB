@@ -5,21 +5,30 @@ import { toast } from "sonner";
 import { Search, MapPin, BookOpen, UserCheck, ArrowRight, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { submitLeadToCRM } from "./actions";
 
 export default function FindTutorPage() {
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (formData: FormData) => {
     setLoading(true);
     
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const result = await submitLeadToCRM(formData);
     
-    toast.success("Tutor Search Initiated!", {
-      description: "Our matching team is looking for the perfect tutor. We'll contact you soon."
-    });
+    if (result.success) {
+      toast.success("Tutor Search Initiated!", {
+        description: "Our matching team is looking for the perfect tutor. We'll contact you soon."
+      });
+      // reset form manually or via ref
+      const form = document.getElementById("find-tutor-form") as HTMLFormElement;
+      if (form) form.reset();
+    } else {
+      toast.error("Oops! Something went wrong.", {
+        description: "Please try again or contact us on WhatsApp."
+      });
+    }
+    
     setLoading(false);
-    (e.target as HTMLFormElement).reset();
   };
 
   return (
@@ -122,22 +131,22 @@ export default function FindTutorPage() {
             
             <h3 className="text-3xl font-bold text-[#1F2937] mb-8 font-serif relative z-10">Your Requirements</h3>
             
-            <form className="space-y-6 relative z-10" onSubmit={handleSubmit}>
+            <form id="find-tutor-form" className="space-y-6 relative z-10" action={handleSubmit}>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Parent/Student Name</label>
-                  <input required type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="Enter full name" />
+                  <input required name="name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="Enter full name" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">WhatsApp Number</label>
-                  <input required type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="+91" />
+                  <input required name="phone" type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="+91" />
                 </div>
               </div>
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Class/Grade</label>
-                  <select required className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all appearance-none cursor-pointer">
+                  <select required name="class" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all appearance-none cursor-pointer">
                     <option value="">Select class...</option>
                     <option value="11-12">Class 11-12</option>
                     <option value="9-10">Class 9-10</option>
@@ -147,18 +156,18 @@ export default function FindTutorPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Locality in Patna</label>
-                  <input required type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Boring Road" />
+                  <input required name="locality" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Boring Road" />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Subjects Needed</label>
-                <input required type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Physics, Maths, Chemistry" />
+                <input required name="subjects" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Physics, Maths, Chemistry" />
               </div>
 
               <div className="space-y-2">
                 <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Any Specific Requirements? (Optional)</label>
-                <textarea rows={3} className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30 resize-none" placeholder="e.g. Prefer female tutor, Need weekend classes..."></textarea>
+                <textarea name="requirements" rows={3} className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30 resize-none" placeholder="e.g. Prefer female tutor, Need weekend classes..."></textarea>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 mt-6">
@@ -198,3 +207,4 @@ export default function FindTutorPage() {
     </div>
   );
 }
+

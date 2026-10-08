@@ -10,7 +10,7 @@ export default async function ParentDashboard() {
   const { data: student } = await supabase
     .from("students")
     .select("id, full_name, class_studying, board, parent_name, enrollment_status")
-    .or(`parent_email.eq.${user.email},email.eq.${user.email}`)
+    .or(`parent_email.eq.${user.email},email.eq.${user.email},parent_auth_user_id.eq.${user.id}`)
     .single();
 
   if (!student) redirect("/portal/login");
@@ -18,10 +18,16 @@ export default async function ParentDashboard() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0];
 
+  const { data: assignmentsForReports } = await supabase
+    .from("assignments")
+    .select("id")
+    .eq("student_id", student.id);
+  const assignmentIds = assignmentsForReports?.map(a => a.id) || [];
+
   const [{ data: assignment }, { data: sessions }, { data: reports }, { data: payments }] = await Promise.all([
     supabase.from("assignments").select(`*, teacher:teacher_id(full_name, badge_level)`).eq("student_id", student.id).eq("status", "active").single(),
     supabase.from("sessions").select("*").eq("student_id", student.id).gte("session_date", startOfMonth),
-    supabase.from("progress_reports").select("*").eq("student_id", student.id).eq("admin_approved", true).order("created_at", { ascending: false }).limit(1),
+    supabase.from("progress_reports").select("*").in("assignment_id", assignmentIds).eq("sent_to_parent", true).order("created_at", { ascending: false }).limit(1),
     supabase.from("payments").select("*").eq("student_id", student.id).order("created_at", { ascending: false }).limit(1),
   ]);
 

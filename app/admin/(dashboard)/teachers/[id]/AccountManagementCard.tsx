@@ -46,6 +46,7 @@ export default function AccountManagementCard({ teacherId, teacherName, teacherE
       body: JSON.stringify({
         targetEmail: teacherEmail,
         targetAuthUserId: authUserId || undefined,
+        targetId: teacherId,
         newPassword: password,
         createIfMissing: !authUserId,
         targetType: "teacher",
