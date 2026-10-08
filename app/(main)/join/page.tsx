@@ -52,16 +52,13 @@ export default function JoinPage() {
     setLoading(true);
     const form = formRef.current!;
     const formData = new FormData(form);
-    
-    // Convert to plain object for API
-    const data = Object.fromEntries(formData.entries());
-    data.formType = "join-tutor-wizard";
+    formData.append("formType", "join-tutor-wizard");
 
     try {
       const res = await fetch("/api/submit-form", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        // Do not set Content-Type, fetch will set it to multipart/form-data with the boundary
+        body: formData,
       });
 
       const result = await res.json();
@@ -321,20 +318,20 @@ export default function JoinPage() {
                           <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase">Aadhaar Number *</label>
                           <input required={currentStep === 3} name="aadhaar_number" type="text" maxLength={12} className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] tracking-widest font-mono focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="XXXX XXXX XXXX" />
                         </div>
-                        {/* File Upload placeholders for the UI, will be implemented with API later */}
+                        {/* File Upload UI */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="border-2 border-dashed border-neutral-300 rounded-xl p-6 text-center hover:bg-neutral-50 transition-colors cursor-pointer">
-                            <UploadCloud className="w-8 h-8 mx-auto text-neutral-400 mb-2" />
-                            <p className="text-sm font-bold text-[#1F2937]">Upload Aadhaar Front</p>
-                            <p className="text-xs text-neutral-500 mt-1">JPEG/PNG max 2MB</p>
-                            <input type="file" name="aadhaar_front" accept="image/*" className="hidden" />
-                          </div>
-                          <div className="border-2 border-dashed border-neutral-300 rounded-xl p-6 text-center hover:bg-neutral-50 transition-colors cursor-pointer">
-                            <UploadCloud className="w-8 h-8 mx-auto text-neutral-400 mb-2" />
-                            <p className="text-sm font-bold text-[#1F2937]">Upload Aadhaar Back</p>
-                            <p className="text-xs text-neutral-500 mt-1">JPEG/PNG max 2MB</p>
-                            <input type="file" name="aadhaar_back" accept="image/*" className="hidden" />
-                          </div>
+                          <label className="border-2 border-dashed border-neutral-300 rounded-xl p-6 text-center hover:bg-neutral-50 transition-colors cursor-pointer flex flex-col items-center justify-center">
+                            <UploadCloud className="w-8 h-8 mx-auto text-[#0F4C5C] mb-2" />
+                            <p className="text-sm font-bold text-[#1F2937]">Upload Aadhaar Front *</p>
+                            <p className="text-xs text-neutral-500 mt-1">JPEG/PNG max 5MB</p>
+                            <input required={currentStep === 3} type="file" name="aadhaar_front" accept="image/*" className="mt-4 text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#0F4C5C]/10 file:text-[#0F4C5C] hover:file:bg-[#0F4C5C]/20 w-full" />
+                          </label>
+                          <label className="border-2 border-dashed border-neutral-300 rounded-xl p-6 text-center hover:bg-neutral-50 transition-colors cursor-pointer flex flex-col items-center justify-center">
+                            <UploadCloud className="w-8 h-8 mx-auto text-[#0F4C5C] mb-2" />
+                            <p className="text-sm font-bold text-[#1F2937]">Upload Aadhaar Back *</p>
+                            <p className="text-xs text-neutral-500 mt-1">JPEG/PNG max 5MB</p>
+                            <input required={currentStep === 3} type="file" name="aadhaar_back" accept="image/*" className="mt-4 text-xs text-neutral-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-[#0F4C5C]/10 file:text-[#0F4C5C] hover:file:bg-[#0F4C5C]/20 w-full" />
+                          </label>
                         </div>
                       </div>
 

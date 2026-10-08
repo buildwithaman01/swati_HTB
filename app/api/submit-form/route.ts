@@ -15,8 +15,47 @@ export async function POST(req: NextRequest) {
   const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK_URL || "";
 
   try {
-    const body = await req.json();
-    const { formType, ...fields } = body;
+    let fields: Record<string, any> = {};
+    let frontUrl = "";
+    let backUrl = "";
+
+    const contentType = req.headers.get("content-type") || "";
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      for (const [key, value] of formData.entries()) {
+        if (value instanceof File) {
+          // files are handled separately
+        } else {
+          fields[key] = value;
+        }
+      }
+
+      // Try uploading files to Supabase 'kyc-documents' bucket
+      try {
+        const supabase = await createAdminClient();
+        const front = formData.get("aadhaar_front") as File | null;
+        const back = formData.get("aadhaar_back") as File | null;
+        
+        if (front && front.size > 0) {
+          const { data, error } = await supabase.storage.from("kyc-documents").upload(`front-${Date.now()}-${front.name.replace(/[^a-zA-Z0-9.]/g, "")}`, front);
+          if (!error && data) frontUrl = supabase.storage.from("kyc-documents").getPublicUrl(data.path).data.publicUrl;
+        }
+        if (back && back.size > 0) {
+          const { data, error } = await supabase.storage.from("kyc-documents").upload(`back-${Date.now()}-${back.name.replace(/[^a-zA-Z0-9.]/g, "")}`, back);
+          if (!error && data) backUrl = supabase.storage.from("kyc-documents").getPublicUrl(data.path).data.publicUrl;
+        }
+      } catch (err) {
+        console.error("File upload error:", err);
+      }
+    } else {
+      fields = await req.json();
+    }
+
+    const formType = fields.formType;
+    delete fields.formType;
+
+    if (frontUrl) fields.aadhaar_front_url = frontUrl;
+    if (backUrl) fields.aadhaar_back_url = backUrl;
 
     const isDemo = formType === "book-demo";
     const subject = isDemo
@@ -148,6 +187,8 @@ function buildEmailHtml(formType: string, fields: Record<string, string>): strin
         ["Preferred Mode", fields.mode],
         ["Serviceable Areas", fields.areas],
         ["Demo Video", fields.video_url || "Not provided"],
+        ["Aadhaar Front", fields.aadhaar_front_url ? `<a href="${fields.aadhaar_front_url}">View</a>` : "Not uploaded"],
+        ["Aadhaar Back", fields.aadhaar_back_url ? `<a href="${fields.aadhaar_back_url}">View</a>` : "Not uploaded"],
       ]
     : [
         ["Full Name", fields.name],
