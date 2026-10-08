@@ -63,8 +63,26 @@ export default function JoinPage() {
 
       const result = await res.json();
       
-      if (result.success && result.whatsappUrl) {
-        setWhatsappUrl(result.whatsappUrl);
+      if (result.success) {
+        // Send email via Web3Forms if data is provided
+        if (result.web3formsData) {
+          try {
+            await fetch("https://api.web3forms.com/submit", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify(result.web3formsData),
+            });
+          } catch (e) {
+            console.error("Email notification failed", e);
+          }
+        }
+
+        if (result.whatsappUrl) {
+          setWhatsappUrl(result.whatsappUrl);
+        }
         setSubmitted(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
