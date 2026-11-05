@@ -45,7 +45,7 @@ export default async function TeacherStudentsPage() {
       <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-2xl p-4">
         <ShieldAlert className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
         <p className="text-sm text-blue-800">
-          <strong>Bureau Policy:</strong> All parent communication must go through Swati Home Tuition Bureau. 
+          <strong>Bureau Policy:</strong> All parent communication must go through Swati Home Tuition Bureau.
           Contact us at <strong>+91 75490 97748</strong> for any queries.
         </p>
       </div>
@@ -74,7 +74,7 @@ export default async function TeacherStudentsPage() {
                     </p>
                   </div>
                 </div>
-                
+
                 <div className="p-6 space-y-4">
                   {/* Parent name visible, phone NOT visible — contact via bureau */}
                   <div className="flex items-start gap-3">

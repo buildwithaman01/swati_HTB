@@ -78,17 +78,15 @@ export default function TeacherLogin() {
           <div className="flex border-b border-neutral-100">
             <button
               onClick={() => { setMode("magic"); setError(""); setSent(false); }}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${
-                mode === "magic" ? "bg-[#0F4C5C] text-white" : "text-neutral-500 hover:text-[#0F4C5C]"
-              }`}
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${mode === "magic" ? "bg-[#0F4C5C] text-white" : "text-neutral-500 hover:text-[#0F4C5C]"
+                }`}
             >
               📧 Magic Link
             </button>
             <button
               onClick={() => { setMode("password"); setError(""); setSent(false); }}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${
-                mode === "password" ? "bg-[#0F4C5C] text-white" : "text-neutral-500 hover:text-[#0F4C5C]"
-              }`}
+              className={`flex-1 py-4 text-sm font-bold transition-colors ${mode === "password" ? "bg-[#0F4C5C] text-white" : "text-neutral-500 hover:text-[#0F4C5C]"
+                }`}
             >
               🔐 Password
             </button>

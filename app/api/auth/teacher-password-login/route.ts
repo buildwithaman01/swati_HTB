@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
 
       if (!matchedTeacher || !matchedTeacher.email) {
-        return NextResponse.json({ 
-          error: `No teacher found with ID / Phone "${rawIdentifier}". Please enter your registered email.` 
+        return NextResponse.json({
+          error: `No teacher found with ID / Phone "${rawIdentifier}". Please enter your registered email.`
         }, { status: 404 });
       }
 
@@ -55,33 +55,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid credentials. Please verify your email / Teacher ID and password." }, { status: 401 });
     }
 
-    // 3. Verify teacher record exists in database
-    if (!teacherRow) {
-      const { data: foundTeacher } = await adminClient
-        .from("teachers")
-        .select("id, email, full_name, teacher_id, verification_status, auth_user_id, is_active")
-        .or(`auth_user_id.eq.${authData.user.id},email.ilike.${emailToAuth}`)
-        .maybeSingle();
-      teacherRow = foundTeacher;
-    }
+      // 3. Verify teacher record exists in database
+      if (!teacherRow) {
+        const { data: foundTeacher } = await adminClient
+          .from("teachers")
+          .select("id, email, full_name, teacher_id, verification_status, auth_user_id, is_active")
+          .or(`auth_user_id.eq.${authData.user.id},email.ilike.${emailToAuth}`)
+          .maybeSingle();
+        teacherRow = foundTeacher;
+      }
 
-    if (!teacherRow) {
-      await supabase.auth.signOut();
-      return NextResponse.json({ error: "No teacher record found for this account. Contact Swati HTB admin." }, { status: 403 });
-    }
+        if (!teacherRow) {
+          await supabase.auth.signOut();
+          return NextResponse.json({ error: "No teacher record found for this account. Contact Swati HTB admin." }, { status: 403 });
+        }
 
-    // Auto-heal: Link auth_user_id if not linked yet
-    if (teacherRow && teacherRow.auth_user_id !== authData.user.id) {
-      await adminClient
-        .from("teachers")
-        .update({ auth_user_id: authData.user.id })
-        .eq("id", teacherRow.id);
-    }
+        // Auto-heal: Link auth_user_id if not linked yet
+        if (teacherRow && teacherRow.auth_user_id !== authData.user.id) {
+          await adminClient
+            .from("teachers")
+            .update({ auth_user_id: authData.user.id })
+            .eq("id", teacherRow.id);
+        }
 
-    return NextResponse.redirect(new URL("/teacher/dashboard", req.url));
-  } catch (err: any) {
-    console.error("[teacher-password-login Error]:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
+        return NextResponse.redirect(new URL("/teacher/dashboard", req.url));
+      } catch (err: any) {
+        console.error("[teacher-password-login Error]:", err);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      }
+    }
 

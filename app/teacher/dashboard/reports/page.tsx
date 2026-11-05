@@ -52,7 +52,7 @@ export default async function TeacherReportsPage() {
   async function submitReport(formData: FormData) {
     "use server";
     const supabase = await createClient();
-    
+
     await supabase.from("progress_reports").insert({
       assignment_id: formData.get("assignment_id"),
       report_month: formData.get("report_month"),
@@ -175,7 +175,7 @@ export default async function TeacherReportsPage() {
                         Month: {report.report_month} • Topics: {report.topics_covered?.length}
                       </p>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                       {report.sent_to_parent ? (
                         <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
@@ -186,7 +186,7 @@ export default async function TeacherReportsPage() {
                           Pending Admin
                         </span>
                       )}
-                      
+
                       <Link href={`/report/${report.id}`} target="_blank" className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-neutral-200 transition-colors">
                         <ArrowRight className="w-4 h-4 text-neutral-400" />
                       </Link>

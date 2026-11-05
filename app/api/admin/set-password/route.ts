@@ -15,105 +15,105 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
     }
 
-    const authAdmin = createAdminAuthClient();
-    const dbAdmin = await createAdminClient();
+      const authAdmin = createAdminAuthClient();
+      const dbAdmin = await createAdminClient();
 
-    let resolvedAuthUserId = targetAuthUserId || null;
-    let actionType = "updated";
+      let resolvedAuthUserId = targetAuthUserId || null;
+      let actionType = "updated";
 
-    // 1. Check if user exists by email in Supabase Auth
-    try {
-      const { data: usersList } = await authAdmin.auth.admin.listUsers({ perPage: 1000 });
-      const existingUser = usersList?.users?.find(u => u.email?.toLowerCase() === email);
-      if (existingUser) {
-        resolvedAuthUserId = existingUser.id;
-      }
-    } catch (listErr) {
-      console.warn("[set-password] listUsers notice:", listErr);
-    }
-
-    if (resolvedAuthUserId) {
-      // 2. User exists in Auth -> update their password & auto-confirm email
-      const { error: updateErr } = await authAdmin.auth.admin.updateUserById(
-        resolvedAuthUserId,
-        {
-          password: newPassword,
-          email_confirm: true,
-          user_metadata: { role: targetType }
+      // 1. Check if user exists by email in Supabase Auth
+      try {
+        const { data: usersList } = await authAdmin.auth.admin.listUsers({ perPage: 1000 });
+        const existingUser = usersList?.users?.find(u => u.email?.toLowerCase() === email);
+        if (existingUser) {
+          resolvedAuthUserId = existingUser.id;
         }
-      );
-
-      if (updateErr) {
-        console.error("[set-password] updateUserById error:", updateErr);
-        return NextResponse.json({ error: updateErr.message }, { status: 400 });
+      } catch (listErr) {
+        console.warn("[set-password] listUsers notice:", listErr);
       }
-      actionType = "updated";
-    } else {
-      // 3. User does not exist in Auth -> create brand new user
-      const { data: created, error: createErr } = await authAdmin.auth.admin.createUser({
-        email,
-        password: newPassword,
-        email_confirm: true,
-        user_metadata: { role: targetType }
-      });
 
-      if (createErr) {
-        // If already registered, find them and update
-        if (createErr.message?.toLowerCase().includes("already registered") || createErr.status === 422) {
-          try {
-            const { data: usersList } = await authAdmin.auth.admin.listUsers();
-            const existing = usersList?.users?.find(u => u.email?.toLowerCase() === email);
-            if (existing) {
-              await authAdmin.auth.admin.updateUserById(existing.id, {
+          if(resolvedAuthUserId) {
+            // 2. User exists in Auth -> update their password & auto-confirm email
+            const { error: updateErr } = await authAdmin.auth.admin.updateUserById(
+              resolvedAuthUserId,
+              {
                 password: newPassword,
-                email_confirm: true
-              });
-              resolvedAuthUserId = existing.id;
-            } else {
+                email_confirm: true,
+                user_metadata: { role: targetType }
+              }
+            );
+
+            if (updateErr) {
+              console.error("[set-password] updateUserById error:", updateErr);
+              return NextResponse.json({ error: updateErr.message }, { status: 400 });
+            }
+            actionType = "updated";
+          } else {
+            // 3. User does not exist in Auth -> create brand new user
+            const { data: created, error: createErr } = await authAdmin.auth.admin.createUser({
+              email,
+              password: newPassword,
+              email_confirm: true,
+              user_metadata: { role: targetType }
+            });
+
+        if (createErr) {
+          // If already registered, find them and update
+          if (createErr.message?.toLowerCase().includes("already registered") || createErr.status === 422) {
+            try {
+              const { data: usersList } = await authAdmin.auth.admin.listUsers();
+              const existing = usersList?.users?.find(u => u.email?.toLowerCase() === email);
+              if (existing) {
+                await authAdmin.auth.admin.updateUserById(existing.id, {
+                  password: newPassword,
+                  email_confirm: true
+                });
+                resolvedAuthUserId = existing.id;
+              } else {
+                return NextResponse.json({ error: createErr.message }, { status: 400 });
+              }
+            } catch {
               return NextResponse.json({ error: createErr.message }, { status: 400 });
             }
-          } catch {
+          } else {
             return NextResponse.json({ error: createErr.message }, { status: 400 });
           }
-        } else {
-          return NextResponse.json({ error: createErr.message }, { status: 400 });
+        } else if (created?.user) {
+          resolvedAuthUserId = created.user.id;
+          actionType = "created";
         }
-      } else if (created?.user) {
-        resolvedAuthUserId = created.user.id;
-        actionType = "created";
       }
-    }
 
-    // 4. Link auth_user_id and confirmed email in the database record
-    if (resolvedAuthUserId && targetId) {
-      if (targetType === "teacher") {
-        await dbAdmin
-          .from("teachers")
-          .update({
-            auth_user_id: resolvedAuthUserId,
-            email: email,
-            is_active: true, // auto-activate teacher once credentials are set
-          })
-          .eq("id", targetId);
-      } else if (targetType === "parent") {
-        await dbAdmin
-          .from("students")
-          .update({
-            parent_auth_user_id: resolvedAuthUserId,
-            parent_email: email,
-          })
-          .eq("id", targetId);
+      // 4. Link auth_user_id and confirmed email in the database record
+      if (resolvedAuthUserId && targetId) {
+        if (targetType === "teacher") {
+          await dbAdmin
+            .from("teachers")
+            .update({
+              auth_user_id: resolvedAuthUserId,
+              email: email,
+              is_active: true, // auto-activate teacher once credentials are set
+            })
+            .eq("id", targetId);
+        } else if (targetType === "parent") {
+          await dbAdmin
+            .from("students")
+            .update({
+              parent_auth_user_id: resolvedAuthUserId,
+              parent_email: email,
+            })
+            .eq("id", targetId);
+        }
       }
-    }
 
-    return NextResponse.json({
-      success: true,
-      action: actionType,
-      authUserId: resolvedAuthUserId,
-      email,
-    });
-  } catch (e: any) {
-    console.error("[set-password] Exception:", e);
-    return NextResponse.json({ error: e.message || "Failed to set password" }, { status: 500 });
+      return NextResponse.json({
+        success: true,
+        action: actionType,
+        authUserId: resolvedAuthUserId,
+        email,
+      });
+    } catch (e: any) {
+      console.error("[set-password] Exception:", e);
+      return NextResponse.json({ error: e.message || "Failed to set password" }, { status: 500 });
+    }
   }
-}

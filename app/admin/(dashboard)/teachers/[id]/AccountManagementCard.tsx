@@ -20,7 +20,7 @@ export default function AccountManagementCard({ teacherId, teacherName, teacherE
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  const loginUrl = typeof window !== "undefined" 
+  const loginUrl = typeof window !== "undefined"
     ? `${window.location.origin}/teacher/login`
     : "https://swatihometuition.in/teacher/login";
 
@@ -59,8 +59,8 @@ export default function AccountManagementCard({ teacherId, teacherName, teacherE
     setLoading(false);
 
     if (data.success) {
-      setSuccess(data.action === "created" 
-        ? "✅ Account created! Now send them the WhatsApp welcome message below." 
+      setSuccess(data.action === "created"
+        ? "✅ Account created! Now send them the WhatsApp welcome message below."
         : "✅ Password updated successfully.");
       router.refresh();
     } else {

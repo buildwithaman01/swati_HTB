@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { BookOpen, Plus, Users, ChevronRight, IndianRupee, Clock, CheckCircle2, PauseCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import AssignmentActions from "./AssignmentActions";
+import AssignmentCreationForm from "./new/AssignmentCreationForm";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,53 +16,19 @@ export default async function AdminAssignments() {
       .from("assignments")
       .select(`
         *,
-        teacher:teachers(id, full_name, teacher_id, locality, subjects),
-        student:students(id, full_name, student_id, class_studying, board, parent_name, parent_phone)
+        teacher:teachers(id, full_name, teacher_id, locality, subjects, phone, whatsapp),
+        student:students(id, full_name, student_id, class_studying, board, parent_name, parent_phone, parent_whatsapp)
       `)
       .order("created_at", { ascending: false }),
     supabase
       .from("teachers")
-      .select("id, full_name, teacher_id, locality, subjects, verification_status")
-      .eq("verification_status", "approved")
-      .eq("is_active", true)
+      .select("id, full_name, teacher_id, locality, subjects, phone, whatsapp, verification_status")
       .order("full_name"),
     supabase
       .from("students")
-      .select("id, full_name, student_id, class_studying, subjects_needed, locality, parent_name")
-      .in("enrollment_status", ["demo", "enrolled", "enquiry"])
+      .select("id, full_name, student_id, class_studying, subjects_needed, subjects_required, locality, parent_name, parent_phone, parent_whatsapp, enrollment_status")
       .order("full_name"),
   ]);
-
-  async function createAssignment(formData: FormData) {
-    "use server";
-    const adminSupabase = await createAdminClient();
-
-    const monthlyFee = parseFloat(formData.get("monthly_fee") as string);
-    const commissionPct = 25;
-
-    await adminSupabase.from("assignments").insert({
-      teacher_id: formData.get("teacher_id"),
-      student_id: formData.get("student_id"),
-      subject: formData.get("subject"),
-      classes_per_week: parseInt(formData.get("classes_per_week") as string) || 3,
-      session_duration_mins: parseInt(formData.get("session_duration_mins") as string) || 60,
-      session_days: (formData.get("session_days") as string)?.split(",").map(d => d.trim()).filter(Boolean),
-      session_time: formData.get("session_time") || null,
-      monthly_fee: monthlyFee,
-      bureau_commission_pct: commissionPct,
-      start_date: formData.get("start_date") || null,
-      notes: formData.get("notes") || null,
-      status: "active",
-    });
-
-    // Also mark student as enrolled
-    await adminSupabase
-      .from("students")
-      .update({ enrollment_status: "enrolled" })
-      .eq("id", formData.get("student_id"));
-
-    revalidatePath("/admin/assignments");
-  }
 
   async function updateAssignmentStatus(formData: FormData) {
     "use server";
@@ -71,9 +38,12 @@ export default async function AdminAssignments() {
       .update({
         status: formData.get("status"),
         cancellation_reason: formData.get("reason") || null,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", formData.get("id"));
     revalidatePath("/admin/assignments");
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/admin/finance");
   }
 
   const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -97,6 +67,12 @@ export default async function AdminAssignments() {
           <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Assignments</h1>
           <p className="text-neutral-500 text-sm mt-1">Teacher ↔ Student links and fee management</p>
         </div>
+        <Link
+          href="/admin/assignments/new"
+          className="bg-[#0F4C5C] hover:bg-[#0a3a47] text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm"
+        >
+          <Plus size={18} /> New Assignment
+        </Link>
       </div>
 
       {/* Stats Row */}
@@ -125,98 +101,7 @@ export default async function AdminAssignments() {
       </div>
 
       {/* Create Assignment Form */}
-      <div className="bg-white rounded-3xl border border-neutral-200/60 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-neutral-100 flex items-center gap-2">
-          <Plus size={18} className="text-[#0F4C5C]" />
-          <h2 className="font-bold text-[#1F2937] text-lg">Create New Assignment</h2>
-        </div>
-        <form action={createAssignment} className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Teacher Select */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Teacher *</label>
-            <select name="teacher_id" required className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20">
-              <option value="">Select teacher...</option>
-              {teachers?.map(t => (
-                <option key={t.id} value={t.id}>{t.full_name} ({t.teacher_id}) — {t.locality || "?"}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Student Select */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Student *</label>
-            <select name="student_id" required className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20">
-              <option value="">Select student...</option>
-              {students?.map(s => (
-                <option key={s.id} value={s.id}>{s.full_name} ({s.student_id}) — Class {s.class_studying || "?"}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Subject */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Subject *</label>
-            <input name="subject" required placeholder="e.g. Mathematics" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
-          </div>
-
-          {/* Monthly Fee */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Monthly Fee (₹) *</label>
-            <input name="monthly_fee" type="number" required placeholder="e.g. 6000" min="0" step="100" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
-          </div>
-
-          {/* Classes per week */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Classes / Week</label>
-            <select name="classes_per_week" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20">
-              {[1,2,3,4,5,6,7].map(n => <option key={n} value={n}>{n} days/week</option>)}
-            </select>
-          </div>
-
-          {/* Session Duration */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Duration (mins)</label>
-            <select name="session_duration_mins" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20">
-              <option value="45">45 min</option>
-              <option value="60" selected>60 min (1 hr)</option>
-              <option value="90">90 min (1.5 hr)</option>
-              <option value="120">120 min (2 hr)</option>
-            </select>
-          </div>
-
-          {/* Session Days */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Session Days</label>
-            <input name="session_days" placeholder="Mon, Wed, Fri" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
-          </div>
-
-          {/* Session Time */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Session Time</label>
-            <input name="session_time" type="time" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
-          </div>
-
-          {/* Start Date */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Start Date</label>
-            <input name="start_date" type="date" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
-          </div>
-
-          {/* Notes */}
-          <div className="flex flex-col gap-1.5 md:col-span-2 lg:col-span-3">
-            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Notes (optional)</label>
-            <textarea name="notes" rows={2} placeholder="Any special instructions..." className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 resize-none" />
-          </div>
-
-          {/* Submit */}
-          <div className="md:col-span-2 lg:col-span-3 flex items-center gap-3">
-            <button type="submit" className="bg-[#0F4C5C] hover:bg-[#0a3a47] text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-md flex items-center gap-2">
-              <Plus size={16} /> Create Assignment
-            </button>
-            <p className="text-xs text-neutral-400">Commission (25%) and teacher earning are auto-calculated</p>
-          </div>
-        </form>
-      </div>
+      <AssignmentCreationForm teachers={teachers || []} students={students || []} />
 
       {/* Assignments Table */}
       <div className="bg-white rounded-3xl border border-neutral-200/60 shadow-sm overflow-hidden">

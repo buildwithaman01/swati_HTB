@@ -2,8 +2,10 @@ import { createAdminClient } from "@/utils/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import Link from "next/link";
-import { ArrowLeft, User, Phone, MapPin, GraduationCap, FileText, Save, Home, BookOpen, AlertCircle, Calendar, MessageCircle } from "lucide-react";
+import { ArrowLeft, User, Phone, MapPin, GraduationCap, FileText, Save, Home, BookOpen, AlertCircle, Calendar, MessageCircle, Plus } from "lucide-react";
 import StudentAccountManagementCard from "./StudentAccountManagementCard";
+import StudentStatusAction from "./StudentStatusAction";
+import StudentProfileForm from "./StudentProfileForm";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,7 +16,7 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId);
 
   const supabase = await createAdminClient();
-  
+
   let query = supabase.from("students").select("*");
   if (isUuid) {
     query = query.eq("id", rawId);
@@ -34,7 +36,8 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
       *,
       teachers:teacher_id (
         full_name,
-        phone
+        phone,
+        teacher_id
       )
     `)
     .eq("student_id", student.id);
@@ -69,45 +72,6 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
     }
   }
 
-  async function updateStudentStatus(formData: FormData) {
-    "use server";
-    const id = formData.get("id") as string;
-    const status = formData.get("status") as string;
-    const notes = formData.get("notes") as string;
-    
-    const adminSupabase = await createAdminClient();
-    await adminSupabase.from("students").update({ 
-      enrollment_status: status,
-      internal_notes: notes || null
-    }).eq("id", id);
-    
-    revalidatePath(`/admin/students/${id}`);
-    revalidatePath(`/admin/students`);
-  }
-
-  async function updateProfile(formData: FormData) {
-    "use server";
-    const id = formData.get("id") as string;
-    const adminSupabase = await createAdminClient();
-    
-    await adminSupabase.from("students").update({
-      full_name: formData.get("full_name"),
-      parent_name: formData.get("parent_name"),
-      parent_phone: formData.get("parent_phone"),
-      whatsapp: formData.get("whatsapp"),
-      email: formData.get("email"),
-      locality: formData.get("locality"),
-      address: formData.get("address"),
-      class_studying: formData.get("class_studying"),
-      board: formData.get("board"),
-      subjects_required: (formData.get("subjects_required") as string)?.split(',').map(s => s.trim()).filter(Boolean) || [],
-      tuition_type_preference: formData.get("tuition_type_preference"),
-      budget_range: formData.get("budget_range")
-    }).eq("id", id);
-    
-    revalidatePath(`/admin/students/${id}`);
-  }
-
   const STATUS_COLORS: Record<string, string> = {
     enquiry: "bg-purple-100 text-purple-700 border-purple-200",
     demo: "bg-amber-100 text-amber-700 border-amber-200",
@@ -130,7 +94,7 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left Col - Identity & Status */}
         <div className="space-y-6">
           {/* Main Card */}
@@ -140,7 +104,7 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
             </div>
             <h2 className="text-xl font-bold text-[#1F2937]">{student.full_name}</h2>
             <p className="text-sm text-neutral-500 mt-1">Class {student.class_studying} · {student.board}</p>
-            
+
             <div className="mt-4">
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${STATUS_COLORS[student.enrollment_status] || "bg-gray-100 text-gray-700 border-gray-200"}`}>
                 {student.enrollment_status}
@@ -171,7 +135,7 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
             </div>
           </div>
 
-          <StudentAccountManagementCard 
+          <StudentAccountManagementCard
             studentId={student.id}
             studentName={student.full_name}
             parentEmail={student.parent_email || student.email || ""}
@@ -180,132 +144,16 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
           />
 
           {/* Status Box */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
-            <h3 className="font-bold text-[#1F2937] text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" /> Enrollment Status
-            </h3>
-            
-            <form action={updateStudentStatus} className="space-y-4">
-              <input type="hidden" name="id" value={student.id} />
-              
-              <div>
-                <label className="text-xs font-bold text-neutral-600 mb-1 block">Status</label>
-                <select name="status" defaultValue={student.enrollment_status} className="w-full text-sm rounded-xl border border-neutral-300 p-2.5 bg-white">
-                  <option value="enquiry">Enquiry</option>
-                  <option value="demo">Demo Scheduled / In Progress</option>
-                  <option value="enrolled">Enrolled (Active tuition)</option>
-                  <option value="paused">Paused / Break</option>
-                  <option value="dropped">Dropped / Left</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-neutral-600 mb-1 block">Internal Notes / Requirements</label>
-                <textarea 
-                  name="notes" 
-                  defaultValue={student.internal_notes || ""} 
-                  placeholder="Notes about specific requirements, demo feedback..."
-                  rows={4} 
-                  className="w-full text-sm rounded-xl border border-neutral-300 p-2.5 bg-white resize-none"
-                />
-              </div>
-
-              <button type="submit" className="w-full bg-[#1F2937] text-white font-bold py-2.5 rounded-xl hover:bg-black transition-colors text-sm">
-                Save Status
-              </button>
-            </form>
-          </div>
+          <StudentStatusAction
+            studentId={student.id}
+            currentStatus={student.enrollment_status}
+            initialNotes={student.internal_notes}
+          />
         </div>
 
         {/* Right Col - Full Data Form */}
         <div className="lg:col-span-2 space-y-6">
-          <form action={updateProfile} className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
-            <input type="hidden" name="id" value={student.id} />
-            <div className="flex justify-between items-center mb-6 border-b border-neutral-100 pb-4">
-              <h2 className="text-lg font-bold text-[#1F2937] flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#0F4C5C]" /> Profile Data
-              </h2>
-              <button type="submit" className="bg-[#0F4C5C] hover:bg-[#0a3a47] text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm">
-                <Save size={16} /> Save Changes
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-              {/* Personal */}
-              <div className="md:col-span-2">
-                <h3 className="text-xs font-bold text-[#0F4C5C] uppercase tracking-wider mb-3">Student & Parent</h3>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Student Full Name</label>
-                <input name="full_name" defaultValue={student.full_name} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Parent / Guardian Name</label>
-                <input name="parent_name" defaultValue={student.parent_name} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              
-              {/* Contact & Location */}
-              <div className="md:col-span-2 mt-2">
-                <h3 className="text-xs font-bold text-[#0F4C5C] uppercase tracking-wider mb-3">Contact & Location</h3>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Parent Phone Number</label>
-                <input name="parent_phone" defaultValue={student.parent_phone} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">WhatsApp</label>
-                <input name="whatsapp" defaultValue={student.whatsapp || ""} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Email</label>
-                <input type="email" name="email" defaultValue={student.email || ""} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Full Address</label>
-                <textarea name="address" defaultValue={student.address || ""} rows={2} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none resize-none" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Locality (Short)</label>
-                <input name="locality" defaultValue={student.locality || ""} placeholder="e.g. Boring Road" className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-
-              {/* Academic & Tuition Needs */}
-              <div className="md:col-span-2 mt-2">
-                <h3 className="text-xs font-bold text-[#0F4C5C] uppercase tracking-wider mb-3">Academic & Tuition Needs</h3>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Class</label>
-                <input name="class_studying" defaultValue={student.class_studying || ""} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Board</label>
-                <select name="board" defaultValue={student.board || ""} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none">
-                  <option value="">Select Board...</option>
-                  <option value="CBSE">CBSE</option>
-                  <option value="ICSE">ICSE</option>
-                  <option value="State Board">State Board</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Subjects Required (comma-separated)</label>
-                <input name="subjects_required" defaultValue={(student.subjects_required || []).join(", ")} placeholder="Maths, Science, English" className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Tuition Preference</label>
-                <select name="tuition_type_preference" defaultValue={student.tuition_type_preference || "home"} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none">
-                  <option value="home">Home Tuition (Teacher comes home)</option>
-                  <option value="online">Online Tuition</option>
-                  <option value="hybrid">Hybrid</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Budget Range</label>
-                <input name="budget_range" defaultValue={student.budget_range || ""} placeholder="e.g. 3000-5000/month" className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-
-            </div>
-          </form>
+          <StudentProfileForm student={student} />
 
           {/* Active Assignments */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
@@ -317,7 +165,7 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
                 + New Assignment
               </Link>
             </div>
-            
+
             {!assignments || assignments.length === 0 ? (
               <div className="text-center py-6 text-neutral-500">
                 <Calendar className="w-8 h-8 mx-auto mb-2 text-neutral-300" />
@@ -332,11 +180,10 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
                       <p className="text-xs text-neutral-500 mt-1">Teacher: <span className="font-semibold text-neutral-700">{assignment.teachers?.full_name}</span></p>
                     </div>
                     <div className="text-right">
-                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${
-                        assignment.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 
-                        assignment.status === 'paused' ? 'bg-amber-50 text-amber-700 border-amber-100' : 
-                        'bg-red-50 text-red-700 border-red-100'
-                      }`}>
+                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${assignment.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                          assignment.status === 'paused' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                            'bg-red-50 text-red-700 border-red-100'
+                        }`}>
                         {assignment.status}
                       </span>
                       <p className="text-xs font-semibold text-[#1F2937] mt-1">₹{assignment.monthly_fee}/mo</p>
@@ -353,7 +200,7 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
                 <span className="text-[#0F4C5C]">₹</span> Payment History
               </h2>
               {student.parent_phone && (
-                <a 
+                <a
                   href={`https://wa.me/${student.parent_phone?.replace(/\D/g, "")}?text=${encodeURIComponent(`🔔 *Fee Reminder*\n\nDear Parent/Guardian of ${student.full_name},\n\nThis is a gentle reminder regarding the pending tuition fee for the current month.\n\nPlease clear the dues at your earliest convenience to ensure uninterrupted classes.\n\nThank you,\nSwati Home Tuition Bureau`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -383,9 +230,8 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
                         <td className="py-2 font-semibold text-[#1F2937]">{p.payment_month}</td>
                         <td className="py-2">₹{p.amount}</td>
                         <td className="py-2">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                            p.status === 'received' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${p.status === 'received' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                            }`}>
                             {p.status}
                           </span>
                         </td>
@@ -411,13 +257,12 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
                 {sessions.map(s => (
                   <div key={s.id} className="flex justify-between items-center p-3 rounded-xl bg-neutral-50 border border-neutral-100">
                     <div>
-                      <p className="text-sm font-semibold text-[#1F2937]">{new Date(s.session_date).toLocaleDateString("en-IN", { weekday: 'short', month: 'short', day: 'numeric'})}</p>
+                      <p className="text-sm font-semibold text-[#1F2937]">{new Date(s.session_date).toLocaleDateString("en-IN", { weekday: 'short', month: 'short', day: 'numeric' })}</p>
                       <p className="text-xs text-neutral-500">{s.teachers?.full_name}</p>
                     </div>
                     <div className="text-right">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                        s.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
-                      }`}>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${s.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                        }`}>
                         {s.status.replace("_", " ")}
                       </span>
                       {s.duration_mins && <p className="text-xs text-neutral-500 mt-1">{s.duration_mins} mins</p>}

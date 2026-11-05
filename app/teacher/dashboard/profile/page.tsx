@@ -59,7 +59,7 @@ export default async function TeacherProfilePage() {
 
       <div className="bg-white rounded-3xl p-8 shadow-sm border border-neutral-200/60 max-w-3xl">
         <form action={updateProfile} className="space-y-6">
-          
+
           <div className="flex items-center gap-6 pb-6 border-b border-neutral-100">
             <div className="w-24 h-24 bg-neutral-100 rounded-full overflow-hidden shrink-0 border-2 border-neutral-200">
               {teacher.profile_photo_url ? (
@@ -81,12 +81,12 @@ export default async function TeacherProfilePage() {
               <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <User className="w-3 h-3" /> Profile Photo URL
               </label>
-              <input 
-                type="url" 
-                name="profile_photo_url" 
+              <input
+                type="url"
+                name="profile_photo_url"
                 defaultValue={teacher.profile_photo_url || ""}
                 placeholder="https://..."
-                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" 
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20"
               />
               <p className="text-xs text-neutral-400 mt-1">Provide a link to your hosted photo (e.g., Google Drive image link).</p>
             </div>
@@ -95,12 +95,12 @@ export default async function TeacherProfilePage() {
               <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <Phone className="w-3 h-3" /> WhatsApp Number
               </label>
-              <input 
-                type="text" 
-                name="whatsapp" 
+              <input
+                type="text"
+                name="whatsapp"
                 defaultValue={teacher.whatsapp || ""}
                 required
-                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" 
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20"
               />
             </div>
 
@@ -108,12 +108,12 @@ export default async function TeacherProfilePage() {
               <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <MapPin className="w-3 h-3" /> Areas Serviceable (Comma separated)
               </label>
-              <input 
-                type="text" 
-                name="areas" 
+              <input
+                type="text"
+                name="areas"
                 defaultValue={(teacher.areas_serviceable || []).join(", ")}
                 placeholder="e.g. Boring Road, Kankarbagh, Patliputra"
-                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" 
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20"
               />
             </div>
 
@@ -121,12 +121,12 @@ export default async function TeacherProfilePage() {
               <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <BookOpen className="w-3 h-3" /> Subjects Taught (Comma separated)
               </label>
-              <input 
-                type="text" 
-                name="subjects" 
+              <input
+                type="text"
+                name="subjects"
                 defaultValue={(teacher.subjects || []).join(", ")}
                 placeholder="e.g. Mathematics, Physics, Chemistry"
-                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" 
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20"
               />
             </div>
 
@@ -134,12 +134,12 @@ export default async function TeacherProfilePage() {
               <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <GraduationCap className="w-3 h-3" /> Classes Taught (Comma separated)
               </label>
-              <input 
-                type="text" 
-                name="classes" 
+              <input
+                type="text"
+                name="classes"
                 defaultValue={(teacher.classes_taught || []).join(", ")}
                 placeholder="e.g. Class 10, Class 11, Class 12"
-                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" 
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20"
               />
             </div>
 
@@ -147,12 +147,12 @@ export default async function TeacherProfilePage() {
               <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <BookOpen className="w-3 h-3" /> Board Expertise (Comma separated)
               </label>
-              <input 
-                type="text" 
-                name="boards" 
+              <input
+                type="text"
+                name="boards"
                 defaultValue={(teacher.board_expertise || []).join(", ")}
                 placeholder="e.g. CBSE, ICSE, State Board"
-                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" 
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20"
               />
             </div>
 
@@ -160,12 +160,12 @@ export default async function TeacherProfilePage() {
               <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <User className="w-3 h-3" /> Languages Spoken (Comma separated)
               </label>
-              <input 
-                type="text" 
-                name="languages" 
+              <input
+                type="text"
+                name="languages"
                 defaultValue={(teacher.languages || []).join(", ")}
                 placeholder="e.g. English, Hindi"
-                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" 
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20"
               />
             </div>
 
@@ -173,12 +173,12 @@ export default async function TeacherProfilePage() {
               <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5 flex items-center gap-2">
                 <User className="w-3 h-3" /> Professional Bio
               </label>
-              <textarea 
-                name="bio" 
+              <textarea
+                name="bio"
                 rows={4}
                 defaultValue={teacher.bio || ""}
                 placeholder="Tell parents and students about your teaching style, experience, and what makes you a great tutor..."
-                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 resize-none" 
+                className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 resize-none"
               />
             </div>
           </div>

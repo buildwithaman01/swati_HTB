@@ -42,7 +42,7 @@ export default async function TeacherIDCardPage() {
               </div>
               <p className="text-[10px] uppercase tracking-widest opacity-80 mt-2">Home Tuition Bureau</p>
             </div>
-            
+
             {/* Photo & Badge */}
             <div className="relative px-6 pb-6">
               <div className="flex justify-center -mt-10">
@@ -62,7 +62,7 @@ export default async function TeacherIDCardPage() {
               <div className="text-center mt-3">
                 <h3 className="font-bold text-lg text-[#1F2937]">{teacher.full_name}</h3>
                 <p className="text-xs font-mono text-neutral-500 mt-0.5">ID: {teacher.teacher_id}</p>
-                
+
                 <div className="flex justify-center mt-2">
                   {isVerified ? (
                     <span className="flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full">
@@ -83,7 +83,7 @@ export default async function TeacherIDCardPage() {
                   <p className="text-[10px] font-bold text-neutral-400 uppercase mt-2">Subject</p>
                   <p className="text-xs font-medium text-neutral-700 truncate w-24">{(teacher.subjects || [])[0] || 'Tutor'}</p>
                 </div>
-                
+
                 <div className="w-20 h-20 bg-white p-1 rounded-lg border border-neutral-200 shrink-0">
                   <img src={qrCodeUrl} alt="Verification QR" className="w-full h-full object-contain" />
                 </div>
@@ -103,16 +103,16 @@ export default async function TeacherIDCardPage() {
               <li>You can screenshot this card to save it to your phone's photo gallery.</li>
             </ul>
           </div>
-          
+
           <div className="bg-white border border-neutral-200/60 rounded-2xl p-6">
             <h3 className="font-bold text-[#1F2937] text-sm mb-2">Your Verification Link</h3>
             <p className="text-xs text-neutral-500 mb-3">You can also share this link directly via WhatsApp:</p>
             <div className="flex gap-2">
-              <input 
-                type="text" 
-                readOnly 
-                value={verifyUrl} 
-                className="flex-1 text-xs font-mono bg-neutral-50 border border-neutral-200 rounded-lg p-2 outline-none" 
+              <input
+                type="text"
+                readOnly
+                value={verifyUrl}
+                className="flex-1 text-xs font-mono bg-neutral-50 border border-neutral-200 rounded-lg p-2 outline-none"
               />
             </div>
           </div>

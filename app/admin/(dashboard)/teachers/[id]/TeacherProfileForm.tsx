@@ -294,3 +294,4 @@ export default function TeacherProfileForm({ teacher }: Props) {
     </form>
   );
 }
+

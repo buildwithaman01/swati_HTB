@@ -16,7 +16,7 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId);
 
   const supabase = await createAdminClient();
-  
+
   let query = supabase.from("teachers").select("*");
   if (isUuid) {
     query = query.eq("id", rawId);
@@ -30,13 +30,23 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
 
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
-  startOfMonth.setHours(0,0,0,0);
-  
+  startOfMonth.setHours(0, 0, 0, 0);
+
   const { count: sessionCountThisMonth } = await supabase
     .from("sessions")
     .select("*", { count: "exact", head: true })
     .eq("teacher_id", teacher.id)
     .gte("session_date", startOfMonth.toISOString());
+
+  // Fetch teacher's active assignments
+  const { data: assignments } = await supabase
+    .from("assignments")
+    .select(`
+      *,
+      student:students(id, full_name, student_id, class_studying, parent_name, parent_phone, parent_whatsapp)
+    `)
+    .eq("teacher_id", teacher.id)
+    .order("created_at", { ascending: false });
 
 
   // Generate secure 1-hour signed URL for private KYC documents
@@ -68,7 +78,7 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Left Col - Identity & Status */}
         <div className="space-y-6">
           {/* Main Card */}
@@ -85,20 +95,19 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
             </div>
             <h2 className="text-xl font-bold text-[#1F2937]">{teacher.full_name}</h2>
             <p className="text-sm text-neutral-500 mt-1">{teacher.qualification}</p>
-            
+
             <div className="flex flex-wrap gap-2 justify-center mt-4">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                teacher.verification_status === "approved" ? "bg-emerald-100 text-emerald-700" : 
-                teacher.verification_status === "pending" ? "bg-amber-100 text-amber-700" : 
-                "bg-red-100 text-red-700"
-              }`}>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${teacher.verification_status === "approved" ? "bg-emerald-100 text-emerald-700" :
+                  teacher.verification_status === "pending" ? "bg-amber-100 text-amber-700" :
+                    "bg-red-100 text-red-700"
+                }`}>
                 {teacher.verification_status}
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider border border-indigo-100">
                 <ShieldCheck className="w-3.5 h-3.5" /> {teacher.badge_level}
               </span>
             </div>
-            
+
             <div className="mt-4 px-4 py-2 bg-neutral-50 rounded-xl border border-neutral-200/60 w-full flex justify-between items-center">
               <span className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Sessions this month</span>
               <span className="font-bold text-lg text-[#0F4C5C]">{sessionCountThisMonth || 0}</span>
@@ -144,8 +153,87 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
         <div className="lg:col-span-2 space-y-6">
           <TeacherProfileForm teacher={teacher} />
 
+          {/* Assigned Students */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-lg font-bold text-[#1F2937] flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-[#0F4C5C]" /> Assigned Students & Tuitions ({assignments?.length || 0})
+              </h2>
+              <Link
+                href={`/admin/assignments/new?teacher_id=${teacher.id}`}
+                className="bg-[#0F4C5C] hover:bg-[#0a3a47] text-white px-3.5 py-1.5 rounded-xl text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5"
+              >
+                + Assign Student
+              </Link>
+            </div>
+
+            {!assignments || assignments.length === 0 ? (
+              <div className="text-center py-6 text-neutral-500">
+                <BookOpen className="w-8 h-8 mx-auto mb-2 text-neutral-300" />
+                <p className="text-sm">No students currently assigned to this teacher.</p>
+                <Link
+                  href={`/admin/assignments/new?teacher_id=${teacher.id}`}
+                  className="inline-block mt-2 text-xs font-bold text-[#0F4C5C] hover:underline"
+                >
+                  Click here to assign a student →
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {assignments.map((assignment: any) => (
+                  <div
+                    key={assignment.id}
+                    className="border border-neutral-100 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-neutral-50/50 hover:bg-white transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/admin/students/${assignment.student?.id || assignment.student_id}`}
+                          className="font-bold text-sm text-[#1F2937] hover:text-[#0F4C5C] hover:underline"
+                        >
+                          {assignment.student?.full_name || "Student"}
+                        </Link>
+                        <span className="text-xs text-neutral-400 font-mono">
+                          ({assignment.student?.student_id || "STD"})
+                        </span>
+                      </div>
+                      <p className="text-xs text-neutral-500 mt-0.5">
+                        <span className="font-semibold text-neutral-700">{assignment.subject}</span> · Class{" "}
+                        {assignment.student?.class_studying || "?"} · Parent: {assignment.student?.parent_name} (
+                        {assignment.student?.parent_phone})
+                      </p>
+                      <p className="text-[11px] text-neutral-400 mt-1">
+                        Schedule: {assignment.classes_per_week}x/week · {assignment.session_duration_mins} mins
+                      </p>
+                    </div>
+
+                    <div className="text-left sm:text-right">
+                      <span
+                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          assignment.status === "active"
+                            ? "bg-emerald-100 text-emerald-800"
+                            : assignment.status === "paused"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-neutral-100 text-neutral-700"
+                        }`}
+                      >
+                        {assignment.status}
+                      </span>
+                      <p className="text-xs font-bold text-[#1F2937] mt-1">
+                        Fee: ₹{Number(assignment.monthly_fee).toLocaleString("en-IN")}/mo
+                      </p>
+                      <p className="text-[11px] font-semibold text-emerald-600">
+                        Teacher: ₹{Number(assignment.teacher_earning).toLocaleString("en-IN")}/mo
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Account Management */}
-          <AccountManagementCard 
+          <AccountManagementCard
             teacherId={teacher.id}
             teacherName={teacher.full_name}
             teacherEmail={teacher.email || ""}

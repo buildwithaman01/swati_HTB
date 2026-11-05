@@ -45,8 +45,8 @@ export default async function TeacherDashboard() {
   // 4. Fetch recent sessions
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
-  startOfMonth.setHours(0,0,0,0);
-  
+  startOfMonth.setHours(0, 0, 0, 0);
+
   const { count: sessionCountThisMonth } = await supabase
     .from("sessions")
     .select("*", { count: "exact", head: true })

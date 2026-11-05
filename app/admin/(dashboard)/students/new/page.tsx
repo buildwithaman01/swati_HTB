@@ -11,21 +11,29 @@ export default function AdminNewStudent() {
     
     const subjects = (formData.get("subjects_required") as string)?.split(',').map(s => s.trim()).filter(Boolean) || [];
 
+    const emailVal = (formData.get("email") as string)?.trim() || null;
+    const whatsappVal = (formData.get("whatsapp") as string)?.trim() || null;
+    const addressVal = (formData.get("address") as string)?.trim() || null;
+    const budgetVal = (formData.get("budget_range") as string)?.trim() || null;
+    const notesVal = (formData.get("internal_notes") as string)?.trim() || null;
+
     const { data, error } = await adminSupabase.from("students").insert({
       full_name: formData.get("full_name"),
       parent_name: formData.get("parent_name"),
       parent_phone: formData.get("parent_phone"),
-      whatsapp: formData.get("whatsapp"),
-      email: formData.get("email"),
+      whatsapp: whatsappVal,
+      email: emailVal,
+      parent_email: emailVal,
       locality: formData.get("locality"),
-      address: formData.get("address"),
+      address: addressVal,
       class_studying: formData.get("class_studying"),
-      board: formData.get("board"),
+      board: formData.get("board") || "CBSE",
       subjects_required: subjects,
-      tuition_type_preference: formData.get("tuition_type_preference"),
-      budget_range: formData.get("budget_range"),
-      enrollment_status: formData.get("enrollment_status"),
-      internal_notes: formData.get("internal_notes")
+      subjects_needed: subjects,
+      tuition_type_preference: formData.get("tuition_type_preference") || "home",
+      budget_range: budgetVal,
+      enrollment_status: formData.get("enrollment_status") || "enquiry",
+      internal_notes: notesVal
     }).select("id").single();
 
     if (error) {

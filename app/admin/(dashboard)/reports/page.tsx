@@ -23,10 +23,10 @@ export default async function AdminReportsPage() {
 
   async function markAsSent(formData: FormData) {
     "use server";
-    const supabase = await createClient();
+    const adminSupabase = await createAdminClient();
     const id = formData.get("id");
     
-    await supabase.from("progress_reports").update({
+    await adminSupabase.from("progress_reports").update({
       sent_to_parent: true,
       sent_at: new Date().toISOString()
     }).eq("id", id);

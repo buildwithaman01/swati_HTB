@@ -43,7 +43,7 @@ export default async function TeacherDashboardLayout({
           </div>
           <h1 className="text-xl font-bold font-serif text-[#1F2937]">Profile Not Found</h1>
           <p className="text-sm text-neutral-500 mt-2">
-            We couldn't find a teacher profile linked to <strong>{user.email}</strong>. 
+            We couldn't find a teacher profile linked to <strong>{user.email}</strong>.
             If you recently applied, please wait for admin approval.
           </p>
           <form action="/api/auth/logout" method="POST" className="mt-6">
@@ -64,7 +64,7 @@ export default async function TeacherDashboardLayout({
           </Link>
           <div className="mt-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-[#0F4C5C] text-white flex items-center justify-center font-bold text-sm shrink-0">
-              {teacher.profile_photo_url ? <img src={teacher.profile_photo_url} className="w-full h-full rounded-full object-cover"/> : teacher.full_name.charAt(0)}
+              {teacher.profile_photo_url ? <img src={teacher.profile_photo_url} className="w-full h-full rounded-full object-cover" /> : teacher.full_name.charAt(0)}
             </div>
             <div className="overflow-hidden">
               <p className="text-sm font-bold text-[#1F2937] truncate">{teacher.full_name}</p>
@@ -72,7 +72,7 @@ export default async function TeacherDashboardLayout({
             </div>
           </div>
         </div>
-        
+
         <nav className="p-4 space-y-1">
           <Link href="/teacher/dashboard" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold bg-neutral-100 text-[#1F2937]">
             <LayoutDashboard className="w-4 h-4" /> Overview
@@ -92,7 +92,7 @@ export default async function TeacherDashboardLayout({
           <Link href="/teacher/dashboard/profile" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-50 hover:text-[#1F2937] transition-colors">
             <User className="w-4 h-4" /> My Profile
           </Link>
-          
+
           <div className="pt-4 mt-4 border-t border-neutral-100">
             <form action="/api/auth/logout" method="POST">
               <button type="submit" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors">

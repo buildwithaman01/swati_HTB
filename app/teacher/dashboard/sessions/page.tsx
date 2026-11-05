@@ -54,7 +54,7 @@ export default async function SessionsPage() {
       .select("id")
       .eq("auth_user_id", user.id)
       .single();
-      
+
     const resolvedFormTeacherId = teacherResult?.id ?? (await supabase
       .from("teachers")
       .select("id")
@@ -66,7 +66,7 @@ export default async function SessionsPage() {
 
     const assignmentStr = String(formData.get("assignment_id"));
     const [assignment_id, student_id] = assignmentStr.split("|");
-    
+
     const session_date = String(formData.get("session_date"));
     const session_start = String(formData.get("session_start"));
     const session_end = String(formData.get("session_end"));
@@ -104,14 +104,14 @@ export default async function SessionsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* Form Column */}
         <div className="lg:col-span-1">
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
             <h2 className="text-lg font-bold text-[#1F2937] mb-6 flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-[#0F4C5C]" /> Log New Session
             </h2>
-            
+
             <form action={logSession} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">Student</label>
@@ -183,7 +183,7 @@ export default async function SessionsPage() {
                         <h3 className="font-bold text-[#1F2937] text-sm">{session.students?.full_name}</h3>
                         <div className="flex items-center gap-2 mt-1 text-xs text-neutral-500">
                           <span className="flex items-center gap-1"><CalendarIcon className="w-3 h-3" /> {new Date(session.session_date).toLocaleDateString()}</span>
-                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {session.session_start?.slice(0,5)} - {session.session_end?.slice(0,5)} ({session.duration_mins}m)</span>
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {session.session_start?.slice(0, 5)} - {session.session_end?.slice(0, 5)} ({session.duration_mins}m)</span>
                         </div>
                       </div>
                       <span className="bg-emerald-100 text-emerald-800 text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full">

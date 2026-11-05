@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { KeyRound, MessageCircle, CheckCircle2, Eye, EyeOff, UserPlus, Send } from "lucide-react";
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export default function StudentAccountManagementCard({ studentId, studentName, parentEmail, parentPhone, authUserId }: Props) {
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -45,6 +47,7 @@ export default function StudentAccountManagementCard({ studentId, studentName, p
       body: JSON.stringify({
         targetEmail: parentEmail,
         targetAuthUserId: authUserId || undefined,
+        targetId: studentId,
         newPassword: password,
         createIfMissing: !authUserId,
         targetType: "parent",
@@ -58,6 +61,7 @@ export default function StudentAccountManagementCard({ studentId, studentName, p
       setSuccess(data.action === "created" 
         ? "✅ Account created! Now send them the WhatsApp welcome message below." 
         : "✅ Password updated successfully.");
+      router.refresh();
     } else {
       setError(data.error || "Failed to set password.");
     }

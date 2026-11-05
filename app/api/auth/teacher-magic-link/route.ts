@@ -20,40 +20,40 @@ export async function POST(req: NextRequest) {
         .or(`teacher_id.ilike.${rawIdentifier},phone.eq.${rawIdentifier},whatsapp.eq.${rawIdentifier}`)
         .maybeSingle();
 
-      if (!teacherRecord || !teacherRecord.email) {
-        return NextResponse.json({ 
-          error: `No teacher found with ID / Phone "${rawIdentifier}". Please enter your registered email.` 
-        }, { status: 404 });
-      }
-      targetEmail = teacherRecord.email;
-    } else {
-      // Verify teacher exists by email using adminClient (bypasses RLS)
-      const { data: teacher } = await adminClient
-        .from("teachers")
-        .select("id, full_name, email")
-        .ilike("email", targetEmail)
-        .maybeSingle();
+        if (!teacherRecord || !teacherRecord.email) {
+          return NextResponse.json({
+            error: `No teacher found with ID / Phone "${rawIdentifier}". Please enter your registered email.`
+          }, { status: 404 });
+        }
+        targetEmail = teacherRecord.email;
+      } else {
+        // Verify teacher exists by email using adminClient (bypasses RLS)
+        const { data: teacher } = await adminClient
+          .from("teachers")
+          .select("id, full_name, email")
+          .ilike("email", targetEmail)
+          .maybeSingle();
 
-      if (!teacher) {
-        return NextResponse.json({ 
-          error: `No teacher account found with email "${targetEmail}". Contact Swati HTB admin.` 
-        }, { status: 404 });
+        if (!teacher) {
+          return NextResponse.json({
+            error: `No teacher account found with email "${targetEmail}". Contact Swati HTB admin.`
+          }, { status: 404 });
+        }
       }
+
+      const supabase = await createClient();
+      const { error } = await supabase.auth.signInWithOtp({
+        email: targetEmail.toLowerCase(),
+        options: {
+          emailRedirectTo: `${req.nextUrl.origin}/api/auth/callback?next=/teacher/dashboard`,
+        },
+      });
+
+      if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+
+      return NextResponse.json({ success: true, email: targetEmail });
+    } catch (e: any) {
+      console.error("[teacher-magic-link Error]:", e);
+      return NextResponse.json({ error: e.message }, { status: 500 });
     }
-
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email: targetEmail.toLowerCase(),
-      options: {
-        emailRedirectTo: `${req.nextUrl.origin}/api/auth/callback?next=/teacher/dashboard`,
-      },
-    });
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-
-    return NextResponse.json({ success: true, email: targetEmail });
-  } catch (e: any) {
-    console.error("[teacher-magic-link Error]:", e);
-    return NextResponse.json({ error: e.message }, { status: 500 });
   }
-}

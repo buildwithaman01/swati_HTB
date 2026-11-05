@@ -14,23 +14,29 @@ export default function AdminNewTeacher() {
     const classes_taught = (formData.get("classes_taught") as string)?.split(',').map(s => s.trim()).filter(Boolean) || [];
     const areas_serviceable = (formData.get("areas_serviceable") as string)?.split(',').map(s => s.trim()).filter(Boolean) || [];
 
+    const emailVal = (formData.get("email") as string)?.trim() || null;
+    const whatsappVal = (formData.get("whatsapp") as string)?.trim() || null;
+    const institutionVal = (formData.get("institution") as string)?.trim() || null;
+    const addressVal = (formData.get("address") as string)?.trim() || null;
+    const statusVal = (formData.get("verification_status") as string) || "pending";
+
     const { data, error } = await adminSupabase.from("teachers").insert({
       full_name: formData.get("full_name"),
       phone: formData.get("phone"),
-      whatsapp: formData.get("whatsapp"),
-      email: formData.get("email"),
-      gender: formData.get("gender"),
+      whatsapp: whatsappVal,
+      email: emailVal,
+      gender: formData.get("gender") || "other",
       qualification: formData.get("qualification"),
-      institution: formData.get("institution"),
+      institution: institutionVal,
       experience_years: parseInt(formData.get("experience_years") as string) || 0,
       locality: formData.get("locality"),
-      address: formData.get("address"),
+      address: addressVal,
       subjects,
       classes_taught,
       areas_serviceable,
-      verification_status: formData.get("verification_status"),
-      badge_level: formData.get("badge_level"),
-      is_active: formData.get("verification_status") === "approved", // auto-activate if approved
+      verification_status: statusVal,
+      badge_level: formData.get("badge_level") || "verified",
+      is_active: statusVal === "approved", // auto-activate if approved
     }).select("id").single();
 
     if (error) {
