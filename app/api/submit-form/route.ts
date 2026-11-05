@@ -42,7 +42,9 @@ export async function POST(req: NextRequest) {
           if (error) {
             console.error("[Supabase Storage Front Upload Error]:", error);
           } else if (data) {
-            frontUrl = frontName;
+            // Generate long-lived 1-year signed URL for emails & sheets
+            const { data: signed } = await supabase.storage.from("kyc-documents").createSignedUrl(frontName, 31536000);
+            frontUrl = signed?.signedUrl || `https://swatihometuition.in/api/docs/view?file=${encodeURIComponent(frontName)}`;
           }
         }
         if (back && back.size > 0) {
@@ -51,7 +53,8 @@ export async function POST(req: NextRequest) {
           if (error) {
             console.error("[Supabase Storage Back Upload Error]:", error);
           } else if (data) {
-            backUrl = backName;
+            const { data: signed } = await supabase.storage.from("kyc-documents").createSignedUrl(backName, 31536000);
+            backUrl = signed?.signedUrl || `https://swatihometuition.in/api/docs/view?file=${encodeURIComponent(backName)}`;
           }
         }
       } catch (err) {

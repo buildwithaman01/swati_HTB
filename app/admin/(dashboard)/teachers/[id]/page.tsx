@@ -49,16 +49,21 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
     .order("created_at", { ascending: false });
 
 
-  // Generate secure 1-hour signed URL for private KYC documents
+  // Generate secure signed URL for private KYC documents
   let idProofViewUrl = null;
   if (teacher.id_proof_url) {
-    if (teacher.id_proof_url.startsWith("http")) {
+    let cleanDocName = teacher.id_proof_url.trim();
+    if (cleanDocName.includes("kyc-documents/")) {
+      cleanDocName = cleanDocName.split("kyc-documents/").pop()?.split("?")[0] || cleanDocName;
+    }
+
+    if (teacher.id_proof_url.includes("?token=")) {
       idProofViewUrl = teacher.id_proof_url;
     } else {
       const { data: signed } = await supabase.storage
         .from("kyc-documents")
-        .createSignedUrl(teacher.id_proof_url, 3600);
-      idProofViewUrl = signed?.signedUrl || null;
+        .createSignedUrl(decodeURIComponent(cleanDocName), 7200);
+      idProofViewUrl = signed?.signedUrl || `/api/docs/view?file=${encodeURIComponent(cleanDocName)}`;
     }
   }
 
