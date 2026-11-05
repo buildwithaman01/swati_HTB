@@ -31,8 +31,71 @@ export default function JoinPage() {
   const [whatsappUrl, setWhatsappUrl] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
+  // Step Validation Helper
+  const validateStep = (step: number) => {
+    const form = formRef.current;
+    if (!form) return true;
+
+    if (step === 1) {
+      const name = (form.elements.namedItem("name") as HTMLInputElement)?.value.trim();
+      const dob = (form.elements.namedItem("dob") as HTMLInputElement)?.value.trim();
+      const gender = (form.elements.namedItem("gender") as HTMLSelectElement)?.value.trim();
+      const guardian = (form.elements.namedItem("guardian_name") as HTMLInputElement)?.value.trim();
+      const whatsapp = (form.elements.namedItem("whatsapp") as HTMLInputElement)?.value.trim();
+      const email = (form.elements.namedItem("email") as HTMLInputElement)?.value.trim();
+      const address = (form.elements.namedItem("current_address") as HTMLTextAreaElement)?.value.trim();
+
+      if (!name) { toast.error("Please enter your Full Name"); return false; }
+      if (!dob) { toast.error("Please select your Date of Birth"); return false; }
+      if (!gender) { toast.error("Please select your Gender"); return false; }
+      if (!guardian) { toast.error("Please enter Father / Husband Name"); return false; }
+      if (!whatsapp) { toast.error("Please enter your WhatsApp Number"); return false; }
+      if (!email || !email.includes("@")) { toast.error("Please enter a valid Email Address"); return false; }
+      if (!address) { toast.error("Please enter your Current Address in Patna"); return false; }
+      return true;
+    }
+
+    if (step === 2) {
+      const qualification = (form.elements.namedItem("qualification") as HTMLSelectElement)?.value.trim();
+      const college = (form.elements.namedItem("college") as HTMLInputElement)?.value.trim();
+      const subjects = (form.elements.namedItem("subjects") as HTMLInputElement)?.value.trim();
+      const classes = (form.elements.namedItem("classes") as HTMLInputElement)?.value.trim();
+      const experience = (form.elements.namedItem("experience") as HTMLInputElement)?.value.trim();
+      const mode = (form.elements.namedItem("mode") as HTMLSelectElement)?.value.trim();
+      const areas = (form.elements.namedItem("areas") as HTMLInputElement)?.value.trim();
+
+      if (!qualification) { toast.error("Please select your Highest Qualification"); return false; }
+      if (!college) { toast.error("Please enter your College / University Name"); return false; }
+      if (!subjects) { toast.error("Please enter Subjects You Can Teach"); return false; }
+      if (!classes) { toast.error("Please enter Classes You Can Teach"); return false; }
+      if (experience === "") { toast.error("Please enter your Teaching Experience in years"); return false; }
+      if (!mode) { toast.error("Please select your Preferred Teaching Mode"); return false; }
+      if (!areas) { toast.error("Please enter Serviceable Areas in Patna"); return false; }
+      return true;
+    }
+
+    if (step === 3) {
+      const aadhaarNum = (form.elements.namedItem("aadhaar_number") as HTMLInputElement)?.value.trim();
+      const ref1Name = (form.elements.namedItem("ref1_name") as HTMLInputElement)?.value.trim();
+      const ref1Phone = (form.elements.namedItem("ref1_phone") as HTMLInputElement)?.value.trim();
+      const ref2Name = (form.elements.namedItem("ref2_name") as HTMLInputElement)?.value.trim();
+      const ref2Phone = (form.elements.namedItem("ref2_phone") as HTMLInputElement)?.value.trim();
+      const agree1 = (form.elements.namedItem("agreement_1") as HTMLInputElement)?.checked;
+      const agree2 = (form.elements.namedItem("agreement_2") as HTMLInputElement)?.checked;
+
+      if (!aadhaarNum) { toast.error("Please enter your Aadhaar Number"); return false; }
+      if (!ref1Name || !ref1Phone) { toast.error("Please provide Reference 1 Name & Phone"); return false; }
+      if (!ref2Name || !ref2Phone) { toast.error("Please provide Reference 2 Name & Phone"); return false; }
+      if (!agree1 || !agree2) { toast.error("Please accept both Bureau Agreements to continue"); return false; }
+      return true;
+    }
+
+    return true;
+  };
+
   // Auto-scroll to top when step changes
   const handleNext = () => {
+    if (!validateStep(currentStep)) return;
     setCurrentStep(prev => Math.min(prev + 1, 3));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -44,8 +107,15 @@ export default function JoinPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (currentStep !== 3) {
-      handleNext();
+    if (!validateStep(1)) {
+      setCurrentStep(1);
+      return;
+    }
+    if (!validateStep(2)) {
+      setCurrentStep(2);
+      return;
+    }
+    if (!validateStep(3)) {
       return;
     }
 
@@ -208,7 +278,7 @@ export default function JoinPage() {
 
               {/* Form Content */}
               <div className="p-6 md:p-12">
-                <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
+                <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-8">
                   
                   {/* STEP 1: PERSONAL DETAILS */}
                   <div className={currentStep === 1 ? "block" : "hidden"}>
@@ -306,7 +376,7 @@ export default function JoinPage() {
                         <label className="text-xs font-bold tracking-wider text-[#1F2937]/70 uppercase flex items-center gap-2">
                           <Video className="w-4 h-4" /> Demo Video Link (Highly Recommended)
                         </label>
-                        <input name="video_url" type="url" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="Paste YouTube or Google Drive link..." />
+                        <input name="video_url" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-xl px-4 py-3 text-[#1F2937] focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all" placeholder="Paste YouTube or Google Drive link..." />
                         <p className="text-xs text-[#1F2937]/50 mt-1">Tutors with demo videos are verified and assigned students 3x faster.</p>
                       </div>
                     </div>
