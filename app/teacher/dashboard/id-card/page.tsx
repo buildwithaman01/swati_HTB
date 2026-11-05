@@ -91,6 +91,14 @@ export default async function TeacherIDCardPage() {
             </div>
           </div>
           <IDCardDownloader targetId="virtual-id-card" teacherName={teacher.full_name} />
+          <div className="mt-3 text-center">
+            <a
+              href="/teacher/dashboard/profile"
+              className="inline-flex items-center justify-center gap-1.5 text-xs text-[#0F4C5C] font-semibold hover:underline bg-[#0F4C5C]/5 px-3 py-1.5 rounded-lg border border-[#0F4C5C]/20 transition-colors"
+            >
+              📷 Upload / Change ID Photo in Profile
+            </a>
+          </div>
         </div>
 
         {/* Instructions */}

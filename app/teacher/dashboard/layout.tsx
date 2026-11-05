@@ -1,7 +1,7 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { BookOpen, Calendar, LayoutDashboard, LogOut, User, FileText } from "lucide-react";
+import { BookOpen, Calendar, LayoutDashboard, LogOut, User, FileText, GraduationCap } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -82,6 +82,9 @@ export default async function TeacherDashboardLayout({
           </Link>
           <Link href="/teacher/dashboard/sessions" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-50 hover:text-[#1F2937] transition-colors">
             <Calendar className="w-4 h-4" /> Log Session
+          </Link>
+          <Link href="/teacher/dashboard/tests" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-50 hover:text-[#1F2937] transition-colors">
+            <GraduationCap className="w-4 h-4" /> Tests & Marks
           </Link>
           <Link href="/teacher/dashboard/reports" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-neutral-600 hover:bg-neutral-50 hover:text-[#1F2937] transition-colors">
             <FileText className="w-4 h-4" /> Reports

@@ -1,7 +1,7 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Calendar, FileText, IndianRupee, LogOut, GraduationCap } from "lucide-react";
+import { LayoutDashboard, Calendar, FileText, IndianRupee, LogOut, GraduationCap, User } from "lucide-react";
 
 export default async function ParentPortalLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -9,28 +9,42 @@ export default async function ParentPortalLayout({ children }: { children: React
 
   if (!user) redirect("/portal/login");
 
-  // Find student by parent auth id
-  const { data: student } = await supabase
+  // Find student by parent auth id or email with resilient admin fallback
+  const adminClient = await createAdminClient();
+  let { data: student } = await adminClient
     .from("students")
-    .select("id, full_name, class_studying, parent_name, enrollment_status")
-    .eq("parent_auth_user_id", user.id)
+    .select("id, full_name, class_studying, parent_name, enrollment_status, parent_auth_user_id, internal_notes")
+    .or(`parent_auth_user_id.eq.${user.id},parent_email.ilike.${user.email},email.ilike.${user.email}`)
     .limit(1)
     .maybeSingle();
 
   if (!student) redirect("/portal/login");
 
+  // Auto-heal parent_auth_user_id if missing
+  if (!student.parent_auth_user_id) {
+    await adminClient.from("students").update({ parent_auth_user_id: user.id }).eq("id", student.id);
+  }
+
+  // Extract photo if present
+  let studentPhoto = "";
+  try {
+    const photoMatch = (student.internal_notes || "").match(/\[STUDENT_PHOTO:(.*?)\]/);
+    if (photoMatch && photoMatch[1]) studentPhoto = photoMatch[1];
+  } catch {}
+
   // Get active teacher
-  const { data: assignment } = await supabase
+  const { data: assignment } = await adminClient
     .from("assignments")
     .select(`id, subject, teacher:teacher_id(full_name)`)
     .eq("student_id", student.id)
     .eq("status", "active")
-    .single();
+    .maybeSingle();
 
   const navLinks = [
     { href: "/portal/dashboard", label: "Overview", icon: <LayoutDashboard className="w-4 h-4" /> },
     { href: "/portal/sessions", label: "Sessions", icon: <Calendar className="w-4 h-4" /> },
-    { href: "/portal/reports", label: "Progress Reports", icon: <FileText className="w-4 h-4" /> },
+    { href: "/portal/reports", label: "Progress & Tests", icon: <FileText className="w-4 h-4" /> },
+    { href: "/portal/profile", label: "Student Profile", icon: <User className="w-4 h-4" /> },
     { href: "/portal/payments", label: "Payments", icon: <IndianRupee className="w-4 h-4" /> },
   ];
 
