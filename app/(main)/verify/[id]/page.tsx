@@ -30,7 +30,8 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
     query = query.eq("teacher_id", rawId.toUpperCase());
   }
 
-  const { data: teacher } = await query.maybeSingle();
+  const { data: teacherList } = await query.order("created_at", { ascending: false }).limit(1);
+  const teacher = teacherList?.[0] || null;
 
   const { data: reviews } = teacher?.id
     ? await supabaseAdmin

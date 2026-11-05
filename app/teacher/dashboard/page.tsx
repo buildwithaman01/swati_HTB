@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
 import { Users, IndianRupee, ShieldAlert, CheckCircle2, Clock, Calendar } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -10,13 +10,7 @@ export default async function TeacherDashboard() {
 
   if (!user) return null;
 
-  const adminClient = await createAdminClient();
-  const { data: teacher } = await adminClient
-    .from("teachers")
-    .select("id, verification_status, badge_level")
-    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
-    .maybeSingle();
-
+  const teacher = await getTeacherProfile(user.id, user.email);
   const resolvedTeacherId = teacher?.id;
 
   if (!resolvedTeacherId) return null;

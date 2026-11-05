@@ -9,12 +9,13 @@ export const revalidate = 0;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const { data: teacher } = await supabaseAdmin
+  const { data: list } = await supabaseAdmin
     .from("teachers")
     .select("full_name, qualification, subjects, locality")
     .eq("profile_slug", slug)
     .eq("verification_status", "approved")
-    .maybeSingle();
+    .limit(1);
+  const teacher = list?.[0];
   if (!teacher) return { title: "Teacher Not Found — Swati HTB" };
   return {
     title: `${teacher.full_name} — ${teacher.qualification} | Swati Home Tuition Bureau`,
@@ -31,13 +32,15 @@ const BADGE: Record<string, { label: string; color: string }> = {
 
 export default async function TeacherProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { data: teacher } = await supabaseAdmin
+  const { data: list } = await supabaseAdmin
     .from("teachers")
     .select("*")
     .eq("profile_slug", slug)
     .eq("verification_status", "approved")
     .eq("is_active", true)
-    .maybeSingle();
+    .limit(1);
+
+  const teacher = list?.[0];
 
   if (!teacher) notFound();
 

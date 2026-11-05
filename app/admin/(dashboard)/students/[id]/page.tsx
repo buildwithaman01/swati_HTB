@@ -24,7 +24,8 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
     query = query.eq("student_id", rawId.toUpperCase());
   }
 
-  const { data: student } = await query.maybeSingle();
+  const { data: studentList } = await query.order("created_at", { ascending: false }).limit(1);
+  const student = studentList?.[0] || null;
 
   if (!student) return notFound();
 

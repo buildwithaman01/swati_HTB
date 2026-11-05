@@ -41,3 +41,47 @@ export async function createAdminClient() {
     },
   });
 }
+
+/**
+ * Robust helper to load a teacher's profile for the logged-in auth user.
+ * Prevents PGRST116 (multiple rows) crashes and auto-heals unlinked auth_user_id.
+ */
+export async function getTeacherProfile(userId: string, email?: string | null) {
+  const adminClient = await createAdminClient();
+
+  // 1. First priority: match by auth_user_id
+  const { data: byAuth } = await adminClient
+    .from("teachers")
+    .select("*")
+    .eq("auth_user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (byAuth && byAuth.length > 0) {
+    return byAuth[0];
+  }
+
+  // 2. Second priority: match by email (case-insensitive)
+  if (email && email.trim()) {
+    const cleanEmail = email.trim();
+    const { data: byEmail } = await adminClient
+      .from("teachers")
+      .select("*")
+      .ilike("email", cleanEmail)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (byEmail && byEmail.length > 0) {
+      const teacher = byEmail[0];
+      // Self-heal link in the background
+      await adminClient
+        .from("teachers")
+        .update({ auth_user_id: userId })
+        .eq("id", teacher.id);
+      return teacher;
+    }
+  }
+
+  return null;
+}
+

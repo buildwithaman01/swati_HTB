@@ -86,23 +86,34 @@ export async function POST(req: NextRequest) {
 
       // 4. Link auth_user_id and confirmed email in the database record
       if (resolvedAuthUserId && targetId) {
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetId);
         if (targetType === "teacher") {
-          await dbAdmin
+          let updateQuery = dbAdmin
             .from("teachers")
             .update({
               auth_user_id: resolvedAuthUserId,
-              email: email,
+              email: email.trim().toLowerCase(),
               is_active: true, // auto-activate teacher once credentials are set
-            })
-            .eq("id", targetId);
+            });
+          if (isUuid) {
+            updateQuery = updateQuery.eq("id", targetId);
+          } else {
+            updateQuery = updateQuery.or(`id.eq.${targetId},teacher_id.eq.${targetId.toUpperCase()}`);
+          }
+          await updateQuery;
         } else if (targetType === "parent") {
-          await dbAdmin
+          let updateQuery = dbAdmin
             .from("students")
             .update({
               parent_auth_user_id: resolvedAuthUserId,
-              parent_email: email,
-            })
-            .eq("id", targetId);
+              parent_email: email.trim().toLowerCase(),
+            });
+          if (isUuid) {
+            updateQuery = updateQuery.eq("id", targetId);
+          } else {
+            updateQuery = updateQuery.or(`id.eq.${targetId},student_id.eq.${targetId.toUpperCase()}`);
+          }
+          await updateQuery;
         }
       }
 

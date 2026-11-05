@@ -13,6 +13,8 @@ export async function POST(req: NextRequest) {
 
     const adminDb = await createAdminClient();
 
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
     if (type === "status") {
       const { status, internal_notes, rejection_reason, badge_level } = body;
       const updateData: any = {
@@ -35,12 +37,16 @@ export async function POST(req: NextRequest) {
         updateData.is_active = false;
       }
 
-      const { data, error } = await adminDb
-        .from("teachers")
-        .update(updateData)
-        .eq("id", id)
+      let updateQuery = adminDb.from("teachers").update(updateData);
+      if (isUuid) {
+        updateQuery = updateQuery.eq("id", id);
+      } else {
+        updateQuery = updateQuery.or(`id.eq.${id},teacher_id.eq.${id.toUpperCase()}`);
+      }
+
+      const { data, error } = await updateQuery
         .select("id, verification_status, badge_level, is_active")
-        .single();
+        .limit(1);
 
       if (error) {
         console.error("[update-teacher error]:", error);
@@ -51,7 +57,7 @@ export async function POST(req: NextRequest) {
       revalidatePath("/admin/teachers");
       revalidatePath(`/verify/${id}`);
 
-      return NextResponse.json({ success: true, teacher: data });
+      return NextResponse.json({ success: true, teacher: data?.[0] || null });
     } else if (type === "profile") {
       const {
         full_name, phone, whatsapp, email, gender, locality, address,
@@ -59,28 +65,33 @@ export async function POST(req: NextRequest) {
         badge_level, subjects, classes_taught, areas_serviceable
       } = body;
 
-      const { data, error } = await adminDb
-        .from("teachers")
-        .update({
-          full_name,
-          phone,
-          whatsapp,
-          email,
-          gender,
-          locality,
-          address,
-          qualification,
-          institution,
-          experience_years: parseInt(experience_years) || 0,
-          profile_visibility,
-          badge_level,
-          subjects: Array.isArray(subjects) ? subjects : (subjects || "").split(",").map((s: string) => s.trim()).filter(Boolean),
-          classes_taught: Array.isArray(classes_taught) ? classes_taught : (classes_taught || "").split(",").map((s: string) => s.trim()).filter(Boolean),
-          areas_serviceable: Array.isArray(areas_serviceable) ? areas_serviceable : (areas_serviceable || "").split(",").map((s: string) => s.trim()).filter(Boolean),
-        })
-        .eq("id", id)
+      let updateQuery = adminDb.from("teachers").update({
+        full_name,
+        phone,
+        whatsapp,
+        email: email ? email.trim().toLowerCase() : null,
+        gender,
+        locality,
+        address,
+        qualification,
+        institution,
+        experience_years: parseInt(experience_years) || 0,
+        profile_visibility,
+        badge_level,
+        subjects: Array.isArray(subjects) ? subjects : (subjects || "").split(",").map((s: string) => s.trim()).filter(Boolean),
+        classes_taught: Array.isArray(classes_taught) ? classes_taught : (classes_taught || "").split(",").map((s: string) => s.trim()).filter(Boolean),
+        areas_serviceable: Array.isArray(areas_serviceable) ? areas_serviceable : (areas_serviceable || "").split(",").map((s: string) => s.trim()).filter(Boolean),
+      });
+
+      if (isUuid) {
+        updateQuery = updateQuery.eq("id", id);
+      } else {
+        updateQuery = updateQuery.or(`id.eq.${id},teacher_id.eq.${id.toUpperCase()}`);
+      }
+
+      const { data, error } = await updateQuery
         .select()
-        .single();
+        .limit(1);
 
       if (error) {
         console.error("[update-teacher error]:", error);
@@ -90,7 +101,7 @@ export async function POST(req: NextRequest) {
       revalidatePath(`/admin/teachers/${id}`);
       revalidatePath("/admin/teachers");
 
-      return NextResponse.json({ success: true, teacher: data });
+      return NextResponse.json({ success: true, teacher: data?.[0] || null });
     }
 
     return NextResponse.json({ error: "Invalid update type" }, { status: 400 });

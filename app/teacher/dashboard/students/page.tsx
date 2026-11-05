@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
 import { BookOpen, MapPin, Phone, UserCircle, ShieldAlert } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -10,29 +10,51 @@ export default async function TeacherStudentsPage() {
 
   if (!user) return null;
 
-  const adminClient = await createAdminClient();
-  const { data: teacher } = await adminClient
-    .from("teachers")
-    .select("id")
-    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
-    .maybeSingle();
-
+  const teacher = await getTeacherProfile(user.id, user.email);
   const resolvedTeacherId = teacher?.id;
 
   if (!resolvedTeacherId) return null;
 
-  // SECURITY: parent_phone intentionally NOT selected
-  const { data: assignments } = await supabase
+  const adminClient = await createAdminClient();
+
+  // Fetch active assignments with student details
+  let assignments: any[] = [];
+  const { data: asData, error: asErr } = await adminClient
     .from("assignments")
     .select(`
       id, monthly_fee, session_duration_mins, classes_per_week, subject, session_days, session_time,
       students:student_id ( 
-        id, student_id, full_name, class_studying, board, locality, address,
+        id, student_id, full_name, class_studying, locality, address,
         parent_name, special_needs, preferred_timing
       )
     `)
     .eq("teacher_id", resolvedTeacherId)
     .eq("status", "active");
+
+  if (!asErr && asData) {
+    assignments = asData;
+  } else {
+    // Fallback flat query
+    const { data: flatAs } = await adminClient
+      .from("assignments")
+      .select("*")
+      .eq("teacher_id", resolvedTeacherId)
+      .eq("status", "active");
+
+    if (flatAs && flatAs.length > 0) {
+      const studentIds = flatAs.map((a) => a.student_id);
+      const { data: stList } = await adminClient
+        .from("students")
+        .select("id, student_id, full_name, class_studying, locality, address, parent_name, special_needs, preferred_timing")
+        .in("id", studentIds);
+
+      const stMap = new Map((stList || []).map((s) => [s.id, s]));
+      assignments = flatAs.map((a) => ({
+        ...a,
+        students: stMap.get(a.student_id) || null,
+      }));
+    }
+  }
 
   return (
     <div className="space-y-8">

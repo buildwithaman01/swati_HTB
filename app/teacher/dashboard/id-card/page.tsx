@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
 import { Download, ShieldCheck, ShieldAlert } from "lucide-react";
 import IDCardDownloader from "./IDCardDownloader";
 
@@ -11,12 +11,7 @@ export default async function TeacherIDCardPage() {
 
   if (!user) return null;
 
-  const adminClient = await createAdminClient();
-  const { data: teacher } = await adminClient
-    .from("teachers")
-    .select("*")
-    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
-    .maybeSingle();
+  const teacher = await getTeacherProfile(user.id, user.email);
 
   if (!teacher) return null;
 

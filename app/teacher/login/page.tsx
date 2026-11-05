@@ -47,10 +47,12 @@ export default function TeacherLogin() {
     });
 
     setLoading(false);
-    if (res.redirected) {
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.success) {
+      window.location.href = data.redirectUrl || "/teacher/dashboard";
+    } else if (res.redirected) {
       window.location.href = res.url;
     } else {
-      const data = await res.json().catch(() => ({}));
       setError(data.error || "Invalid credentials. Please try again.");
     }
   }

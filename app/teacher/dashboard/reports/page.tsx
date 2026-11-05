@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
 import { FileText, Plus, CheckCircle2, Search, ArrowRight, User } from "lucide-react";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
@@ -12,16 +12,8 @@ export default async function TeacherReportsPage() {
 
   if (!user) return null;
 
-  const adminClient = await createAdminClient();
-  const { data: teacher } = await adminClient
-    .from("teachers")
-    .select("id")
-    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
-    .maybeSingle();
-
+  const teacher = await getTeacherProfile(user.id, user.email);
   const resolvedTeacherId = teacher?.id;
-  if (!resolvedTeacherId) return null;
-
   if (!resolvedTeacherId) return null;
 
   // Get teacher's assignments

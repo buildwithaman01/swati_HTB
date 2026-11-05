@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import TeacherTestsClient from "./TeacherTestsClient";
 
@@ -11,14 +11,11 @@ export default async function TeacherTestsPage() {
 
   if (!user) redirect("/teacher/login");
 
-  const adminClient = await createAdminClient();
-  const { data: teacher } = await adminClient
-    .from("teachers")
-    .select("id, full_name, teacher_id")
-    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
-    .maybeSingle();
+  const teacher = await getTeacherProfile(user.id, user.email);
 
   if (!teacher) redirect("/teacher/login");
+
+  const adminClient = await createAdminClient();
 
   // Get active assignments for this teacher
   const { data: assignments } = await adminClient

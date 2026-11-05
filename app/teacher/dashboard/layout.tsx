@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Calendar, LayoutDashboard, LogOut, User, FileText, GraduationCap } from "lucide-react";
@@ -18,21 +18,8 @@ export default async function TeacherDashboardLayout({
     redirect("/teacher/login");
   }
 
-  // Get teacher profile via adminClient to bypass RLS and self-heal auth_user_id
-  const adminClient = await createAdminClient();
-  let { data: teacher } = await adminClient
-    .from("teachers")
-    .select("*")
-    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
-    .maybeSingle();
-
-  // Self-heal: ensure auth_user_id is linked
-  if (teacher && teacher.auth_user_id !== user.id) {
-    await adminClient
-      .from("teachers")
-      .update({ auth_user_id: user.id })
-      .eq("id", teacher.id);
-  }
+  // Get teacher profile via getTeacherProfile: resilient lookup, avoids duplicate-row crashes, and self-heals auth_user_id
+  const teacher = await getTeacherProfile(user.id, user.email);
 
   if (!teacher) {
     return (

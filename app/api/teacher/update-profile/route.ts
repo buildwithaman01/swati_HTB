@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, createClient } from "@/utils/supabase/server";
+import { createAdminClient, createClient, getTeacherProfile } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export async function POST(req: NextRequest) {
@@ -13,11 +13,7 @@ export async function POST(req: NextRequest) {
     // Resolve teacher ID
     let teacherId = body.id || "";
     if (!teacherId && user) {
-      const { data: t } = await adminDb
-        .from("teachers")
-        .select("id")
-        .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
-        .maybeSingle();
+      const t = await getTeacherProfile(user.id, user.email);
       if (t) teacherId = t.id;
     }
 

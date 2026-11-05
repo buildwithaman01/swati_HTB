@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, createClient } from "@/utils/supabase/server";
+import { createAdminClient, createClient, getTeacherProfile } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export async function POST(req: NextRequest) {
@@ -79,19 +79,16 @@ export async function POST(req: NextRequest) {
 
       if (user) {
         if (targetType === "teacher") {
-          const { data: t } = await adminDb
-            .from("teachers")
-            .select("id")
-            .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
-            .maybeSingle();
+          const t = await getTeacherProfile(user.id, user.email);
           if (t) targetId = t.id;
         } else if (targetType === "student") {
-          const { data: s } = await adminDb
+          const { data: sList } = await adminDb
             .from("students")
             .select("id")
             .or(`parent_auth_user_id.eq.${user.id},parent_email.ilike.${user.email},email.ilike.${user.email}`)
-            .maybeSingle();
-          if (s) targetId = s.id;
+            .order("created_at", { ascending: false })
+            .limit(1);
+          if (sList && sList.length > 0) targetId = sList[0].id;
         }
       }
     }

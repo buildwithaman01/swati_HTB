@@ -40,19 +40,20 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Basic role check: if admin route, ensure user is a selected admin.
+  // Basic role check: if admin route, ensure user is an authorized admin.
   if (user && isAdmin && !isLoginPage) {
-    const defaultAdmins = "swatihometuitionbureau@gmail.com,swatihometuitionbeauro@gmail.com";
-    const adminEmails = (process.env.ADMIN_EMAILS || defaultAdmins).split(',').map(e => e.trim().toLowerCase());
+    const defaultAdmins =
+      "swatihometuitionbureau@gmail.com,swatihometuitionbeauro@gmail.com,amansingh.dev.ai.ml@gmail.com,buildwithaman01@gmail.com,contact@pehchanly.com";
+    const adminEmails = (process.env.ADMIN_EMAILS || defaultAdmins)
+      .split(",")
+      .map((e) => e.trim().toLowerCase());
+
     if (!adminEmails.includes(user.email?.toLowerCase() || "")) {
-      // User is logged in but not an authorized admin
+      // User is logged in but not an authorized admin.
+      // Redirect to admin login with clear message WITHOUT destroying their active teacher/parent session.
       const url = request.nextUrl.clone();
-      url.pathname = '/admin/login';
-      url.searchParams.set('message', 'Unauthorized: Your email is not an authorized Admin.');
-      
-      // We should also sign them out of the unauthorized session
-      await supabase.auth.signOut();
-      
+      url.pathname = "/admin/login";
+      url.searchParams.set("message", "Unauthorized: Your account does not have Admin access.");
       return NextResponse.redirect(url);
     }
   }

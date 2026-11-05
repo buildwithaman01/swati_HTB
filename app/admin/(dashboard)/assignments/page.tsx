@@ -11,24 +11,60 @@ export const revalidate = 0;
 export default async function AdminAssignments() {
   const supabase = await createAdminClient();
 
-  const [{ data: assignments }, { data: teachers }, { data: students }] = await Promise.all([
-    supabase
-      .from("assignments")
-      .select(`
-        *,
-        teacher:teachers(id, full_name, teacher_id, locality, subjects, phone, whatsapp),
-        student:students(id, full_name, student_id, class_studying, board, parent_name, parent_phone, parent_whatsapp)
-      `)
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("teachers")
-      .select("id, full_name, teacher_id, locality, subjects, phone, whatsapp, verification_status")
-      .order("full_name"),
-    supabase
-      .from("students")
-      .select("id, full_name, student_id, class_studying, subjects_needed, subjects_required, locality, parent_name, parent_phone, parent_whatsapp, enrollment_status")
-      .order("full_name"),
-  ]);
+  let assignmentsList: any[] = [];
+  let teachersList: any[] = [];
+  let studentsList: any[] = [];
+
+  try {
+    const [{ data: assignmentsData, error: asErr }, { data: teachersData }, { data: studentsData }] =
+      await Promise.all([
+        supabase
+          .from("assignments")
+          .select(`
+            *,
+            teacher:teachers(id, full_name, teacher_id, locality, subjects, phone, whatsapp),
+            student:students(id, full_name, student_id, class_studying, parent_name, parent_phone, parent_whatsapp)
+          `)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("teachers")
+          .select("id, full_name, teacher_id, locality, subjects, phone, whatsapp, verification_status")
+          .order("full_name"),
+        supabase
+          .from("students")
+          .select("id, full_name, student_id, class_studying, subjects_needed, subjects_required, locality, parent_name, parent_phone, parent_whatsapp, enrollment_status")
+          .order("full_name"),
+      ]);
+
+    teachersList = teachersData || [];
+    studentsList = studentsData || [];
+
+    if (!asErr && assignmentsData) {
+      assignmentsList = assignmentsData;
+    } else {
+      // Resilient fallback: fetch flat assignments and link teacher/student from memory
+      const { data: flatAssignments } = await supabase
+        .from("assignments")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (flatAssignments) {
+        const teacherMap = new Map(teachersList.map((t) => [t.id, t]));
+        const studentMap = new Map(studentsList.map((s) => [s.id, s]));
+        assignmentsList = flatAssignments.map((a) => ({
+          ...a,
+          teacher: a.teacher || teacherMap.get(a.teacher_id) || null,
+          student: a.student || studentMap.get(a.student_id) || null,
+        }));
+      }
+    }
+  } catch (loadErr) {
+    console.error("[AdminAssignments loadErr]:", loadErr);
+  }
+
+  const assignments = assignmentsList;
+  const teachers = teachersList;
+  const students = studentsList;
 
   async function updateAssignmentStatus(formData: FormData) {
     "use server";
