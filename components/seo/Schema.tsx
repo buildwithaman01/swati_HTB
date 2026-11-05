@@ -1,12 +1,15 @@
 export default function Schema() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
+    "@type": ["LocalBusiness", "EducationalOrganization"],
     "name": "Swati Home Tuition Bureau",
+    "alternateName": "Swati HTB Patna",
     "image": "https://swatihometuition.in/images/logo1.png",
-    "@id": "https://swatihometuition.in",
+    "@id": "https://swatihometuition.in/#organization",
     "url": "https://swatihometuition.in",
     "telephone": "+919229738307",
+    "email": "contact@swatihometuition.in",
+    "priceRange": "₹2,500 - ₹12,000/month",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Block A, Area B, 3rd Floor, Banke Bihari Kunj, Mithapur",
@@ -35,24 +38,53 @@ export default function Schema() {
       "opens": "08:00",
       "closes": "20:00"
     },
+    "areaServed": [
+      { "@type": "City", "name": "Patna" },
+      { "@type": "AdministrativeArea", "name": "Boring Road, Patna" },
+      { "@type": "AdministrativeArea", "name": "Kankarbagh, Patna" },
+      { "@type": "AdministrativeArea", "name": "Patliputra Colony, Patna" },
+      { "@type": "AdministrativeArea", "name": "Bailey Road, Patna" },
+      { "@type": "AdministrativeArea", "name": "Rajendra Nagar, Patna" },
+      { "@type": "AdministrativeArea", "name": "Ashiana Nagar, Patna" }
+    ],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "128",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+919229738307",
+      "contactType": "customer service",
+      "areaServed": "IN",
+      "availableLanguage": ["Hindi", "English"]
+    },
     "sameAs": [
       "https://www.facebook.com/profile.php?id=61593236635791",
-      "https://www.instagram.com/swatihtb"
+      "https://www.instagram.com/swati.htb"
     ]
   };
 
-  const educationalOrgSchema = {
+  const serviceSchema = {
     "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    "name": "Swati Home Tuition Bureau",
-    "url": "https://swatihometuition.in",
-    "logo": "https://swatihometuition.in/images/logo1.png",
-    "description": "Patna's leading home tuition bureau providing verified educators and a strict girls safety protocol.",
-    "address": {
-      "@type": "PostalAddress",
-      "addressLocality": "Patna",
-      "addressRegion": "Bihar",
-      "addressCountry": "IN"
+    "@type": "Service",
+    "name": "Home Tuition and Private Tutoring in Patna",
+    "serviceType": "Home Tutoring",
+    "provider": {
+      "@id": "https://swatihometuition.in/#organization"
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": "Patna"
+    },
+    "description": "Verified home tutors for Class 1 to 12 (CBSE, ICSE, Bihar Board), IIT-JEE, and NEET in Patna with strict female student safety protocols.",
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "INR",
+      "lowPrice": "2500",
+      "highPrice": "12000"
     }
   };
 
@@ -64,7 +96,7 @@ export default function Schema() {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(educationalOrgSchema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
       />
     </>
   );

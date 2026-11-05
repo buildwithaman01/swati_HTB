@@ -19,6 +19,43 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://swatihometuition.in'),
   title: "Swati Home Tuition Bureau | Patna's Best Home Tutors",
   description: "Get 100% verified, expert home tutors for CBSE, ICSE, BSEB, JEE & NEET in Patna. We enforce a strict 4-step safety protocol for your peace of mind.",
+  keywords: [
+    "Home Tutors in Patna",
+    "Home Tuition Patna",
+    "Best Home Tutors in Patna",
+    "Female Home Tutor in Patna",
+    "Home Tutor Boring Road Patna",
+    "Home Tutor Kankarbagh Patna",
+    "Home Tutor Patliputra Patna",
+    "CBSE Home Tutors Patna",
+    "ICSE Home Tuition Patna",
+    "NEET Home Tutor Patna",
+    "JEE Main Home Tutor Patna",
+    "Swati Home Tuition Bureau",
+    "Private Tutor Patna"
+  ],
+  alternates: {
+    canonical: 'https://swatihometuition.in',
+  },
+  authors: [{ name: "Swati Home Tuition Bureau", url: "https://swatihometuition.in" }],
+  creator: "Swati Home Tuition Bureau",
+  publisher: "Swati Home Tuition Bureau",
+  formatDetection: {
+    telephone: true,
+    address: true,
+    email: true,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
     title: "Swati Home Tuition Bureau | Top Home Tutors in Patna",
     description: "Book a free demo class today with Patna's most trusted home tuition bureau. Serving Boring Road, Kankarbagh, Patliputra, and 86+ localities.",
