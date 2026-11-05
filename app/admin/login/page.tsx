@@ -1,9 +1,12 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { Shield } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
-export default async function AdminLogin({ searchParams }: { searchParams: { message: string } }) {
+export default async function AdminLogin({ searchParams }: { searchParams: Promise<{ message?: string }> }) {
+  const sp = await searchParams;
+  const message = sp?.message;
+
   // If already logged in, redirect
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -22,9 +25,9 @@ export default async function AdminLogin({ searchParams }: { searchParams: { mes
         <h1 className="text-2xl font-bold text-center text-[#1F2937] mb-2 font-serif">Admin Control Panel</h1>
         <p className="text-center text-[#1F2937]/60 text-sm mb-8">Authorized personnel only</p>
 
-        {searchParams?.message && (
+        {message && (
           <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100 text-center font-medium">
-            {searchParams.message}
+            {message}
           </div>
         )}
 

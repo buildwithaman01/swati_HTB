@@ -1,7 +1,10 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CheckCircle2, XCircle, Shield, ExternalLink, Star, Quote } from "lucide-react";
+import { CheckCircle2, XCircle, Shield, ExternalLink, Star } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Verify Teacher — Swati Home Tuition Bureau",
@@ -15,24 +18,32 @@ const BADGE: Record<string, string> = {
   pending:   "⏳ Pending",
 };
 
-export default async function VerifyPage({ params }: { params: { id: string } }) {
-  const teacherId = params.id.toUpperCase();
+export default async function VerifyPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const rawId = (id || "").trim();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId);
 
-  const { data: teacher } = await supabaseAdmin
-    .from("teachers")
-    .select("*")
-    .eq("teacher_id", teacherId)
-    .single();
+  let query = supabaseAdmin.from("teachers").select("*");
+  if (isUuid) {
+    query = query.eq("id", rawId);
+  } else {
+    query = query.eq("teacher_id", rawId.toUpperCase());
+  }
 
-  const { data: reviews } = await supabaseAdmin
-    .from("reviews")
-    .select("rating, review_text, parent_name, locality, created_at")
-    .eq("teacher_id", teacher?.id)
-    .eq("is_verified", true)
-    .eq("is_public", true)
-    .order("created_at", { ascending: false });
+  const { data: teacher } = await query.maybeSingle();
+
+  const { data: reviews } = teacher?.id
+    ? await supabaseAdmin
+        .from("reviews")
+        .select("rating, review_text, parent_name, locality, created_at")
+        .eq("teacher_id", teacher.id)
+        .eq("is_verified", true)
+        .eq("is_public", true)
+        .order("created_at", { ascending: false })
+    : { data: [] };
 
   const isValid = !!(teacher && teacher.verification_status === "approved" && teacher.is_active);
+  const displayId = teacher?.teacher_id || rawId.toUpperCase();
 
   return (
     <main className="min-h-screen bg-[#FAF7F2] flex items-center justify-center px-4 py-12">
@@ -42,7 +53,7 @@ export default async function VerifyPage({ params }: { params: { id: string } })
             <Shield className="w-4 h-4" />
             Swati Safety Shield
           </div>
-          <p className="text-[#1F2937]/50 text-sm">Verifying ID: <code className="font-bold text-[#0F4C5C]">{teacherId}</code></p>
+          <p className="text-[#1F2937]/50 text-sm">Verifying ID: <code className="font-bold text-[#0F4C5C]">{displayId}</code></p>
         </div>
 
         <div className={`rounded-3xl overflow-hidden shadow-lg border-2 ${isValid ? "border-emerald-400" : "border-red-400"}`}>

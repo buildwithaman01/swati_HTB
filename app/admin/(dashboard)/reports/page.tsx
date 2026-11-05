@@ -1,10 +1,13 @@
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/server";
 import { FileText, CheckCircle2, ArrowRight, Eye, Send } from "lucide-react";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminReportsPage() {
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
 
   const { data: reports } = await supabase
     .from("progress_reports")

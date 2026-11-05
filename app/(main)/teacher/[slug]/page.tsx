@@ -1,16 +1,20 @@
-﻿import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MapPin, BookOpen, Star, Shield, CheckCircle2, Clock, Phone } from "lucide-react";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
   const { data: teacher } = await supabaseAdmin
     .from("teachers")
     .select("full_name, qualification, subjects, locality")
-    .eq("profile_slug", params.slug)
+    .eq("profile_slug", slug)
     .eq("verification_status", "approved")
-    .single();
+    .maybeSingle();
   if (!teacher) return { title: "Teacher Not Found — Swati HTB" };
   return {
     title: `${teacher.full_name} — ${teacher.qualification} | Swati Home Tuition Bureau`,
@@ -25,14 +29,15 @@ const BADGE: Record<string, { label: string; color: string }> = {
   pending:   { label: "⏳ Pending Verification",      color: "bg-gray-100 text-gray-600 border-gray-300" },
 };
 
-export default async function TeacherProfilePage({ params }: { params: { slug: string } }) {
+export default async function TeacherProfilePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const { data: teacher } = await supabaseAdmin
     .from("teachers")
     .select("*")
-    .eq("profile_slug", params.slug)
+    .eq("profile_slug", slug)
     .eq("verification_status", "approved")
     .eq("is_active", true)
-    .single();
+    .maybeSingle();
 
   if (!teacher) notFound();
 

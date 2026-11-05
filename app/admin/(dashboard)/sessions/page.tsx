@@ -1,6 +1,9 @@
 import { createAdminClient } from "@/utils/supabase/server";
 import { BookOpen, Calendar, Clock, CheckCircle2, User } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminSessionsPage() {
   const supabase = await createAdminClient();
 

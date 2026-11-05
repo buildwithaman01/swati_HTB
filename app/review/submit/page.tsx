@@ -1,9 +1,23 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Star, CheckCircle2, Send } from "lucide-react";
 
-export default function SubmitReviewPage({ searchParams }: { searchParams: { token?: string } }) {
-  const token = searchParams?.token;
+export default function SubmitReviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <p className="text-neutral-500 text-sm">Loading review form...</p>
+      </div>
+    }>
+      <ReviewForm />
+    </Suspense>
+  );
+}
+
+function ReviewForm() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token");
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [text, setText] = useState("");

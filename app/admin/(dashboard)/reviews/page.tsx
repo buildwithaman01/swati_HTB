@@ -2,6 +2,9 @@ import { createAdminClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { Star, CheckCircle2, EyeOff, Eye, MessageCircle } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminReviews() {
   const supabase = await createAdminClient();
 
@@ -57,7 +60,6 @@ export default async function AdminReviews() {
     await adminSupabase.from("reviews").update({
       is_verified: false,
       is_public: false,
-      admin_note: "Rejected by admin",
     }).eq("id", id);
     revalidatePath("/admin/reviews");
   }

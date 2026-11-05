@@ -2,9 +2,13 @@ import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 
-export default async function PrintReportPage({ params }: { params: { id: string } }) {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function PrintReportPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = await createClient();
-  const reportId = params.id;
+  const reportId = id;
 
   const { data: report } = await supabase
     .from("progress_reports")

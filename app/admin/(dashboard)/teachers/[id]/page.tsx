@@ -5,14 +5,26 @@ import Link from "next/link";
 import { ArrowLeft, User, Phone, MapPin, GraduationCap, CheckCircle2, XCircle, Clock, ShieldCheck, Mail, Map, BookOpen, AlertTriangle, FileText, Save, Check, X, MessageCircle, KeyRound } from "lucide-react";
 import AccountManagementCard from "./AccountManagementCard";
 
-export default async function TeacherDetail({ params }: { params: { id: string } }) {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function TeacherDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const rawId = (id || "").trim();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId);
+
   const supabase = await createAdminClient();
   
-  const { data: teacher } = await supabase
-    .from("teachers")
-    .select("*")
-    .eq("id", params.id)
-    .single();
+  let query = supabase.from("teachers").select("*");
+  if (isUuid) {
+    query = query.eq("id", rawId);
+  } else {
+    query = query.eq("teacher_id", rawId.toUpperCase());
+  }
+
+  const { data: teacher } = await query.maybeSingle();
+
+  if (!teacher) return notFound();
 
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
@@ -21,10 +33,9 @@ export default async function TeacherDetail({ params }: { params: { id: string }
   const { count: sessionCountThisMonth } = await supabase
     .from("sessions")
     .select("*", { count: "exact", head: true })
-    .eq("teacher_id", params.id)
+    .eq("teacher_id", teacher.id)
     .gte("session_date", startOfMonth.toISOString());
 
-  if (!teacher) return notFound();
 
   // Generate secure 1-hour signed URL for private KYC documents
   let idProofViewUrl = null;

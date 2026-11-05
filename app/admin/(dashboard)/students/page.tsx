@@ -3,21 +3,28 @@ import { Search, GraduationCap, Plus, Filter, UserCheck, AlertCircle } from "luc
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminStudents({
   searchParams,
 }: {
-  searchParams: { q?: string; status?: string };
+  searchParams: Promise<{ q?: string; status?: string }>;
 }) {
+  const sp = await searchParams;
+  const q = sp?.q;
+  const status = sp?.status;
+
   const supabase = await createAdminClient();
   
   let query = supabase.from("students").select("*").order("created_at", { ascending: false });
 
-  if (searchParams.q) {
-    query = query.or(`full_name.ilike.%${searchParams.q}%,student_id.ilike.%${searchParams.q}%,parent_phone.ilike.%${searchParams.q}%,locality.ilike.%${searchParams.q}%`);
+  if (q) {
+    query = query.or(`full_name.ilike.%${q}%,student_id.ilike.%${q}%,parent_phone.ilike.%${q}%,locality.ilike.%${q}%`);
   }
 
-  if (searchParams.status && searchParams.status !== "all") {
-    query = query.eq("enrollment_status", searchParams.status);
+  if (status && status !== "all") {
+    query = query.eq("enrollment_status", status);
   }
 
   const { data: students } = await query;
@@ -50,12 +57,12 @@ export default async function AdminStudents({
             <input 
               type="text" 
               name="q"
-              defaultValue={searchParams.q}
+              defaultValue={q}
               placeholder="Search by name, ID, parent phone, or area..." 
               className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 text-sm" 
             />
           </div>
-          {searchParams.status && <input type="hidden" name="status" value={searchParams.status} />}
+          {status && <input type="hidden" name="status" value={status} />}
           <button type="submit" className="bg-neutral-100 hover:bg-neutral-200 text-[#1F2937] px-4 rounded-xl text-sm font-semibold transition-colors">
             Search
           </button>
@@ -64,10 +71,10 @@ export default async function AdminStudents({
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           <Filter className="text-neutral-400 w-4 h-4 ml-2 shrink-0" />
           <div className="flex bg-neutral-100 p-1 rounded-xl shrink-0">
-            <FilterLink current={searchParams.status} value="" label="All" q={searchParams.q} />
-            <FilterLink current={searchParams.status} value="enquiry" label="Enquiry" q={searchParams.q} />
-            <FilterLink current={searchParams.status} value="demo" label="Demo" q={searchParams.q} />
-            <FilterLink current={searchParams.status} value="enrolled" label="Enrolled" q={searchParams.q} />
+            <FilterLink current={status} value="" label="All" q={q} />
+            <FilterLink current={status} value="enquiry" label="Enquiry" q={q} />
+            <FilterLink current={status} value="demo" label="Demo" q={q} />
+            <FilterLink current={status} value="enrolled" label="Enrolled" q={q} />
           </div>
         </div>
       </div>

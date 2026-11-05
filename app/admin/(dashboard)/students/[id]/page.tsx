@@ -5,16 +5,27 @@ import Link from "next/link";
 import { ArrowLeft, User, Phone, MapPin, GraduationCap, FileText, Save, Home, BookOpen, AlertCircle, Calendar, MessageCircle } from "lucide-react";
 import StudentAccountManagementCard from "./StudentAccountManagementCard";
 
-export default async function StudentDetail({ params }: { params: { id: string } }) {
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export default async function StudentDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const rawId = (id || "").trim();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawId);
+
   const supabase = await createAdminClient();
   
-  const { data: student } = await supabase
-    .from("students")
-    .select("*")
-    .eq("id", params.id)
-    .single();
+  let query = supabase.from("students").select("*");
+  if (isUuid) {
+    query = query.eq("id", rawId);
+  } else {
+    query = query.eq("student_id", rawId.toUpperCase());
+  }
+
+  const { data: student } = await query.maybeSingle();
 
   if (!student) return notFound();
+
 
   // Fetch their assignments to show active teachers/classes
   const { data: assignments } = await supabase

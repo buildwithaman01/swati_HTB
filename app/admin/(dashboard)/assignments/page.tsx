@@ -4,6 +4,9 @@ import { BookOpen, Plus, Users, ChevronRight, IndianRupee, Clock, CheckCircle2, 
 import Link from "next/link";
 import AssignmentActions from "./AssignmentActions";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminAssignments() {
   const supabase = await createAdminClient();
 

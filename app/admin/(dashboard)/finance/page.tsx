@@ -2,6 +2,9 @@ import { createAdminClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { IndianRupee, TrendingUp, AlertCircle, CheckCircle2, Plus, CreditCard, Clock } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AdminFinance() {
   const supabase = await createAdminClient();
 

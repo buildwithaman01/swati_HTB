@@ -1,4 +1,5 @@
-﻿import { createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 export async function createClient() {
@@ -28,18 +29,15 @@ export async function createClient() {
   );
 }
 
-// For operations that bypass RLS (like the admin dashboard fetching data)
+// For operations that bypass RLS (like the admin dashboard fetching data & API handlers)
 export async function createAdminClient() {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return [];
-        },
-        setAll() {}
-      }
-    }
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dtbhafjzoybnmqgxdwoo.supabase.co";
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+
+  return createSupabaseClient(url, key, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
 }
