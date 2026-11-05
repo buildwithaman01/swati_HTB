@@ -1,6 +1,7 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { FileText, TrendingUp, TrendingDown, Award, ExternalLink, Calendar } from "lucide-react";
+import PrintReportButton from "./PrintReportButton";
 
 export default async function ParentReports() {
   const supabase = await createClient();
@@ -47,8 +48,11 @@ export default async function ParentReports() {
             Verified performance reports and test marks for <span className="font-semibold text-neutral-800">{student.full_name}</span>.
           </p>
         </div>
-        <div className="text-xs bg-[#0F4C5C]/10 text-[#0F4C5C] font-semibold px-3 py-1.5 rounded-full w-fit">
-          {reports?.length || 0} Records Published
+        <div className="flex items-center gap-2">
+          <PrintReportButton studentName={student.full_name} />
+          <div className="text-xs bg-[#0F4C5C]/10 text-[#0F4C5C] font-semibold px-3 py-2 rounded-xl w-fit">
+            {reports?.length || 0} Records Published
+          </div>
         </div>
       </div>
 

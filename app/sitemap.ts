@@ -1,22 +1,29 @@
 import { MetadataRoute } from 'next';
+import { patnaAreas, slugify } from '@/lib/data/areas';
+import { blogsData } from '@/lib/data/blogs';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://swatihometuition.in';
 
-  // Static routes
-  const routes = [
-    '',
-    '/book-demo',
-    '/find-tutor',
-    '/join',
-  ].map((route) => ({
-    url: `${baseUrl}${route}`,
+  // 1. Core static marketing & trust routes
+  const staticRoutes = [
+    { path: '', priority: 1.0, changeFrequency: 'daily' as const },
+    { path: '/find-tutor', priority: 0.9, changeFrequency: 'weekly' as const },
+    { path: '/book-demo', priority: 0.9, changeFrequency: 'weekly' as const },
+    { path: '/join', priority: 0.8, changeFrequency: 'weekly' as const },
+    { path: '/how-it-works', priority: 0.8, changeFrequency: 'monthly' as const },
+    { path: '/about', priority: 0.7, changeFrequency: 'monthly' as const },
+    { path: '/safety', priority: 0.8, changeFrequency: 'monthly' as const },
+    { path: '/privacy', priority: 0.5, changeFrequency: 'yearly' as const },
+    { path: '/terms', priority: 0.5, changeFrequency: 'yearly' as const },
+  ].map((item) => ({
+    url: `${baseUrl}${item.path}`,
     lastModified: new Date(),
-    changeFrequency: 'weekly' as const,
-    priority: route === '' ? 1 : 0.8,
+    changeFrequency: item.changeFrequency,
+    priority: item.priority,
   }));
 
-  // Program routes
+  // 2. Academic Program routes
   const programs = [
     '/programs/jee-main-advanced',
     '/programs/neet-medical',
@@ -28,55 +35,45 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${baseUrl}${route}`,
     lastModified: new Date(),
     changeFrequency: 'weekly' as const,
-    priority: 0.9, // High priority for program pages
+    priority: 0.9,
   }));
 
-  // Areas
-  const allAreas = [
-    "AG Colony", "Agam Kuan", "Anandpuri", "Anisabad", "Ashiana Nagar", "Bailey Road", "Bazar Samiti", "Bhootnath Road", "Bihta", "Boring Canal Road", "Boring Road", "Bypass Road", "Chhajjubagh", "Danapur", "Digha", "Exhibition Road", "Frazer Road", "Gandhi Maidan", "Gardanibagh", "Gola Road", "Hanuman Nagar", "Indrapuri", "Jagdeo Path", "Kadamkuan", "Kankarbagh", "Khajpura", "Kumhrar", "Kurji", "Lohanipur", "Machhua Toli", "Mahendru", "Mithapur", "Patliputra Colony", "Patna City", "Phulwari Sharif", "Rajabazar", "Rajbanshi Nagar", "Rajendra Nagar", "Rajiv Nagar", "Ramkrishna Nagar", "Rupaspur", "Saguna More", "Sandalpur", "Shastri Nagar", "Sheikhpura", "Sipara", "Srikrishna Nagar", "Yarpur"
-  ];
-  
-  const areaRoutes = [
-    {
-      url: `${baseUrl}/areas`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    },
-    ...allAreas.map((area) => ({
-      url: `${baseUrl}/areas/${area.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.7,
-    }))
-  ];
+  // 3. Programmatic SEO Locality Landing Pages (90+ Patna Localities)
+  const areaIndexRoute = {
+    url: `${baseUrl}/areas`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.9,
+  };
 
-  // Blogs
-  const blogSlugs = [
-    "how-to-find-best-home-tutor-in-patna",
-    "jee-preparation-strategy-from-class-9",
-    "importance-of-female-tutors-for-girls",
-    "cbse-vs-icse-which-is-better-in-patna",
-    "neet-preparation-strategy-home-tutors-patna",
-    "home-tuition-vs-coaching-institutes-patna",
-    "top-schools-in-patna-home-tuition-guide",
-    "class-10-cbse-maths-science-blueprint-patna",
-  ];
+  const areaRoutes = patnaAreas.map((area) => ({
+    url: `${baseUrl}/areas/${slugify(area)}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
 
-  const blogRoutes = [
-    {
-      url: `${baseUrl}/blogs`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    },
-    ...blogSlugs.map((slug) => ({
-      url: `${baseUrl}/blogs/${slug}`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly' as const,
-      priority: 0.6,
-    }))
-  ];
+  // 4. In-Depth Academic Blogs & E-E-A-T Content
+  const blogIndexRoute = {
+    url: `${baseUrl}/blogs`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  };
 
-  return [...routes, ...programs, ...areaRoutes, ...blogRoutes];
+  const blogRoutes = blogsData.map((post) => ({
+    url: `${baseUrl}/blogs/${post.slug}`,
+    lastModified: new Date(post.isoDate || post.date || new Date()),
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+  }));
+
+  return [
+    ...staticRoutes,
+    ...programs,
+    areaIndexRoute,
+    ...areaRoutes,
+    blogIndexRoute,
+    ...blogRoutes,
+  ];
 }

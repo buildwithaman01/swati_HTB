@@ -128,10 +128,30 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm font-medium text-[#FAF7F2]/50">
-            © {new Date().getFullYear()} Swati Home Tuition Bureau. All rights reserved.
-          </p>
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+          <div className="text-sm font-medium text-[#FAF7F2]/50">
+            <p>© {new Date().getFullYear()} Swati Home Tuition Bureau. All rights reserved.</p>
+            <p className="text-xs text-[#FAF7F2]/40 mt-1">
+              Developed &amp; Maintained by{" "}
+              <a 
+                href="https://pehchanly.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-[#D4A017] transition-colors underline underline-offset-2"
+              >
+                Pehchanly Digital Solutions
+              </a>
+              {" "}·{" "}
+              <a 
+                href="https://github.com/buildwithaman01" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-[#D4A017] transition-colors"
+              >
+                Aman Singh
+              </a>
+            </p>
+          </div>
           <div className="flex items-center gap-8">
             <Link href="/privacy" className="text-sm font-medium text-[#FAF7F2]/50 hover:text-white transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="text-sm font-medium text-[#FAF7F2]/50 hover:text-white transition-colors">Terms of Service</Link>
