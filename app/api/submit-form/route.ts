@@ -37,12 +37,22 @@ export async function POST(req: NextRequest) {
         const back = formData.get("aadhaar_back") as File | null;
         
         if (front && front.size > 0) {
-          const { data, error } = await supabase.storage.from("kyc-documents").upload(`front-${Date.now()}-${front.name.replace(/[^a-zA-Z0-9.]/g, "")}`, front);
-          if (!error && data) frontUrl = supabase.storage.from("kyc-documents").getPublicUrl(data.path).data.publicUrl;
+          const frontName = `front-${Date.now()}-${front.name.replace(/[^a-zA-Z0-9.]/g, "")}`;
+          const { data, error } = await supabase.storage.from("kyc-documents").upload(frontName, front);
+          if (error) {
+            console.error("[Supabase Storage Front Upload Error]:", error);
+          } else if (data) {
+            frontUrl = frontName;
+          }
         }
         if (back && back.size > 0) {
-          const { data, error } = await supabase.storage.from("kyc-documents").upload(`back-${Date.now()}-${back.name.replace(/[^a-zA-Z0-9.]/g, "")}`, back);
-          if (!error && data) backUrl = supabase.storage.from("kyc-documents").getPublicUrl(data.path).data.publicUrl;
+          const backName = `back-${Date.now()}-${back.name.replace(/[^a-zA-Z0-9.]/g, "")}`;
+          const { data, error } = await supabase.storage.from("kyc-documents").upload(backName, back);
+          if (error) {
+            console.error("[Supabase Storage Back Upload Error]:", error);
+          } else if (data) {
+            backUrl = backName;
+          }
         }
       } catch (err) {
         console.error("File upload error:", err);
@@ -70,16 +80,62 @@ export async function POST(req: NextRequest) {
         // Parse subjects into array safely
         const subjectsArray = fields.subjects ? fields.subjects.split(",").map((s: string) => s.trim()) : [];
         
-        // A) Insert into Supabase (status: enquiry)
-        await supabase.from("students").insert({
+        // Smart Locality detection from address string
+        const addressText = (fields.address || "").toLowerCase();
+        let detectedLocality = fields.locality || "";
+        if (!detectedLocality) {
+          const patnaLocalities = [
+            "boring road", "kankarbagh", "patliputra", "bailey road", "rajendra nagar",
+            "anandpuri", "ashiana", "digha", "danapur", "sk puri", "frazer road",
+            "gola road", "saguna more", "exhibition road", "kidwaipuri", "shastri nagar",
+            "mithapur", "gardanibagh", "kumhrar", "anisabad", "kurji", "phulwari"
+          ];
+          for (const loc of patnaLocalities) {
+            if (addressText.includes(loc)) {
+              detectedLocality = loc.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+              break;
+            }
+          }
+        }
+        if (!detectedLocality && fields.address) {
+          detectedLocality = fields.address.split(',')[0].trim();
+        }
+
+        const studentPayload: Record<string, any> = {
           full_name: fields.name || "Unknown",
           parent_name: fields.name || "Unknown",
           parent_phone: fields.phone || "Unknown",
+          whatsapp: fields.phone || null,
           class_studying: fields.studentClass || null,
-          subjects_needed: subjectsArray,
+          locality: detectedLocality || "Patna",
           address: fields.address || null,
-          enrollment_status: "enquiry"
-        });
+          subjects_required: subjectsArray,
+          subjects_needed: subjectsArray,
+          enrollment_status: "enquiry",
+          tuition_type_preference: "home",
+          internal_notes: `Free Demo Booking. Address: ${fields.address || "N/A"} | Subjects: ${fields.subjects || "N/A"}`
+        };
+
+        // A) Insert into Supabase (status: enquiry)
+        const { data: insertedStudent, error: studentInsertError } = await supabase
+          .from("students")
+          .insert(studentPayload)
+          .select("id, student_id")
+          .single();
+
+        if (studentInsertError) {
+          console.error("[Supabase Student Insert Error]:", studentInsertError);
+          // If conflict on phone number, update record with new enquiry details
+          if (studentInsertError.code === "23505") {
+            const { error: updateErr } = await supabase
+              .from("students")
+              .update(studentPayload)
+              .eq("parent_phone", studentPayload.parent_phone);
+            if (updateErr) console.error("[Supabase Student Update Conflict Error]:", updateErr);
+          }
+        } else {
+          console.log("[Supabase] Successfully saved student demo request:", insertedStudent);
+        }
 
         // B) Push to Vtiger CRM as Lead
         try {
@@ -90,9 +146,9 @@ export async function POST(req: NextRequest) {
               lastname: fields.name || "Unknown",
               phone: fields.phone || "Unknown",
               class: fields.studentClass || "",
-              locality: fields.address || "",
+              locality: detectedLocality || fields.address || "",
               subjects: fields.subjects || "",
-              requirements: "",
+              requirements: `Demo Request for ${fields.studentClass || "General"}`
             }),
           });
         } catch (crmErr) {
@@ -100,35 +156,126 @@ export async function POST(req: NextRequest) {
         }
 
       } else if (formType === "join-tutor" || formType === "join-tutor-wizard") {
-        // Parse subjects into array safely
+        // Parse arrays safely
         const subjectsArray = fields.subjects ? fields.subjects.split(",").map((s: string) => s.trim()) : [];
+        const classesArray = fields.classes ? fields.classes.split(",").map((s: string) => s.trim()) : [];
+        const areasArray = fields.areas ? fields.areas.split(",").map((s: string) => s.trim()) : [];
         
         // Ensure gender matches enum (male, female, other)
         let gender = "other";
         if (fields.gender?.toLowerCase() === "male") gender = "male";
         if (fields.gender?.toLowerCase() === "female") gender = "female";
 
-        await supabase.from("teachers").insert({
+        // Generate teacher_id fallback (e.g. TCH-2026-005)
+        const currentYear = new Date().getFullYear();
+        const randId = Math.floor(100 + Math.random() * 900);
+        const generatedTeacherId = `TCH-${currentYear}-${randId}`;
+
+        // Safe Date of Birth (null if empty string)
+        const validDob = fields.dob && fields.dob.trim() !== "" ? fields.dob.trim() : null;
+
+        // Admin notes compiling references & guardian
+        const adminNotesList = [
+          fields.guardian_name ? `Guardian: ${fields.guardian_name}` : null,
+          fields.ref1_name ? `Ref 1: ${fields.ref1_name} (${fields.ref1_phone || "No phone"})` : null,
+          fields.ref2_name ? `Ref 2: ${fields.ref2_name} (${fields.ref2_phone || "No phone"})` : null,
+          fields.mode ? `Preferred Mode: ${fields.mode}` : null,
+          fields.video_url ? `Demo Video: ${fields.video_url}` : null,
+        ].filter(Boolean);
+
+        const teacherPayload: Record<string, any> = {
+          teacher_id: generatedTeacherId,
           full_name: fields.name || "Unknown",
           phone: fields.whatsapp || fields.phone || "Unknown",
+          whatsapp: fields.whatsapp || fields.phone || null,
+          email: fields.email || null,
           gender: gender,
+          date_of_birth: validDob,
           qualification: fields.qualification || "Not provided",
+          institution: fields.college || null,
+          experience_years: parseInt(fields.experience) || 0,
           subjects: subjectsArray,
+          classes_taught: classesArray,
+          areas_serviceable: areasArray,
           locality: fields.areas || fields.location || null,
-          verification_status: "pending"
-        });
+          address: fields.current_address || null,
+          aadhar_number: fields.aadhaar_number || fields.aadhar_number || null,
+          id_proof_url: fields.aadhaar_front_url || null,
+          verification_status: "pending",
+          internal_notes: adminNotesList.length > 0 ? adminNotesList.join(" | ") : null,
+        };
+
+        const { data: insertedTeacher, error: dbInsertError } = await supabase
+          .from("teachers")
+          .insert(teacherPayload)
+          .select("id, teacher_id")
+          .single();
+
+        if (dbInsertError) {
+          console.error("[Supabase Insert Error]:", dbInsertError);
+          // If conflict on unique phone, update existing record so admin panel has latest data
+          if (dbInsertError.code === "23505") {
+            const { error: updateErr } = await supabase
+              .from("teachers")
+              .update(teacherPayload)
+              .eq("phone", teacherPayload.phone);
+            if (updateErr) console.error("[Supabase Update Conflict Error]:", updateErr);
+          }
+        } else {
+          console.log("[Supabase] Successfully inserted teacher:", insertedTeacher);
+        }
       }
     } catch (dbError) {
-      console.error("[Supabase Insert Error]:", dbError);
-      // We continue even if DB fails, so they still get the WhatsApp redirect
+      console.error("[Database Connection Error]:", dbError);
     }
 
     // 2. ── Build WhatsApp message URL
     const waMessage = buildWhatsAppMessage(formType, fields);
     const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
 
-    // 3. ── Build a clean HTML email body for Web3Forms
-    const emailHtml = buildEmailHtml(formType, fields);
+    // 3. ── Build Web3Forms Payload (Clean Key-Value Table, NO raw HTML codes)
+    let web3formsPayload: Record<string, any> | null = null;
+    if (WEB3FORMS_KEY) {
+      if (isDemo) {
+        web3formsPayload = {
+          access_key: WEB3FORMS_KEY,
+          subject,
+          from_name: "Swati HTB Website",
+          "Parent / Student Name": fields.name || "N/A",
+          "WhatsApp Number": fields.phone || "N/A",
+          "Student Class": fields.studentClass || "N/A",
+          "Subjects Needed": fields.subjects || "Not specified",
+          "Home Address": fields.address || "N/A",
+        };
+      } else {
+        web3formsPayload = {
+          access_key: WEB3FORMS_KEY,
+          subject,
+          from_name: "Swati HTB Teacher Onboarding",
+          "Full Name": fields.name || "N/A",
+          "WhatsApp Number": fields.whatsapp || fields.phone || "N/A",
+          "Gender": fields.gender || "N/A",
+          "Date of Birth": fields.dob || "N/A",
+          "Father or Husband Name": fields.guardian_name || "N/A",
+          "Email Address": fields.email || "N/A",
+          "Current Address": fields.current_address || "N/A",
+          "Highest Qualification": fields.qualification || "N/A",
+          "College / University": fields.college || "N/A",
+          "Subjects Can Teach": fields.subjects || "N/A",
+          "Classes Can Teach": fields.classes || "N/A",
+          "Teaching Experience": `${fields.experience || 0} Years`,
+          "Preferred Mode": fields.mode || "N/A",
+          "Serviceable Areas": fields.areas || "N/A",
+          "Demo Video": fields.video_url || "Not provided",
+          "Aadhaar Number": fields.aadhaar_number || "N/A",
+          "Aadhaar Front Link": fields.aadhaar_front_url || "Not uploaded",
+          "Aadhaar Back Link": fields.aadhaar_back_url || "Not uploaded",
+          "Reference 1": fields.ref1_name ? `${fields.ref1_name} (${fields.ref1_phone || "No phone"})` : "N/A",
+          "Reference 2": fields.ref2_name ? `${fields.ref2_name} (${fields.ref2_phone || "No phone"})` : "N/A",
+          "Bureau Agreements": "Accepted Anti-Bypass & Background Verification Policy",
+        };
+      }
+    }
 
     // 4. ── Google Sheets (if configured)
     if (GOOGLE_SHEET_WEBHOOK) {
@@ -143,17 +290,12 @@ export async function POST(req: NextRequest) {
       }).catch((err) => console.error("[Sheets] Failed:", err));
     }
 
-    // 5. ── Return data to frontend (Frontend will send to Web3Forms directly)
+    // 5. ── Return data to frontend
     return NextResponse.json({
       success: true,
       message: "Form processed successfully",
       whatsappUrl: waUrl,
-      // Pass email data to frontend
-      web3formsData: WEB3FORMS_KEY ? {
-        access_key: WEB3FORMS_KEY,
-        subject,
-        message: emailHtml,
-      } : null
+      web3formsData: web3formsPayload
     });
   } catch (err) {
     console.error("[submit-form] Error:", err);

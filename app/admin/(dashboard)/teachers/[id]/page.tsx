@@ -26,6 +26,19 @@ export default async function TeacherDetail({ params }: { params: { id: string }
 
   if (!teacher) return notFound();
 
+  // Generate secure 1-hour signed URL for private KYC documents
+  let idProofViewUrl = null;
+  if (teacher.id_proof_url) {
+    if (teacher.id_proof_url.startsWith("http")) {
+      idProofViewUrl = teacher.id_proof_url;
+    } else {
+      const { data: signed } = await supabase.storage
+        .from("kyc-documents")
+        .createSignedUrl(teacher.id_proof_url, 3600);
+      idProofViewUrl = signed?.signedUrl || null;
+    }
+  }
+
   // Server actions
   async function updateTeacherStatus(formData: FormData) {
     "use server";
@@ -343,7 +356,7 @@ export default async function TeacherDetail({ params }: { params: { id: string }
               <ShieldCheck className="w-5 h-5 text-[#0F4C5C]" /> Verification Documents
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <DocBox title="Aadhar Card" value={teacher.aadhar_number} url={teacher.id_proof_url} />
+              <DocBox title="Aadhar Card" value={teacher.aadhar_number} url={idProofViewUrl} />
               <DocBox title="PAN Card" value={teacher.pan_number} url={null} />
               <DocBox title="Police Verification" value={teacher.police_verified ? "Verified" : "Not Verified"} url={teacher.police_cert_url} />
             </div>

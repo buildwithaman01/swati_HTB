@@ -9,6 +9,8 @@ import { submitLeadToCRM } from "./actions";
 
 export default function FindTutorPage() {
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [whatsappUrl, setWhatsappUrl] = useState("https://wa.me/919229738307");
 
   const handleSubmit = async (formData: FormData) => {
     setLoading(true);
@@ -17,14 +19,16 @@ export default function FindTutorPage() {
     
     if (result.success) {
       toast.success("Tutor Search Initiated!", {
-        description: "Our matching team is looking for the perfect tutor. We'll contact you soon."
+        description: "Your request is registered. We are matching verified tutors in your area."
       });
-      // reset form manually or via ref
-      const form = document.getElementById("find-tutor-form") as HTMLFormElement;
-      if (form) form.reset();
+      if (result.whatsappUrl) {
+        setWhatsappUrl(result.whatsappUrl);
+      }
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       toast.error("Oops! Something went wrong.", {
-        description: "Please try again or contact us on WhatsApp."
+        description: "Please try again or contact us directly on WhatsApp."
       });
     }
     
@@ -129,77 +133,117 @@ export default function FindTutorPage() {
           >
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#FAF7F2] rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
             
-            <h3 className="text-3xl font-bold text-[#1F2937] mb-8 font-serif relative z-10">Your Requirements</h3>
-            
-            <form id="find-tutor-form" className="space-y-6 relative z-10" action={handleSubmit}>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Parent/Student Name</label>
-                  <input required name="name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="Enter full name" />
+            {submitted ? (
+              <div className="relative z-10 flex flex-col items-center text-center py-6">
+                <div className="w-20 h-20 rounded-full bg-emerald-50 border-4 border-emerald-200 flex items-center justify-center mb-6">
+                  <UserCheck className="w-10 h-10 text-emerald-500" />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">WhatsApp Number</label>
-                  <input required name="phone" type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="+91" />
+                <h3 className="text-3xl font-bold text-[#1F2937] mb-3 font-serif">
+                  Tutor Search Initiated! 🎉
+                </h3>
+                <p className="text-[#1F2937]/70 text-base leading-relaxed max-w-md mb-8">
+                  Your request has been registered in our matching system. Our academic counselors are reviewing verified tutor profiles in your locality.
+                </p>
+
+                <div className="w-full bg-[#f0fdf4] border border-emerald-200 rounded-2xl p-6 mb-6">
+                  <p className="text-sm font-semibold text-emerald-800 mb-1">Want priority matching?</p>
+                  <p className="text-sm text-emerald-700 mb-4">
+                    Send your requirements directly to our matching team on WhatsApp.
+                  </p>
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center w-full gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-base px-7 py-4 rounded-2xl shadow-[0_8px_24px_rgba(37,211,102,0.3)] transition-all group"
+                  >
+                    <span>Connect on WhatsApp</span>
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </a>
                 </div>
-              </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Class/Grade</label>
-                  <select required name="class" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all appearance-none cursor-pointer">
-                    <option value="">Select class...</option>
-                    <option value="11-12">Class 11-12</option>
-                    <option value="9-10">Class 9-10</option>
-                    <option value="1-8">Class 1-8</option>
-                    <option value="jee">JEE / NEET</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Locality in Patna</label>
-                  <input required name="locality" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Boring Road" />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Subjects Needed</label>
-                <input required name="subjects" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Physics, Maths, Chemistry" />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Any Specific Requirements? (Optional)</label>
-                <textarea name="requirements" rows={3} className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30 resize-none" placeholder="e.g. Prefer female tutor, Need weekend classes..."></textarea>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 mt-6">
-                <button 
-                  type="submit" 
-                  disabled={loading}
-                  className="flex-1 bg-[#0F4C5C] disabled:opacity-70 disabled:cursor-not-allowed hover:bg-[#0a3845] text-white font-bold text-lg py-5 rounded-2xl shadow-[0_10px_30px_rgba(15,76,92,0.3)] transition-all flex items-center justify-center gap-3 group"
+                <button
+                  type="button"
+                  onClick={() => setSubmitted(false)}
+                  className="text-sm text-[#1F2937]/50 hover:text-[#0F4C5C] underline underline-offset-4"
                 >
-                  {loading ? (
-                    <>
-                      <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Searching...
-                    </>
-                  ) : (
-                    <>
-                      Find My Tutor <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                    </>
-                  )}
+                  Submit another request
                 </button>
-                <a 
-                  href="https://wa.me/919229738307" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="flex-1"
-                >
-                  <button type="button" className="w-full h-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-lg py-5 rounded-2xl shadow-[0_10px_30px_rgba(37,211,102,0.3)] transition-all flex items-center justify-center gap-3 group">
-                    WhatsApp Us <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </a>
               </div>
+            ) : (
+              <>
+                <h3 className="text-3xl font-bold text-[#1F2937] mb-8 font-serif relative z-10">Your Requirements</h3>
+                
+                <form id="find-tutor-form" className="space-y-6 relative z-10" action={handleSubmit}>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Parent/Student Name</label>
+                      <input required name="name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="Enter full name" />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">WhatsApp Number</label>
+                      <input required name="phone" type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="+91" />
+                    </div>
+                  </div>
 
-            </form>
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Class/Grade</label>
+                      <select required name="class" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all appearance-none cursor-pointer">
+                        <option value="">Select class...</option>
+                        <option value="11-12">Class 11-12</option>
+                        <option value="9-10">Class 9-10</option>
+                        <option value="1-8">Class 1-8</option>
+                        <option value="jee">JEE / NEET</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Locality in Patna</label>
+                      <input required name="locality" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Boring Road" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Subjects Needed</label>
+                    <input required name="subjects" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Physics, Maths, Chemistry" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Any Specific Requirements? (Optional)</label>
+                    <textarea name="requirements" rows={3} className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30 resize-none" placeholder="e.g. Prefer female tutor, Need weekend classes..."></textarea>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                    <button 
+                      type="submit" 
+                      disabled={loading}
+                      className="flex-1 bg-[#0F4C5C] disabled:opacity-70 disabled:cursor-not-allowed hover:bg-[#0a3845] text-white font-bold text-lg py-5 rounded-2xl shadow-[0_10px_30px_rgba(15,76,92,0.3)] transition-all flex items-center justify-center gap-3 group"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          Searching...
+                        </>
+                      ) : (
+                        <>
+                          Find My Tutor <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </button>
+                    <a 
+                      href="https://wa.me/919229738307" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex-1"
+                    >
+                      <button type="button" className="w-full h-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-lg py-5 rounded-2xl shadow-[0_10px_30px_rgba(37,211,102,0.3)] transition-all flex items-center justify-center gap-3 group">
+                        WhatsApp Us <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      </button>
+                    </a>
+                  </div>
+
+                </form>
+              </>
+            )}
           </motion.div>
 
         </div>

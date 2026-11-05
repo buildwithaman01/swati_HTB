@@ -23,6 +23,7 @@ export default function BookDemoPage() {
         name: formData.get("name"),
         phone: formData.get("phone"),
         studentClass: formData.get("studentClass"),
+        locality: formData.get("locality"),
         subjects: formData.get("subjects"),
         address: formData.get("address"),
       };
@@ -199,9 +200,14 @@ export default function BookDemoPage() {
                       </select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Specific Subjects (Optional)</label>
-                      <input name="subjects" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Only Physics & Maths" />
+                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Locality / Area in Patna</label>
+                      <input required name="locality" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Boring Road, Patliputra" />
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Specific Subjects (Optional)</label>
+                    <input name="subjects" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Only Physics & Maths" />
                   </div>
 
                   <div className="space-y-2">
