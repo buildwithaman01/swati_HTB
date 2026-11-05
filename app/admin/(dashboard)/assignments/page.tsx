@@ -1,8 +1,8 @@
 import { createAdminClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
-import { BookOpen, Plus, Users, ChevronRight, IndianRupee, Clock, CheckCircle2, PauseCircle, XCircle } from "lucide-react";
+import { BookOpen, Plus, Users, IndianRupee, CheckCircle2, PauseCircle, XCircle } from "lucide-react";
 import Link from "next/link";
 import AssignmentActions from "./AssignmentActions";
+import AssignmentStatusSelect from "./AssignmentStatusSelect";
 import AssignmentCreationForm from "./new/AssignmentCreationForm";
 
 export const dynamic = "force-dynamic";
@@ -66,22 +66,6 @@ export default async function AdminAssignments() {
   const teachers = teachersList;
   const students = studentsList;
 
-  async function updateAssignmentStatus(formData: FormData) {
-    "use server";
-    const adminSupabase = await createAdminClient();
-    await adminSupabase
-      .from("assignments")
-      .update({
-        status: formData.get("status"),
-        cancellation_reason: formData.get("reason") || null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", formData.get("id"));
-    revalidatePath("/admin/assignments");
-    revalidatePath("/admin/dashboard");
-    revalidatePath("/admin/finance");
-  }
-
   const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
     active: { label: "Active", color: "bg-emerald-100 text-emerald-700", icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
     paused: { label: "Paused", color: "bg-amber-100 text-amber-700", icon: <PauseCircle className="w-3.5 h-3.5" /> },
@@ -89,10 +73,10 @@ export default async function AdminAssignments() {
     cancelled: { label: "Cancelled", color: "bg-red-100 text-red-700", icon: <XCircle className="w-3.5 h-3.5" /> },
   };
 
-  const activeCount = assignments?.filter(a => a.status === "active").length ?? 0;
+  const activeCount = assignments?.filter((a) => a.status === "active").length ?? 0;
   const totalMonthlyRevenue = assignments
-    ?.filter(a => a.status === "active")
-    .reduce((sum, a) => sum + Number(a.monthly_fee), 0) ?? 0;
+    ?.filter((a) => a.status === "active")
+    .reduce((sum, a) => sum + (Number(a.monthly_fee) || 0), 0) ?? 0;
   const totalCommission = totalMonthlyRevenue * 0.25;
 
   return (
@@ -167,40 +151,45 @@ export default async function AdminAssignments() {
               <tbody className="divide-y divide-neutral-100">
                 {assignments.map((a) => {
                   const cfg = STATUS_CONFIG[a.status] ?? STATUS_CONFIG.active;
+                  const startDateValid = a.start_date && !isNaN(new Date(a.start_date).getTime());
+                  const fee = Number(a.monthly_fee) || 0;
+                  const teacherEarning = Number(a.teacher_earning) || Math.round(fee * 0.75);
+                  const bureauAmt = Number(a.bureau_commission_amt) || Math.round(fee * 0.25);
+
                   return (
                     <tr key={a.id} className="hover:bg-neutral-50/30 transition-colors">
                       {/* Teacher */}
                       <td className="px-6 py-4">
                         <p className="font-semibold text-sm text-[#1F2937]">{(a.teacher as any)?.full_name ?? "—"}</p>
-                        <p className="text-xs text-neutral-400 font-mono">{(a.teacher as any)?.teacher_id}</p>
+                        <p className="text-xs text-neutral-400 font-mono">{(a.teacher as any)?.teacher_id || "—"}</p>
                       </td>
                       {/* Student */}
                       <td className="px-6 py-4">
                         <p className="font-semibold text-sm text-[#1F2937]">{(a.student as any)?.full_name ?? "—"}</p>
-                        <p className="text-xs text-neutral-400">Parent: {(a.student as any)?.parent_name}</p>
+                        <p className="text-xs text-neutral-400">Parent: {(a.student as any)?.parent_name || "—"}</p>
                       </td>
                       {/* Subject */}
                       <td className="px-6 py-4">
-                        <p className="text-sm text-[#1F2937]">{a.subject}</p>
+                        <p className="text-sm text-[#1F2937]">{a.subject || "General"}</p>
                         <p className="text-xs text-neutral-400">Class {(a.student as any)?.class_studying || "?"}</p>
                       </td>
                       {/* Schedule */}
                       <td className="px-6 py-4">
-                        <p className="text-sm text-[#1F2937]">{a.classes_per_week}x/week</p>
-                        <p className="text-xs text-neutral-400">{a.session_duration_mins} min</p>
+                        <p className="text-sm text-[#1F2937]">{a.classes_per_week || 3}x/week</p>
+                        <p className="text-xs text-neutral-400">{a.session_duration_mins || 60} min</p>
                       </td>
                       {/* Fee */}
                       <td className="px-6 py-4">
-                        <p className="text-sm font-bold text-[#1F2937]">₹{Number(a.monthly_fee).toLocaleString("en-IN")}</p>
-                        <p className="text-xs text-emerald-600 font-medium">Teacher: ₹{Number(a.teacher_earning).toLocaleString("en-IN")}</p>
-                        <p className="text-xs text-purple-600">Bureau: ₹{Number(a.bureau_commission_amt).toLocaleString("en-IN")}</p>
+                        <p className="text-sm font-bold text-[#1F2937]">₹{fee.toLocaleString("en-IN")}</p>
+                        <p className="text-xs text-emerald-600 font-medium">Teacher: ₹{teacherEarning.toLocaleString("en-IN")}</p>
+                        <p className="text-xs text-purple-600">Bureau: ₹{bureauAmt.toLocaleString("en-IN")}</p>
                       </td>
                       {/* Status & Actions */}
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${cfg.color}`}>
                           {cfg.icon} {cfg.label}
                         </span>
-                        {a.start_date && (
+                        {startDateValid && (
                           <p className="text-xs text-neutral-400 mt-1">Since {new Date(a.start_date).toLocaleDateString("en-IN")}</p>
                         )}
                         <AssignmentActions
@@ -216,21 +205,7 @@ export default async function AdminAssignments() {
                       </td>
                       {/* Actions */}
                       <td className="px-6 py-4 text-right">
-                        <form action={updateAssignmentStatus} className="inline-flex gap-2 items-center">
-                          <input type="hidden" name="id" value={a.id} />
-                          <select
-                            name="status"
-                            defaultValue=""
-                            onChange={(e) => e.target.form?.requestSubmit()}
-                            className="text-xs border border-neutral-200 rounded-lg px-2 py-1.5 focus:outline-none"
-                          >
-                            <option value="" disabled>Change...</option>
-                            <option value="active">Active</option>
-                            <option value="paused">Pause</option>
-                            <option value="completed">Complete</option>
-                            <option value="cancelled">Cancel</option>
-                          </select>
-                        </form>
+                        <AssignmentStatusSelect assignmentId={a.id} currentStatus={a.status} />
                       </td>
                     </tr>
                   );

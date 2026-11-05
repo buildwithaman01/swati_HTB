@@ -65,7 +65,19 @@ export default function AssignmentCreationForm({
   const selectedStudent = students.find((s) => s.id === studentId);
 
   // Auto-fill subject if student has subjects and none selected
-  const studentSubjects = selectedStudent?.subjects_needed || selectedStudent?.subjects_required || [];
+  const rawStudentSubs = selectedStudent?.subjects_needed || selectedStudent?.subjects_required || [];
+  const studentSubjects: string[] = Array.isArray(rawStudentSubs)
+    ? rawStudentSubs
+    : typeof rawStudentSubs === "string"
+    ? (rawStudentSubs as string).split(",").map((s) => s.trim()).filter(Boolean)
+    : [];
+
+  const rawTeacherSubs = selectedTeacher?.subjects;
+  const teacherSubjectsText = Array.isArray(rawTeacherSubs)
+    ? rawTeacherSubs.join(", ")
+    : typeof rawTeacherSubs === "string"
+    ? rawTeacherSubs
+    : "General";
 
   const feeNum = parseFloat(monthlyFee) || 0;
   const bureauCommission = Math.round(feeNum * 0.25);
@@ -259,7 +271,7 @@ export default function AssignmentCreationForm({
           </select>
           {selectedTeacher && (
             <p className="text-xs text-neutral-500">
-              Subjects taught: {selectedTeacher.subjects?.join(", ") || "General"}
+              Subjects taught: {teacherSubjectsText || "General"}
             </p>
           )}
         </div>

@@ -1,10 +1,10 @@
-﻿import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   const formData = await request.formData();
-  const email = String(formData.get("email"));
-  const password = String(formData.get("password"));
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const password = String(formData.get("password") || "");
 
   const supabase = await createClient();
 
@@ -16,10 +16,10 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.redirect(
       new URL(`/admin/login?message=${encodeURIComponent(error.message)}`, request.url),
-      301
+      303
     );
   }
 
   // After successful login, redirect to admin dashboard
-  return NextResponse.redirect(new URL("/admin/dashboard", request.url), 301);
+  return NextResponse.redirect(new URL("/admin/dashboard", request.url), 303);
 }

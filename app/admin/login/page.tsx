@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Shield } from "lucide-react";
+import { Shield, AlertTriangle, LogOut } from "lucide-react";
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -7,10 +7,29 @@ export default async function AdminLogin({ searchParams }: { searchParams: Promi
   const sp = await searchParams;
   const message = sp?.message;
 
-  // If already logged in, redirect
+  const defaultAdmins = [
+    "swatihometuitionbureau@gmail.com",
+    "swatihometuitionbeauro@gmail.com",
+    "amansingh.dev.ai.ml@gmail.com",
+    "aman.kalpra.11@gmail.com",
+    "buildwithaman01@gmail.com",
+    "contact@pehchanly.com",
+  ];
+
+  const envAdmins = (process.env.ADMIN_EMAILS || "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  const authorizedAdminEmails = Array.from(new Set([...defaultAdmins, ...envAdmins]));
+
+  // If already logged in AND is an authorized admin, redirect to dashboard
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
+
+  const isUserAdmin = Boolean(user?.email && authorizedAdminEmails.includes(user.email.toLowerCase()));
+
+  if (user && isUserAdmin) {
     redirect("/admin/dashboard");
   }
 
@@ -23,9 +42,32 @@ export default async function AdminLogin({ searchParams }: { searchParams: Promi
           </div>
         </div>
         <h1 className="text-2xl font-bold text-center text-[#1F2937] mb-2 font-serif">Admin Control Panel</h1>
-        <p className="text-center text-[#1F2937]/60 text-sm mb-8">Authorized personnel only</p>
+        <p className="text-center text-[#1F2937]/60 text-sm mb-6">Authorized personnel only</p>
 
-        {message && (
+        {user && !isUserAdmin && (
+          <div className="p-4 mb-6 bg-amber-50 border border-amber-200 rounded-2xl text-center space-y-2">
+            <div className="flex items-center justify-center gap-1.5 text-amber-800 font-bold text-xs">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              Signed in as Non-Admin
+            </div>
+            <p className="text-xs text-amber-700">
+              Active account: <span className="font-mono font-semibold">{user.email}</span>.
+            </p>
+            <p className="text-[11px] text-amber-600">
+              Please enter your Admin credentials below, or sign out to switch accounts.
+            </p>
+            <form action="/api/auth/logout" method="post" className="pt-1">
+              <button
+                type="submit"
+                className="inline-flex items-center gap-1 text-xs text-[#0F4C5C] font-bold hover:underline"
+              >
+                <LogOut className="w-3 h-3" /> Sign out of {user.email}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {message && !user && (
           <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-xl text-sm border border-red-100 text-center font-medium">
             {message}
           </div>

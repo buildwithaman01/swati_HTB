@@ -42,18 +42,28 @@ export async function updateSession(request: NextRequest) {
 
   // Basic role check: if admin route, ensure user is an authorized admin.
   if (user && isAdmin && !isLoginPage) {
-    const defaultAdmins =
-      "swatihometuitionbureau@gmail.com,swatihometuitionbeauro@gmail.com,amansingh.dev.ai.ml@gmail.com,buildwithaman01@gmail.com,contact@pehchanly.com";
-    const adminEmails = (process.env.ADMIN_EMAILS || defaultAdmins)
-      .split(",")
-      .map((e) => e.trim().toLowerCase());
+    const defaultAdmins = [
+      "swatihometuitionbureau@gmail.com",
+      "swatihometuitionbeauro@gmail.com",
+      "amansingh.dev.ai.ml@gmail.com",
+      "aman.kalpra.11@gmail.com",
+      "buildwithaman01@gmail.com",
+      "contact@pehchanly.com",
+    ];
 
-    if (!adminEmails.includes(user.email?.toLowerCase() || "")) {
+    const envAdmins = (process.env.ADMIN_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+
+    const authorizedAdminEmails = Array.from(new Set([...defaultAdmins, ...envAdmins]));
+
+    if (!authorizedAdminEmails.includes(user.email?.toLowerCase() || "")) {
       // User is logged in but not an authorized admin.
       // Redirect to admin login with clear message WITHOUT destroying their active teacher/parent session.
       const url = request.nextUrl.clone();
       url.pathname = "/admin/login";
-      url.searchParams.set("message", "Unauthorized: Your account does not have Admin access.");
+      url.searchParams.set("message", `Unauthorized: ${user.email} does not have Admin access.`);
       return NextResponse.redirect(url);
     }
   }
