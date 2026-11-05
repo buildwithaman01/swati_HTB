@@ -1,7 +1,9 @@
 {
-  "name": "website",
-  "version": "0.1.0",
+  "name": "swati-home-tuition-bureau",
+  "version": "1.0.0",
+  "description": "Production Web Platform & Management System for Swati Home Tuition Bureau, Patna. Engineered by Aman Singh under Pehchanly Digital Solutions.",
   "private": true,
+  "author": "Aman Singh (https://pehchanly.com/)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
