@@ -118,15 +118,15 @@ export default function TeacherLogin() {
                         Enter your registered email and we'll send you a one-click login link — no password needed.
                       </p>
                       <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">
-                        Email Address
+                        Email Address, Teacher ID, or Phone
                       </label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                         <input
-                          type="email"
+                          type="text"
                           name="email"
                           required
-                          placeholder="your@email.com"
+                          placeholder="e.g. your@email.com or TCH-2026-XXX"
                           className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none"
                         />
                       </div>
@@ -145,19 +145,19 @@ export default function TeacherLogin() {
             ) : (
               <form onSubmit={handlePassword} className="space-y-4">
                 <p className="text-sm text-neutral-500 mb-5">
-                  Sign in with your email and the password set by your admin.
+                  Sign in with your email or Teacher ID and the password set by admin.
                 </p>
                 <div>
                   <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">
-                    Email Address
+                    Email Address, Teacher ID, or Phone
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                     <input
-                      type="email"
+                      type="text"
                       name="email"
                       required
-                      placeholder="your@email.com"
+                      placeholder="e.g. your@email.com or TCH-2026-XXX"
                       className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none"
                     />
                   </div>

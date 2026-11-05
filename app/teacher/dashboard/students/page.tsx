@@ -1,5 +1,8 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { BookOpen, MapPin, Phone, UserCircle, ShieldAlert } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function TeacherStudentsPage() {
   const supabase = await createClient();
@@ -7,20 +10,14 @@ export default async function TeacherStudentsPage() {
 
   if (!user) return null;
 
-  // Auth-user-id-based lookup (more reliable than email)
-  const { data: teacher } = await supabase
+  const adminClient = await createAdminClient();
+  const { data: teacher } = await adminClient
     .from("teachers")
     .select("id")
-    .eq("auth_user_id", user.id)
-    .single();
+    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
+    .maybeSingle();
 
-  // Fallback to email if auth_user_id not set yet on this record
-  const resolvedTeacherId = teacher?.id ?? (await supabase
-    .from("teachers")
-    .select("id")
-    .eq("email", user.email)
-    .single()
-  ).data?.id;
+  const resolvedTeacherId = teacher?.id;
 
   if (!resolvedTeacherId) return null;
 

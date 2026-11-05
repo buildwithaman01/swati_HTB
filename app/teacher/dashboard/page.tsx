@@ -1,5 +1,8 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { Users, IndianRupee, ShieldAlert, CheckCircle2, Clock, Calendar } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function TeacherDashboard() {
   const supabase = await createClient();
@@ -7,19 +10,14 @@ export default async function TeacherDashboard() {
 
   if (!user) return null;
 
-  // 1. Fixed Auth Lookup
-  const { data: teacher } = await supabase
+  const adminClient = await createAdminClient();
+  const { data: teacher } = await adminClient
     .from("teachers")
     .select("id, verification_status, badge_level")
-    .eq("auth_user_id", user.id)
-    .single();
+    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
+    .maybeSingle();
 
-  const resolvedTeacherId = teacher?.id ?? (await supabase
-    .from("teachers")
-    .select("id, verification_status, badge_level")
-    .eq("email", user.email)
-    .single()
-  ).data?.id;
+  const resolvedTeacherId = teacher?.id;
 
   if (!resolvedTeacherId) return null;
 

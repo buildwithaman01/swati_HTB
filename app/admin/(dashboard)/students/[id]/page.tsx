@@ -58,9 +58,15 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
   let authUserId = null;
   const targetEmail = student.parent_email || student.email;
   if (targetEmail) {
-    const { data: authData } = await supabase.auth.admin.listUsers();
-    const user = authData.users.find((u) => u.email === targetEmail);
-    if (user) authUserId = user.id;
+    try {
+      const { data: authData, error: authErr } = await supabase.auth.admin.listUsers();
+      if (!authErr && authData?.users) {
+        const user = authData.users.find((u) => u.email === targetEmail);
+        if (user) authUserId = user.id;
+      }
+    } catch (e) {
+      console.warn("[student auth lookup failed]:", e);
+    }
   }
 
   async function updateStudentStatus(formData: FormData) {

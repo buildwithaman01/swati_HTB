@@ -1,7 +1,10 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { BookOpen, Calendar, LayoutDashboard, LogOut, User, FileText } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function TeacherDashboardLayout({
   children,
@@ -15,12 +18,21 @@ export default async function TeacherDashboardLayout({
     redirect("/teacher/login");
   }
 
-  // Get teacher profile
-  const { data: teacher } = await supabase
+  // Get teacher profile via adminClient to bypass RLS and self-heal auth_user_id
+  const adminClient = await createAdminClient();
+  let { data: teacher } = await adminClient
     .from("teachers")
     .select("*")
-    .eq("email", user.email)
-    .single();
+    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
+    .maybeSingle();
+
+  // Self-heal: ensure auth_user_id is linked
+  if (teacher && teacher.auth_user_id !== user.id) {
+    await adminClient
+      .from("teachers")
+      .update({ auth_user_id: user.id })
+      .eq("id", teacher.id);
+  }
 
   if (!teacher) {
     return (

@@ -1,29 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const formData = await req.formData().catch(() => null);
-    const email = body.email || formData?.get("email") as string;
+    const rawIdentifier = (body.email || formData?.get("email") as string || "").trim();
 
-    if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
+    if (!rawIdentifier) return NextResponse.json({ error: "Email or Teacher ID is required" }, { status: 400 });
 
-    const supabase = await createClient();
+    const adminClient = await createAdminClient();
 
-    // Verify teacher exists
-    const { data: teacher } = await supabase
-      .from("teachers")
-      .select("id, full_name")
-      .eq("email", email)
-      .single();
+    let targetEmail = rawIdentifier;
+    if (!rawIdentifier.includes("@")) {
+      // Find teacher by teacher_id or phone
+      const { data: teacherRecord } = await adminClient
+        .from("teachers")
+        .select("email, full_name, teacher_id")
+        .or(`teacher_id.ilike.${rawIdentifier},phone.eq.${rawIdentifier},whatsapp.eq.${rawIdentifier}`)
+        .maybeSingle();
 
-    if (!teacher) {
-      return NextResponse.json({ error: "No teacher account found with that email. Contact your admin." }, { status: 404 });
+      if (!teacherRecord || !teacherRecord.email) {
+        return NextResponse.json({ 
+          error: `No teacher found with ID / Phone "${rawIdentifier}". Please enter your registered email.` 
+        }, { status: 404 });
+      }
+      targetEmail = teacherRecord.email;
+    } else {
+      // Verify teacher exists by email using adminClient (bypasses RLS)
+      const { data: teacher } = await adminClient
+        .from("teachers")
+        .select("id, full_name, email")
+        .ilike("email", targetEmail)
+        .maybeSingle();
+
+      if (!teacher) {
+        return NextResponse.json({ 
+          error: `No teacher account found with email "${targetEmail}". Contact Swati HTB admin.` 
+        }, { status: 404 });
+      }
     }
 
+    const supabase = await createClient();
     const { error } = await supabase.auth.signInWithOtp({
-      email,
+      email: targetEmail.toLowerCase(),
       options: {
         emailRedirectTo: `${req.nextUrl.origin}/api/auth/callback?next=/teacher/dashboard`,
       },
@@ -31,8 +51,9 @@ export async function POST(req: NextRequest) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, email: targetEmail });
   } catch (e: any) {
+    console.error("[teacher-magic-link Error]:", e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

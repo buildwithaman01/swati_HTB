@@ -5,45 +5,115 @@ import { createAdminClient } from "@/utils/supabase/server";
 // Admin sets or resets a teacher/parent password directly
 export async function POST(req: NextRequest) {
   try {
-    const { targetEmail, targetAuthUserId, newPassword, createIfMissing, targetType, targetId } = await req.json();
-    const supabase = createAdminAuthClient();
+    const { targetEmail, targetAuthUserId, newPassword, targetType, targetId } = await req.json();
 
-    // Validate caller is admin (check via service role — the client is already admin-level)
-    // In production you'd also verify the request comes from an authenticated admin session
-
-    if (targetAuthUserId) {
-      // Update existing user password
-      const { error } = await supabase.auth.admin.updateUserById(targetAuthUserId, {
-        password: newPassword,
-      });
-      if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-      return NextResponse.json({ success: true, action: "updated" });
+    const email = (targetEmail || "").trim().toLowerCase();
+    if (!email) {
+      return NextResponse.json({ error: "Email is required to set credentials." }, { status: 400 });
+    }
+    if (!newPassword || newPassword.length < 6) {
+      return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 });
     }
 
-    if (createIfMissing && targetEmail) {
-      // Create a brand new auth account
-      const { data, error } = await supabase.auth.admin.createUser({
-        email: targetEmail,
-        password: newPassword,
-        email_confirm: true, // auto-confirm, no email verification needed
-      });
-      if (error) return NextResponse.json({ error: error.message }, { status: 400 });
-      
-      // If we just created the user, we need to link it back to the database record!
-      const authUserId = data.user.id;
-      const db = await createAdminClient();
-      
-      if (targetType === "teacher" && targetId) {
-        await db.from("teachers").update({ auth_user_id: authUserId }).eq("id", targetId);
-      } else if (targetType === "parent" && targetId) {
-        await db.from("students").update({ parent_auth_user_id: authUserId }).eq("id", targetId);
+    const authAdmin = createAdminAuthClient();
+    const dbAdmin = await createAdminClient();
+
+    let resolvedAuthUserId = targetAuthUserId || null;
+    let actionType = "updated";
+
+    // 1. Check if user exists by email in Supabase Auth
+    try {
+      const { data: usersList } = await authAdmin.auth.admin.listUsers({ perPage: 1000 });
+      const existingUser = usersList?.users?.find(u => u.email?.toLowerCase() === email);
+      if (existingUser) {
+        resolvedAuthUserId = existingUser.id;
       }
-
-      return NextResponse.json({ success: true, action: "created", authUserId });
+    } catch (listErr) {
+      console.warn("[set-password] listUsers notice:", listErr);
     }
 
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    if (resolvedAuthUserId) {
+      // 2. User exists in Auth -> update their password & auto-confirm email
+      const { error: updateErr } = await authAdmin.auth.admin.updateUserById(
+        resolvedAuthUserId,
+        {
+          password: newPassword,
+          email_confirm: true,
+          user_metadata: { role: targetType }
+        }
+      );
+
+      if (updateErr) {
+        console.error("[set-password] updateUserById error:", updateErr);
+        return NextResponse.json({ error: updateErr.message }, { status: 400 });
+      }
+      actionType = "updated";
+    } else {
+      // 3. User does not exist in Auth -> create brand new user
+      const { data: created, error: createErr } = await authAdmin.auth.admin.createUser({
+        email,
+        password: newPassword,
+        email_confirm: true,
+        user_metadata: { role: targetType }
+      });
+
+      if (createErr) {
+        // If already registered, find them and update
+        if (createErr.message?.toLowerCase().includes("already registered") || createErr.status === 422) {
+          try {
+            const { data: usersList } = await authAdmin.auth.admin.listUsers();
+            const existing = usersList?.users?.find(u => u.email?.toLowerCase() === email);
+            if (existing) {
+              await authAdmin.auth.admin.updateUserById(existing.id, {
+                password: newPassword,
+                email_confirm: true
+              });
+              resolvedAuthUserId = existing.id;
+            } else {
+              return NextResponse.json({ error: createErr.message }, { status: 400 });
+            }
+          } catch {
+            return NextResponse.json({ error: createErr.message }, { status: 400 });
+          }
+        } else {
+          return NextResponse.json({ error: createErr.message }, { status: 400 });
+        }
+      } else if (created?.user) {
+        resolvedAuthUserId = created.user.id;
+        actionType = "created";
+      }
+    }
+
+    // 4. Link auth_user_id and confirmed email in the database record
+    if (resolvedAuthUserId && targetId) {
+      if (targetType === "teacher") {
+        await dbAdmin
+          .from("teachers")
+          .update({
+            auth_user_id: resolvedAuthUserId,
+            email: email,
+            is_active: true, // auto-activate teacher once credentials are set
+          })
+          .eq("id", targetId);
+      } else if (targetType === "parent") {
+        await dbAdmin
+          .from("students")
+          .update({
+            parent_auth_user_id: resolvedAuthUserId,
+            parent_email: email,
+          })
+          .eq("id", targetId);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      action: actionType,
+      authUserId: resolvedAuthUserId,
+      email,
+    });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    console.error("[set-password] Exception:", e);
+    return NextResponse.json({ error: e.message || "Failed to set password" }, { status: 500 });
   }
 }

@@ -1,24 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 
 export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
     if (!email) return NextResponse.json({ error: "Email required" }, { status: 400 });
 
-    const supabase = await createClient();
+    const adminClient = await createAdminClient();
 
-    // Verify parent email is registered in students table
-    const { data: student } = await supabase
+    // Verify parent email is registered in students table using adminClient
+    const { data: student } = await adminClient
       .from("students")
       .select("id, full_name, parent_name")
-      .or(`parent_email.eq.${email},email.eq.${email}`)
-      .single();
+      .or(`parent_email.ilike.${email},email.ilike.${email}`)
+      .limit(1)
+      .maybeSingle();
 
     if (!student) {
       return NextResponse.json({ error: "No account found with that email. Contact Swati HTB to get access." }, { status: 404 });
     }
 
+    const supabase = await createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { KeyRound, MessageCircle, CheckCircle2, Eye, EyeOff, UserPlus, Send } from "lucide-react";
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function AccountManagementCard({ teacherId, teacherName, teacherEmail, teacherPhone, authUserId, verificationStatus }: Props) {
+  const router = useRouter();
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -23,7 +25,7 @@ export default function AccountManagementCard({ teacherId, teacherName, teacherE
     : "https://swatihometuition.in/teacher/login";
 
   // 1-click WhatsApp welcome message
-  const welcomeMessage = `🎉 *Welcome to Swati Home Tuition Bureau!*\n\nDear ${teacherName},\n\nYou have been approved as a verified teacher on our platform.\n\n*Your Login Details:*\n🔗 Portal: ${loginUrl}\n📧 Email: ${teacherEmail}\n🔑 Password: ${password || "[Password you set above]"}\n\n*Your Teacher ID* will be visible on your dashboard after login.\n\nPlease login and complete your profile.\n\n📞 Any issues? Reply to this message.\n\n— Swati Home Tuition Bureau Team`;
+  const welcomeMessage = `🎉 *Welcome to Swati Home Tuition Bureau!*\n\nDear ${teacherName},\n\nYou have been approved as a verified teacher on our platform.\n\n*Your Login Details:*\n🔗 Portal: ${loginUrl}\n📧 Email / ID: ${teacherEmail}\n🔑 Password: ${password || "[Password you set above]"}\n\n*Your Teacher ID* will be visible on your dashboard after login.\n\nPlease login and complete your profile.\n\n📞 Any issues? Reply to this message.\n\n— Swati Home Tuition Bureau Team`;
 
   const whatsappUrl = `https://wa.me/${teacherPhone.replace(/\D/g, "")}?text=${encodeURIComponent(welcomeMessage)}`;
 
@@ -60,6 +62,7 @@ export default function AccountManagementCard({ teacherId, teacherName, teacherE
       setSuccess(data.action === "created" 
         ? "✅ Account created! Now send them the WhatsApp welcome message below." 
         : "✅ Password updated successfully.");
+      router.refresh();
     } else {
       setError(data.error || "Failed to set password.");
     }

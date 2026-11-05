@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { ArrowLeft, User, Phone, MapPin, GraduationCap, CheckCircle2, XCircle, Clock, ShieldCheck, Mail, Map, BookOpen, AlertTriangle, FileText, Save, Check, X, MessageCircle, KeyRound } from "lucide-react";
 import AccountManagementCard from "./AccountManagementCard";
+import TeacherApprovalAction from "./TeacherApprovalAction";
+import TeacherProfileForm from "./TeacherProfileForm";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -50,62 +52,7 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
     }
   }
 
-  // Server actions
-  async function updateTeacherStatus(formData: FormData) {
-    "use server";
-    const status = formData.get("status") as string;
-    const notes = formData.get("internal_notes") as string;
-    const rejectionReason = formData.get("rejection_reason") as string;
-    const id = formData.get("id") as string;
-    
-    const adminSupabase = await createAdminClient();
-    
-    const updateData: any = { 
-      verification_status: status,
-      internal_notes: notes || null 
-    };
 
-    if (status === "approved") {
-      updateData.badge_level = "verified";
-      updateData.is_active = true;
-      updateData.approved_date = new Date().toISOString();
-      updateData.rejection_reason = null;
-    } else if (status === "rejected") {
-      updateData.is_active = false;
-      updateData.rejection_reason = rejectionReason || null;
-      updateData.badge_level = "pending";
-    }
-
-    await adminSupabase.from("teachers").update(updateData).eq("id", id);
-    revalidatePath(`/admin/teachers/${id}`);
-    revalidatePath(`/admin/teachers`);
-  }
-
-  async function updateProfile(formData: FormData) {
-    "use server";
-    const id = formData.get("id") as string;
-    const adminSupabase = await createAdminClient();
-    
-    await adminSupabase.from("teachers").update({
-      full_name: formData.get("full_name"),
-      phone: formData.get("phone"),
-      whatsapp: formData.get("whatsapp"),
-      email: formData.get("email"),
-      gender: formData.get("gender"),
-      locality: formData.get("locality"),
-      address: formData.get("address"),
-      qualification: formData.get("qualification"),
-      institution: formData.get("institution"),
-      experience_years: parseInt(formData.get("experience_years") as string) || 0,
-      profile_visibility: formData.get("profile_visibility"),
-      badge_level: formData.get("badge_level"),
-      subjects: (formData.get("subjects") as string)?.split(',').map(s => s.trim()).filter(Boolean) || [],
-      classes_taught: (formData.get("classes_taught") as string)?.split(',').map(s => s.trim()).filter(Boolean) || [],
-      areas_serviceable: (formData.get("areas_serviceable") as string)?.split(',').map(s => s.trim()).filter(Boolean) || [],
-    }).eq("id", id);
-    
-    revalidatePath(`/admin/teachers/${id}`);
-  }
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -183,173 +130,19 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
             </div>
           </div>
 
-          {/* Verification Box */}
-          <div className={`rounded-3xl p-6 shadow-sm border ${
-            teacher.verification_status === "pending" ? "bg-amber-50 border-amber-200" :
-            teacher.verification_status === "approved" ? "bg-emerald-50 border-emerald-200" :
-            "bg-red-50 border-red-200"
-          }`}>
-            <h3 className="font-bold text-[#1F2937] text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> Approval Action
-            </h3>
-            
-            <form action={updateTeacherStatus} className="space-y-4">
-              <input type="hidden" name="id" value={teacher.id} />
-              
-              <div>
-                <label className="text-xs font-bold text-neutral-600 mb-1 block">Status</label>
-                <select name="status" defaultValue={teacher.verification_status} className="w-full text-sm rounded-xl border border-neutral-300 p-2.5 bg-white">
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved & Active</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="suspended">Suspended</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-neutral-600 mb-1 block">Internal Notes (Admin Only)</label>
-                <textarea 
-                  name="internal_notes" 
-                  defaultValue={teacher.internal_notes || ""} 
-                  placeholder="Private notes about background check, call, etc."
-                  rows={3} 
-                  className="w-full text-sm rounded-xl border border-neutral-300 p-2.5 bg-white resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-bold text-neutral-600 mb-1 block">Rejection Reason (If rejecting)</label>
-                <input 
-                  type="text" 
-                  name="rejection_reason" 
-                  defaultValue={teacher.rejection_reason || ""} 
-                  placeholder="Sent to teacher if rejected"
-                  className="w-full text-sm rounded-xl border border-neutral-300 p-2.5 bg-white"
-                />
-              </div>
-
-              <button type="submit" className="w-full bg-[#1F2937] text-white font-bold py-2.5 rounded-xl hover:bg-black transition-colors text-sm">
-                Save Status
-              </button>
-            </form>
-          </div>
+          {/* Interactive Approval Action Card */}
+          <TeacherApprovalAction
+            teacherId={teacher.id}
+            currentStatus={teacher.verification_status}
+            badgeLevel={teacher.badge_level}
+            initialNotes={teacher.internal_notes}
+            initialRejectionReason={teacher.rejection_reason}
+          />
         </div>
 
         {/* Right Col - Full Data Form */}
         <div className="lg:col-span-2 space-y-6">
-          <form action={updateProfile} className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
-            <input type="hidden" name="id" value={teacher.id} />
-            <div className="flex justify-between items-center mb-6 border-b border-neutral-100 pb-4">
-              <h2 className="text-lg font-bold text-[#1F2937] flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#0F4C5C]" /> Profile Data
-              </h2>
-              <button type="submit" className="bg-[#0F4C5C] hover:bg-[#0a3a47] text-white px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm">
-                <Save size={16} /> Save Changes
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-              {/* Personal */}
-              <div className="md:col-span-2">
-                <h3 className="text-xs font-bold text-[#0F4C5C] uppercase tracking-wider mb-3">Personal</h3>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Full Name</label>
-                <input name="full_name" defaultValue={teacher.full_name} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Gender</label>
-                <select name="gender" defaultValue={teacher.gender} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none">
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              
-              {/* Contact & Location */}
-              <div className="md:col-span-2 mt-2">
-                <h3 className="text-xs font-bold text-[#0F4C5C] uppercase tracking-wider mb-3">Contact & Location</h3>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Phone Number</label>
-                <input name="phone" defaultValue={teacher.phone} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">WhatsApp</label>
-                <input name="whatsapp" defaultValue={teacher.whatsapp || ""} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Email</label>
-                <input type="email" name="email" defaultValue={teacher.email || ""} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Full Address</label>
-                <textarea name="address" defaultValue={teacher.address || ""} rows={2} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none resize-none" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Locality (Short)</label>
-                <input name="locality" defaultValue={teacher.locality || ""} placeholder="e.g. Boring Road" className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-
-              {/* Education & Experience */}
-              <div className="md:col-span-2 mt-2">
-                <h3 className="text-xs font-bold text-[#0F4C5C] uppercase tracking-wider mb-3">Education & Expertise</h3>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Highest Qualification</label>
-                <input name="qualification" defaultValue={teacher.qualification} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Institution / College</label>
-                <input name="institution" defaultValue={teacher.institution || ""} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Years of Experience</label>
-                <input type="number" name="experience_years" defaultValue={teacher.experience_years || 0} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-
-              {/* Preferences */}
-              <div className="md:col-span-2 mt-2">
-                <h3 className="text-xs font-bold text-[#0F4C5C] uppercase tracking-wider mb-3">Teaching Preferences</h3>
-                <p className="text-xs text-neutral-400 mb-4">Comma-separated lists</p>
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Subjects Taught</label>
-                <input name="subjects" defaultValue={(teacher.subjects || []).join(", ")} placeholder="Mathematics, Science, English" className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Classes Taught</label>
-                <input name="classes_taught" defaultValue={(teacher.classes_taught || []).join(", ")} placeholder="Class 9, Class 10, JEE" className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Serviceable Areas</label>
-                <input name="areas_serviceable" defaultValue={(teacher.areas_serviceable || []).join(", ")} placeholder="Boring Road, Kankarbagh" className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-              </div>
-
-              {/* System Settings */}
-              <div className="md:col-span-2 mt-2">
-                <h3 className="text-xs font-bold text-[#0F4C5C] uppercase tracking-wider mb-3">System Settings</h3>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Profile Visibility</label>
-                <select name="profile_visibility" defaultValue={teacher.profile_visibility} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none">
-                  <option value="public">Public (Visible on website)</option>
-                  <option value="private">Private (Hidden)</option>
-                  <option value="unlisted">Unlisted (Direct link only)</option>
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Badge Level</label>
-                <select name="badge_level" defaultValue={teacher.badge_level} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none">
-                  <option value="pending">No Badge (Pending)</option>
-                  <option value="verified">Verified (Standard)</option>
-                  <option value="certified">Certified (Tested)</option>
-                  <option value="elite">Elite (Top Tier)</option>
-                </select>
-              </div>
-
-            </div>
-          </form>
+          <TeacherProfileForm teacher={teacher} />
 
           {/* Account Management */}
           <AccountManagementCard 

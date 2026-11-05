@@ -1,6 +1,9 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 import { User, MapPin, BookOpen, GraduationCap, Phone } from "lucide-react";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function TeacherProfilePage() {
   const supabase = await createClient();
@@ -8,12 +11,12 @@ export default async function TeacherProfilePage() {
 
   if (!user) return null;
 
-  // Get teacher ID
-  const { data: teacher } = await supabase
+  const adminClient = await createAdminClient();
+  const { data: teacher } = await adminClient
     .from("teachers")
     .select("*")
-    .eq("email", user.email)
-    .single();
+    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
+    .maybeSingle();
 
   if (!teacher) return null;
 

@@ -1,6 +1,9 @@
-import { createClient } from "@/utils/supabase/server";
+import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { Download, ShieldCheck, ShieldAlert } from "lucide-react";
 import IDCardDownloader from "./IDCardDownloader";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function TeacherIDCardPage() {
   const supabase = await createClient();
@@ -8,12 +11,12 @@ export default async function TeacherIDCardPage() {
 
   if (!user) return null;
 
-  // Get teacher ID
-  const { data: teacher } = await supabase
+  const adminClient = await createAdminClient();
+  const { data: teacher } = await adminClient
     .from("teachers")
     .select("*")
-    .eq("email", user.email)
-    .single();
+    .or(`auth_user_id.eq.${user.id},email.ilike.${user.email}`)
+    .maybeSingle();
 
   if (!teacher) return null;
 
