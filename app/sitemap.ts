@@ -56,7 +56,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "how-to-find-best-home-tutor-in-patna",
     "jee-preparation-strategy-from-class-9",
     "importance-of-female-tutors-for-girls",
-    "cbse-vs-icse-which-is-better-in-patna"
+    "cbse-vs-icse-which-is-better-in-patna",
+    "neet-preparation-strategy-home-tutors-patna",
+    "home-tuition-vs-coaching-institutes-patna",
+    "top-schools-in-patna-home-tuition-guide",
+    "class-10-cbse-maths-science-blueprint-patna",
   ];
 
   const blogRoutes = [

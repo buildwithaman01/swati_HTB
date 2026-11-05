@@ -1,8 +1,23 @@
-import { patnaAreas, slugify, unslugify } from "@/lib/data/areas";
+import { patnaAreas, slugify, unslugify, getAreaDetails } from "@/lib/data/areas";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ShieldCheck, UserCheck, RefreshCw, Award, MapPin, HelpCircle, PhoneCall } from "lucide-react";
+import { 
+  ShieldCheck, 
+  UserCheck, 
+  RefreshCw, 
+  Award, 
+  MapPin, 
+  HelpCircle, 
+  PhoneCall, 
+  School, 
+  Compass, 
+  BookOpen, 
+  Sparkles,
+  CheckCircle2,
+  TrendingUp,
+  Search
+} from "lucide-react";
 
 // 1. GENERATE STATIC PAGES AT BUILD TIME
 export async function generateStaticParams() {
@@ -19,18 +34,20 @@ export async function generateMetadata({ params }: { params: Promise<{ area: str
   const isValidArea = patnaAreas.some(a => slugify(a) === area);
   if (!isValidArea) return {};
 
-  const title = `Best Home Tutors in ${areaName}, Patna | Verified Male & Female Teachers | Swati HTB`;
-  const description = `Looking for top home tuition in ${areaName}, Patna? Swati Home Tuition Bureau provides 100% verified, background-checked male and female tutors for CBSE, ICSE & Bihar Board (Class 1 to 12, NEET/JEE). Book a free demo class today!`;
+  const details = getAreaDetails(areaName);
+  const title = `Best Home Tutors in ${areaName}, Patna | 100% Verified Teachers | Swati HTB`;
+  const description = `Find top-rated home tutors in ${areaName}, Patna (${details.zone}). Verified male & female teachers near ${details.landmarks.slice(0, 2).join(", ")}. Classes 1 to 12, CBSE/ICSE, NEET & JEE. Book a free demo class today!`;
 
   return {
     title,
     description,
+    keywords: details.searchQueries,
     alternates: {
       canonical: `https://swatihometuition.in/areas/${area}`,
     },
     openGraph: {
       title: `Home Tutors in ${areaName}, Patna — Swati Home Tuition Bureau`,
-      description: `Verified home tutors available in ${areaName}. 100% background-checked, Swati Safety Shield guaranteed.`,
+      description: `Verified home tutors available in ${areaName}. 100% background-checked, Swati Safety Shield guaranteed. Serving students near ${details.landmarks.slice(0, 2).join(", ")}.`,
       url: `https://swatihometuition.in/areas/${area}`,
       siteName: 'Swati Home Tuition Bureau',
       locale: 'en_IN',
@@ -54,6 +71,8 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
     notFound();
   }
 
+  const details = getAreaDetails(areaName);
+
   // Schema.org Structured Data for LocalBusiness & EducationalOrganization + FAQ + Breadcrumb
   const jsonLd = {
     "@context": "https://schema.org",
@@ -62,10 +81,10 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
         "@type": "LocalBusiness",
         "@id": `https://swatihometuition.in/areas/${area}#localbusiness`,
         "name": `Swati Home Tuition Bureau - ${areaName}`,
-        "description": `Premier home tuition and verified tutoring service in ${areaName}, Patna. Female-first safety protocols and expert educators for Class 1 to 12, IIT-JEE, and NEET.`,
+        "description": `Premier home tuition and verified tutoring service in ${areaName}, Patna (${details.zone}). Female-first safety protocols and expert educators for Class 1 to 12, IIT-JEE, and NEET.`,
         "url": `https://swatihometuition.in/areas/${area}`,
         "telephone": "+919229738307",
-        "priceRange": "₹2,500 - ₹12,000/month",
+        "priceRange": details.feeRange,
         "address": {
           "@type": "PostalAddress",
           "streetAddress": areaName,
@@ -78,7 +97,11 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
           {
             "@type": "AdministrativeArea",
             "name": `${areaName}, Patna`
-          }
+          },
+          ...details.landmarks.map(lm => ({
+            "@type": "Place",
+            "name": `${lm}, ${areaName}, Patna`
+          }))
         ],
         "aggregateRating": {
           "@type": "AggregateRating",
@@ -117,7 +140,7 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
             "name": `How can I find a verified home tutor in ${areaName}, Patna?`,
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": `You can book a tutor with Swati Home Tuition Bureau by filling our 1-minute Book Demo form. We match you with a verified, experienced teacher living in or near ${areaName} within 24 hours.`
+              "text": `You can book a tutor with Swati Home Tuition Bureau by filling our 1-minute Book Demo form. We match you with a verified, experienced teacher living in or near ${areaName} (serving ${details.landmarks.slice(0, 3).join(", ")}) within 24 hours.`
             }
           },
           {
@@ -133,15 +156,15 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
             "name": `What is the monthly fee for home tuition in ${areaName}, Patna?`,
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": `Fees typically range from ₹2,500 to ₹5,000 per month for Class 1-8, ₹4,000 to ₹7,000 for Class 9-10, and ₹6,000 to ₹12,000 for Class 11-12/NEET/JEE, depending on subjects and frequency.`
+              "text": `Home tuition in ${areaName} ranges typically between ${details.feeRange}, depending on class level (Class 1-8, Class 9-10, or Class 11-12/NEET/JEE) and number of weekly sessions.`
             }
           },
           {
             "@type": "Question",
-            "name": `What if we don't like the tutor after the demo class in ${areaName}?`,
+            "name": `Which schools in ${areaName} do your tutors cater to?`,
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": `The first demo session is arranged for you to evaluate the teacher. If you are not completely satisfied, Swati HTB arranges a replacement tutor at zero additional bureau fees.`
+              "text": `Our educators in ${areaName} frequently mentor students from ${details.topSchools.join(", ")}, specializing in both CBSE and ICSE marking guidelines.`
             }
           }
         ]
@@ -160,13 +183,18 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-44 lg:pb-28 bg-[#FAF7F2] overflow-hidden border-b border-neutral-200/60">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white shadow-sm border border-neutral-200/60 mb-6">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
+          
+          {/* Locality & Zone Badges */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-6">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white shadow-sm border border-neutral-200/80 text-xs font-bold text-[#0F4C5C] uppercase tracking-wide">
+              <Compass className="w-3.5 h-3.5 text-[#E36414]" /> {details.zone}
             </span>
-            <span className="text-xs font-bold tracking-wide text-[#0F4C5C] uppercase">
-              Verified Tutors Available in {areaName}
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-600"></span>
+              </span>
+              {details.tutorCount}
             </span>
           </div>
 
@@ -175,8 +203,8 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
             <span className="text-[#0F4C5C] italic underline decoration-[#E36414]/30">{areaName}, Patna</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-neutral-600 max-w-2xl mx-auto mb-8 font-sans leading-relaxed">
-            Get 100% Aadhaar-verified, experienced educators delivered to your doorstep in <strong>{areaName}</strong>. Enforced with the <strong>Swati Safety Shield</strong> for peace of mind.
+          <p className="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto mb-8 font-sans leading-relaxed">
+            Get 100% Aadhaar-verified, experienced educators delivered directly to your home in <strong>{areaName}</strong>. Enforced with the <strong>Swati Safety Shield</strong> and backed by our free replacement guarantee.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -190,6 +218,104 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
                 Search Tutors by Subject
               </button>
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Locality Highlights & Neighborhood Landmarks */}
+      <section className="py-12 bg-white border-b border-neutral-200/60">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Key Landmarks */}
+            <div className="p-6 bg-[#FAF7F2] rounded-3xl border border-neutral-200/70">
+              <div className="flex items-center gap-2 mb-3 text-[#0F4C5C] font-bold text-sm uppercase tracking-wider">
+                <MapPin className="w-4 h-4 text-[#E36414]" /> Key Landmarks Covered
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {details.landmarks.map((landmark, idx) => (
+                  <span key={idx} className="bg-white px-3 py-1 rounded-full text-xs font-semibold text-neutral-700 border border-neutral-200 shadow-2xs">
+                    {landmark}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Top Schools */}
+            <div className="p-6 bg-[#FAF7F2] rounded-3xl border border-neutral-200/70">
+              <div className="flex items-center gap-2 mb-3 text-[#0F4C5C] font-bold text-sm uppercase tracking-wider">
+                <School className="w-4 h-4 text-[#0F4C5C]" /> Schools in {areaName} Zone
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {details.topSchools.map((school, idx) => (
+                  <span key={idx} className="bg-white px-3 py-1 rounded-full text-xs font-semibold text-neutral-700 border border-neutral-200 shadow-2xs">
+                    {school}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Popular Subjects */}
+            <div className="p-6 bg-[#FAF7F2] rounded-3xl border border-neutral-200/70">
+              <div className="flex items-center gap-2 mb-3 text-[#0F4C5C] font-bold text-sm uppercase tracking-wider">
+                <BookOpen className="w-4 h-4 text-[#0F4C5C]" /> High-Demand Subjects
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {details.popularSubjects.map((sub, idx) => (
+                  <span key={idx} className="bg-white px-3 py-1 rounded-full text-xs font-semibold text-neutral-700 border border-neutral-200 shadow-2xs">
+                    {sub}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* Local Pricing Benchmark for this Locality */}
+      <section className="py-16 bg-[#FAFAF8] border-b border-neutral-200/60">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#E36414] bg-[#E36414]/10 px-3 py-1 rounded-full inline-block mb-3">
+              Transparent Local Pricing
+            </span>
+            <h2 className="text-3xl font-bold font-serif text-[#1F2937]">
+              Home Tuition Fee Structure in {areaName}
+            </h2>
+            <p className="text-neutral-500 text-sm mt-2">
+              Fair, standardized monthly rates with zero hidden bureau brokerage charged to parents.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="p-6 bg-white rounded-3xl border border-neutral-200 shadow-sm text-center">
+              <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-1">Primary School</p>
+              <h3 className="text-xl font-bold font-serif text-[#1F2937] mb-2">Class 1 to 5</h3>
+              <p className="text-2xl font-bold text-[#0F4C5C] mb-2">₹2,500 – ₹4,000</p>
+              <p className="text-xs text-neutral-500">Per month • All Subjects</p>
+            </div>
+
+            <div className="p-6 bg-white rounded-3xl border border-neutral-200 shadow-sm text-center">
+              <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-1">Middle School</p>
+              <h3 className="text-xl font-bold font-serif text-[#1F2937] mb-2">Class 6 to 8</h3>
+              <p className="text-2xl font-bold text-[#0F4C5C] mb-2">₹3,500 – ₹5,500</p>
+              <p className="text-xs text-neutral-500">Per month • Maths & Science</p>
+            </div>
+
+            <div className="p-6 bg-white rounded-3xl border border-neutral-200 shadow-sm text-center border-t-4 border-t-[#0F4C5C]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#0F4C5C] mb-1">High School Boards</p>
+              <h3 className="text-xl font-bold font-serif text-[#1F2937] mb-2">Class 9 & 10</h3>
+              <p className="text-2xl font-bold text-[#0F4C5C] mb-2">₹4,500 – ₹7,000</p>
+              <p className="text-xs text-neutral-500">Per month • CBSE / ICSE Boards</p>
+            </div>
+
+            <div className="p-6 bg-white rounded-3xl border border-neutral-200 shadow-sm text-center">
+              <p className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-1">Senior & Entrance</p>
+              <h3 className="text-xl font-bold font-serif text-[#1F2937] mb-2">Class 11-12 / NEET / JEE</h3>
+              <p className="text-2xl font-bold text-[#0F4C5C] mb-2">₹6,500 – ₹12,000</p>
+              <p className="text-xs text-neutral-500">Per month • Subject Specialists</p>
+            </div>
           </div>
         </div>
       </section>
@@ -238,8 +364,29 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
         </div>
       </section>
 
+      {/* Query-Based Local Search Signals (SEO & NLP Dominance) */}
+      <section className="py-12 bg-[#FAF7F2] border-b border-neutral-200/60">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="bg-white p-8 rounded-3xl border border-neutral-200/80 shadow-xs">
+            <div className="flex items-center gap-2 mb-4 text-[#0F4C5C] font-serif font-bold text-lg">
+              <Search className="w-5 h-5 text-[#E36414]" /> Frequently Searched in {areaName}, Patna
+            </div>
+            <p className="text-xs text-neutral-500 mb-4">
+              Parents from {areaName} regularly connect with Swati HTB for specialized learning requirements:
+            </p>
+            <div className="flex flex-wrap gap-2.5">
+              {details.searchQueries.map((query, idx) => (
+                <div key={idx} className="bg-[#FAF7F2] text-neutral-800 text-xs font-medium px-4 py-2 rounded-xl border border-neutral-200">
+                  🔍 "{query}"
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Local FAQ Section for AEO and High Conversions */}
-      <section className="py-16 bg-[#FAF7F2]">
+      <section className="py-16 bg-[#FAFAF8]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#0F4C5C] mb-2">
@@ -254,14 +401,14 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
             <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 shadow-sm">
               <h3 className="font-bold text-base text-[#1F2937] mb-2">How do I get a home tutor in {areaName}?</h3>
               <p className="text-sm text-neutral-600 leading-relaxed">
-                Simply click <strong>Book a Free Demo</strong>, provide your child's class, subjects, and location in {areaName}. Our academic counselor will call you within 2-4 hours to match the best tutor.
+                Simply click <strong>Book a Free Demo</strong>, provide your child's class, subjects, and location in {areaName}. Our academic counselor will call you within 2-4 hours to match the best tutor near {details.landmarks[0] || areaName}.
               </p>
             </div>
 
             <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 shadow-sm">
               <h3 className="font-bold text-base text-[#1F2937] mb-2">Can I request a female tutor in {areaName}?</h3>
               <p className="text-sm text-neutral-600 leading-relaxed">
-                Yes! We maintain an extensive network of qualified, background-verified female teachers who specialize in classes 1 to 12 in {areaName}.
+                Yes! We maintain an extensive network of qualified, background-verified female teachers who specialize in classes 1 to 12 across {areaName} and {details.zone}.
               </p>
             </div>
 
@@ -280,7 +427,7 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
                 <p className="text-sm font-bold text-[#1F2937]">Call / WhatsApp our Patna Bureau Desk</p>
               </div>
               <a
-                href="https://wa.me/919229738307?text=Hi%2C%20I%20need%20a%20home%20tutor%20in%20"
+                href={`https://wa.me/919229738307?text=Hi%2C%20I%20need%20a%20home%20tutor%20in%20${encodeURIComponent(areaName)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-[#0F4C5C] text-white px-5 py-2.5 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-[#0c3c49]"
@@ -296,7 +443,7 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
       <section className="py-12 bg-white">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center gap-2 mb-4 text-[#1F2937] font-serif font-bold text-lg">
-            <MapPin className="w-5 h-5 text-[#0F4C5C]" /> Serviceable Locality: {areaName}, Patna
+            <MapPin className="w-5 h-5 text-[#0F4C5C]" /> Serviceable Locality: {areaName}, Patna ({details.zone})
           </div>
           <div className="bg-white p-2 rounded-3xl shadow-sm border border-neutral-200">
             <iframe 
