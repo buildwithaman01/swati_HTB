@@ -153,7 +153,7 @@ export default async function ProgramPage({ params }: { params: Promise<{ slug: 
                     <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </Link>
-                <a href="https://wa.me/919229738307" target="_blank" rel="noopener noreferrer" className="flex-1">
+                <a href="https://wa.me/917549097748" target="_blank" rel="noopener noreferrer" className="flex-1">
                   <button className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white px-6 md:px-8 py-4 md:py-5 rounded-2xl text-lg font-bold transition-all shadow-[0_10px_30px_rgba(37,211,102,0.3)] flex items-center justify-center gap-3 group">
                     WhatsApp Us
                     <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />

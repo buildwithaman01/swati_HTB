@@ -2,6 +2,7 @@ import { blogsData } from "@/lib/data/blogs";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CANONICAL_LINKS } from "@/lib/constants";
 import { 
   ArrowLeft, 
   Calendar, 
@@ -302,7 +303,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               </div>
 
               <a
-                href="https://wa.me/919229738307?text=Hi%2C%20I%20read%20your%20article%20and%20want%20to%20consult%20an%20academic%20counselor"
+                href={CANONICAL_LINKS.whatsappWithText("Hi, I read your article and want to consult an academic counselor")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 inline-flex items-center gap-2 text-xs font-bold text-[#0B192C] hover:text-[#E5A93C] bg-white px-4 py-2.5 rounded-xl border border-[#E8E6DF] transition-colors"
@@ -357,12 +358,12 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                     </button>
                   </Link>
                   <a
-                    href="https://wa.me/919229738307?text=Hi%2C%20I%20read%20your%20article%20and%20want%20to%20inquire%20about%20a%20home%20tutor"
+                    href={CANONICAL_LINKS.whatsappWithText("Hi, I read your article and want to inquire about a home tutor")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full sm:w-auto bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3.5 rounded-xl text-sm flex items-center justify-center gap-2 border border-white/20 transition-all"
                   >
-                    <PhoneCall className="w-4 h-4 text-[#E5A93C]" /> WhatsApp Counselors
+                    <PhoneCall className="w-4 h-4 text-[#E5A93C]" /> WhatsApp Counselors ({CANONICAL_LINKS.displayPhone})
                   </a>
                 </div>
               </div>

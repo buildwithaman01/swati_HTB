@@ -1,8 +1,9 @@
 "use server";
 
 import { createAdminClient } from "@/utils/supabase/server";
+import { CANONICAL_LINKS } from "@/lib/constants";
 
-const WHATSAPP_NUMBER = "919229738307";
+const WHATSAPP_NUMBER = "917549097748";
 
 export async function submitLeadToCRM(formData: FormData) {
   const name = (formData.get("name") as string)?.trim() || "Parent Lead";

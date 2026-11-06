@@ -303,7 +303,7 @@ export default async function TeacherIDCardPage() {
                     GBP Verified · 4.9★
                   </span>
                   <span className="inline-flex items-center gap-1 font-mono text-white/95">
-                    IG: @swati.htb
+                    IG: @swati_home_tuition
                   </span>
                 </div>
                 <p className="text-[7px] tracking-wide text-neutral-300 font-medium">
@@ -464,7 +464,7 @@ export default async function TeacherIDCardPage() {
                   <InstagramIcon className="w-3.5 h-3.5 text-pink-600" />
                   Instagram
                 </div>
-                <p className="font-bold text-[#0B192C] mt-1 font-mono group-hover:text-pink-700">@swati.htb</p>
+                <p className="font-bold text-[#0B192C] mt-1 font-mono group-hover:text-pink-700">@swati_home_tuition</p>
               </a>
 
               <a

@@ -5,7 +5,7 @@ import { formatWhatsAppUrl, CANONICAL_SUPPORT_PHONE } from "@/lib/whatsapp";
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────────────────────────────────────────
-const WHATSAPP_NUMBER = "919229738307";
+const WHATSAPP_NUMBER = CANONICAL_SUPPORT_PHONE;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ROUTE HANDLER
@@ -412,7 +412,7 @@ function buildEmailHtml(formType: string, fields: Record<string, string>): strin
       <div style="padding:20px 16px;background:#fffbf0;border:1px solid #eee;border-top:none;border-radius:0 0 8px 8px">
         <p style="margin:0;color:#555;font-size:14px">
           ⏰ <strong>Action Required:</strong> Contact within 2 hours for best conversion.<br/>
-          📞 Reply to this email or WhatsApp: <strong>+91 92297 38307</strong>
+          📞 Reply to this email or WhatsApp: <strong>+91 75490 97748</strong>
         </p>
       </div>
     </div>

@@ -186,7 +186,7 @@ export default function NEETMedicalPage() {
                       Book Free Demo
                     </button>
                   </Link>
-                  <a href="https://wa.me/919229738307" target="_blank" rel="noopener noreferrer">
+                  <a href="https://wa.me/917549097748" target="_blank" rel="noopener noreferrer">
                     <button className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white px-8 py-4 rounded-2xl font-bold transition-all shadow-md flex items-center justify-center gap-2">
                       WhatsApp Us
                     </button>

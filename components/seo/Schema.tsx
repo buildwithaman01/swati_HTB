@@ -1,3 +1,5 @@
+import { CANONICAL_LINKS } from "@/lib/constants";
+
 export default function Schema() {
   const localBusinessSchema = {
     "@context": "https://schema.org",
@@ -7,7 +9,7 @@ export default function Schema() {
     "image": "https://swatihometuition.in/images/logo1.png",
     "@id": "https://swatihometuition.in/#organization",
     "url": "https://swatihometuition.in",
-    "telephone": "+919229738307",
+    "telephone": CANONICAL_LINKS.phone,
     "email": "contact@swatihometuition.in",
     "priceRange": "₹2,500 - ₹12,000/month",
     "address": {
@@ -56,14 +58,14 @@ export default function Schema() {
     },
     "contactPoint": {
       "@type": "ContactPoint",
-      "telephone": "+919229738307",
+      "telephone": CANONICAL_LINKS.phone,
       "contactType": "customer service",
       "areaServed": "IN",
       "availableLanguage": ["Hindi", "English"]
     },
     "sameAs": [
-      "https://www.facebook.com/profile.php?id=61593236635791",
-      "https://www.instagram.com/swati.htb"
+      CANONICAL_LINKS.facebook,
+      CANONICAL_LINKS.instagram
     ]
   };
 
