@@ -24,7 +24,7 @@ export default async function NewAssignmentPage({
       .order("full_name"),
     supabase
       .from("students")
-      .select("id, full_name, student_id, class_studying, locality, subjects_needed, subjects_required, parent_name, parent_phone, parent_whatsapp, enrollment_status")
+      .select("id, full_name, student_id, class_studying, locality, subjects_needed, subjects_required, parent_name, parent_phone, whatsapp, enrollment_status")
       .order("full_name"),
   ]);
 

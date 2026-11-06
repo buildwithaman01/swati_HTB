@@ -26,6 +26,7 @@ interface Student {
   subjects_required?: string[] | null;
   parent_name?: string | null;
   parent_phone?: string | null;
+  whatsapp?: string | null;
   parent_whatsapp?: string | null;
   enrollment_status?: string | null;
 }
@@ -140,7 +141,7 @@ export default function AssignmentCreationForm({
     const studentName = selectedStudent?.full_name || "Student";
     const parentName = selectedStudent?.parent_name || studentName;
     const teacherPhone = selectedTeacher?.whatsapp || selectedTeacher?.phone || "";
-    const parentPhone = selectedStudent?.parent_whatsapp || selectedStudent?.parent_phone || "";
+    const parentPhone = selectedStudent?.whatsapp || selectedStudent?.parent_whatsapp || selectedStudent?.parent_phone || "";
 
     const teacherMsg = `🔔 *New Tuition Assignment!*\n\nDear ${teacherName},\n\nYou have been assigned a new tuition for *${subject}*.\n\nStudent: ${studentName}\nParent/Guardian: ${parentName}\nMonthly Fee: ₹${feeNum.toLocaleString("en-IN")}\nSchedule: ${classesPerWeek} days/week (${sessionDays})\n\nPlease check your Swati HTB dashboard for full address and details.\n\n— Swati Home Tuition Bureau`;
     const teacherWaUrl = `https://wa.me/${teacherPhone.replace(/\D/g, "")}?text=${encodeURIComponent(teacherMsg)}`;

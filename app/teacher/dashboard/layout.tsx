@@ -82,7 +82,7 @@ export default async function TeacherDashboardLayout({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  teacher.full_name.charAt(0)
+                  (teacher?.full_name || "T").charAt(0)
                 )}
               </div>
               <div className="overflow-hidden flex-1">

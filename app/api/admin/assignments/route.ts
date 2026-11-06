@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
       .select(`
         *,
         teacher:teachers(id, full_name, teacher_id, phone, whatsapp),
-        student:students(id, full_name, student_id, parent_name, parent_phone, parent_whatsapp)
+        student:students(id, full_name, student_id, parent_name, parent_phone, whatsapp)
       `)
       .single();
 

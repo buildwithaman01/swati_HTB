@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
       .select(`
         *,
         assignment:assignments (id, subject),
-        student:students (id, full_name, class_studying, parent_name, parent_phone, parent_whatsapp)
+        student:students (id, full_name, class_studying, parent_name, parent_phone, whatsapp)
       `)
       .single();
 
@@ -167,7 +167,7 @@ export async function GET(req: NextRequest) {
       .select(`
         *,
         assignment:assignments(id, subject),
-        student:students(id, full_name, class_studying, parent_name, parent_phone, parent_whatsapp),
+        student:students(id, full_name, class_studying, parent_name, parent_phone, whatsapp),
         teacher:teachers(id, full_name, teacher_id)
       `)
       .order("created_at", { ascending: false });

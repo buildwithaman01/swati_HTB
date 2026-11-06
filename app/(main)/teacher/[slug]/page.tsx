@@ -66,7 +66,7 @@ export default async function TeacherProfilePage({ params }: { params: Promise<{
             <div className="w-24 h-24 rounded-full border-4 border-white bg-[#0F4C5C] flex items-center justify-center text-white text-3xl font-bold shadow-md mb-4 overflow-hidden">
               {teacher.profile_photo_url
                 ? <img src={teacher.profile_photo_url} alt={teacher.full_name} className="w-full h-full object-cover" />
-                : teacher.full_name.charAt(0).toUpperCase()}
+                : (teacher.full_name || "T").charAt(0).toUpperCase()}
             </div>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>

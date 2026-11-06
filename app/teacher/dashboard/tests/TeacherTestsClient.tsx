@@ -31,6 +31,7 @@ interface Assignment {
     class_studying?: string;
     parent_name?: string;
     parent_phone?: string;
+    whatsapp?: string;
     parent_whatsapp?: string;
   };
 }
@@ -55,6 +56,7 @@ interface TestRecord {
     class_studying?: string;
     parent_name?: string;
     parent_phone?: string;
+    whatsapp?: string;
     parent_whatsapp?: string;
   };
 }
@@ -702,7 +704,7 @@ export default function TeacherTestsClient({
                 ? `Class ${test.student.class_studying}`
                 : "";
               const parentPhone =
-                test.student?.parent_whatsapp || test.student?.parent_phone || "";
+                test.student?.whatsapp || test.student?.parent_whatsapp || test.student?.parent_phone || "";
 
               const waMsg = `📊 *Tuition Assessment Result Alert!*\n\nDear Parent of ${studentName},\n\nTeacher ${teacherName} has uploaded a new test score:\n\n📝 *Assessment:* ${title}\n📅 *Date:* ${test.report_month}\n🎯 *Score:* ${test.test_scores}\n🏆 *Performance:* ${badgeInfo.badgeText}\n${
                 topics ? `📚 *Topics Covered:* ${topics}\n` : ""

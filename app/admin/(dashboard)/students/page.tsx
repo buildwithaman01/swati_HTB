@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/utils/supabase/server";
-import { Search, GraduationCap, Plus, Filter, UserCheck, AlertCircle } from "lucide-react";
+import { Search, GraduationCap, Plus, Filter, UserCheck, AlertCircle, MessageCircle, FileText } from "lucide-react";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 
@@ -99,40 +99,92 @@ export default async function AdminStudents({
                 </td>
               </tr>
             ) : (
-              students.map((s) => (
-                <tr key={s.id} className="hover:bg-neutral-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
-                        {s.full_name.charAt(0)}
+              students.map((s) => {
+                const subjects = (s.subjects_required && s.subjects_required.length > 0)
+                  ? s.subjects_required
+                  : (s.subjects_needed && s.subjects_needed.length > 0)
+                  ? s.subjects_needed
+                  : [];
+                const formattedClass = s.class_studying
+                  ? (s.class_studying.toLowerCase().startsWith("class") ? s.class_studying : `Class ${s.class_studying}`)
+                  : "Class not set";
+                const phoneClean = (s.whatsapp || s.parent_phone || "").replace(/\D/g, "");
+
+                return (
+                  <tr key={s.id} className="hover:bg-neutral-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
+                          {(s.full_name || "S").charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-[#1F2937] text-sm">{s.full_name || "Student Lead"}</p>
+                          <p className="text-xs text-neutral-500 font-mono mt-0.5">{s.student_id || "STD-PENDING"}</p>
+                          {s.created_at && (
+                            <p className="text-[10px] text-neutral-400 mt-0.5">
+                              {new Date(s.created_at).toLocaleDateString("en-IN", { month: "short", day: "numeric" })}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-bold text-[#1F2937] text-sm">{s.full_name}</p>
-                        <p className="text-xs text-neutral-500 font-mono mt-0.5">{s.student_id}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-semibold text-[#1F2937]">{s.parent_name || s.full_name || "Parent"}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-xs text-neutral-500">{s.parent_phone || "No phone"}</span>
+                        {phoneClean && (
+                          <a
+                            href={`https://wa.me/${phoneClean.startsWith("91") ? phoneClean : `91${phoneClean}`}?text=${encodeURIComponent(`Hello ${s.parent_name || ""}, I am contacting you from Swati Home Tuition Bureau regarding your enquiry for ${formattedClass}.`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#25D366] hover:text-[#1eb856] p-0.5 inline-flex items-center"
+                            title="Chat on WhatsApp"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" />
+                          </a>
+                        )}
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-semibold text-[#1F2937]">{s.parent_name}</p>
-                    <p className="text-xs text-neutral-500 mt-0.5">{s.parent_phone}</p>
-                    <p className="text-xs text-neutral-400 mt-0.5 truncate max-w-[150px]">{s.locality || "Area not set"}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="text-sm font-medium text-[#1F2937]">{s.class_studying ? `Class ${s.class_studying}` : "—"}</p>
-                    <p className="text-xs text-neutral-500 mt-0.5">{s.board || "—"}</p>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${STATUS_COLORS[s.enrollment_status] || "bg-gray-100 text-gray-700"}`}>
-                      {s.enrollment_status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <Link href={`/admin/students/${s.id}`} className="inline-flex items-center gap-2 text-xs font-bold bg-white text-[#1F2937] hover:bg-neutral-50 border border-neutral-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
-                      <UserCheck className="w-3.5 h-3.5" /> Details
-                    </Link>
-                  </td>
-                </tr>
-              ))
+                      <p className="text-xs text-neutral-400 mt-0.5 truncate max-w-[170px]">
+                        📍 {s.locality || "Patna"}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-medium text-[#1F2937]">{formattedClass}</p>
+                      {subjects.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 mt-1 max-w-[240px]">
+                          {subjects.slice(0, 3).map((sub: string, idx: number) => (
+                            <span key={idx} className="bg-neutral-100 text-neutral-700 text-[10px] font-medium px-2 py-0.5 rounded-md">
+                              {sub}
+                            </span>
+                          ))}
+                          {subjects.length > 3 && (
+                            <span className="text-[10px] text-neutral-400 font-medium self-center">
+                              +{subjects.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-neutral-400 mt-0.5">{s.board || "CBSE"}</p>
+                      )}
+                      {s.internal_notes && (
+                        <p className="text-[10px] text-neutral-400 mt-1 line-clamp-1 max-w-[240px] italic">
+                          📝 {s.internal_notes}
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${STATUS_COLORS[s.enrollment_status] || "bg-gray-100 text-gray-700"}`}>
+                        {s.enrollment_status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link href={`/admin/students/${s.id}`} className="inline-flex items-center gap-2 text-xs font-bold bg-white text-[#1F2937] hover:bg-neutral-50 border border-neutral-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                        <UserCheck className="w-3.5 h-3.5" /> Details
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

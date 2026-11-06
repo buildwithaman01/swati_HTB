@@ -81,10 +81,12 @@ export async function POST(req: NextRequest) {
       
       if (isDemo) {
         // Parse subjects into array safely
-        const subjectsArray = fields.subjects ? fields.subjects.split(",").map((s: string) => s.trim()) : [];
+        const subjectsArray = fields.subjects
+          ? fields.subjects.split(",").map((s: string) => s.trim()).filter(Boolean)
+          : [];
         
-        // Smart Locality detection from address string
-        const addressText = (fields.address || "").toLowerCase();
+        // Smart Locality detection from address or locality string
+        const addressText = `${fields.locality || ""} ${fields.address || ""}`.toLowerCase();
         let detectedLocality = fields.locality || "";
         if (!detectedLocality) {
           const patnaLocalities = [
@@ -103,20 +105,47 @@ export async function POST(req: NextRequest) {
         if (!detectedLocality && fields.address) {
           detectedLocality = fields.address.split(',')[0].trim();
         }
+        if (!detectedLocality) {
+          detectedLocality = "Patna";
+        }
+
+        // Generate student_id fallback (e.g. STD-2026-1482) so ID is never null in DB or Admin Panel
+        const currentYear = new Date().getFullYear();
+        const randNum = Math.floor(1000 + Math.random() * 9000);
+        const generatedStudentId = `STD-${currentYear}-${randNum}`;
+
+        // Gender preference inference from tutor preference if provided
+        const prefLower = (fields.teacherPreference || "").toLowerCase();
+        let genderPref = "no_preference";
+        if (prefLower.includes("female")) genderPref = "female";
+        else if (prefLower.includes("male")) genderPref = "male";
+
+        // Build comprehensive internal notes so Admin coordinators see full inquiry background
+        const noteItems = [
+          `Inquiry Source: ${fields.source || "Website Free Demo / Intake"}`,
+          `Target Locality: ${detectedLocality}`,
+          `Class: ${fields.studentClass || "Not specified"}`,
+          `Subjects: ${fields.subjects || "Not specified"}`,
+          fields.teacherPreference ? `Teacher Preference: ${fields.teacherPreference}` : null,
+          fields.address ? `Address: ${fields.address}` : null,
+          fields.message || fields.remarks ? `Note: ${fields.message || fields.remarks}` : null,
+        ].filter(Boolean);
 
         const studentPayload: Record<string, any> = {
-          full_name: fields.name || "Unknown",
-          parent_name: fields.name || "Unknown",
+          student_id: generatedStudentId,
+          full_name: fields.name || "Student Lead",
+          parent_name: fields.name || "Parent Lead",
           parent_phone: fields.phone || "Unknown",
           whatsapp: fields.phone || null,
           class_studying: fields.studentClass || null,
-          locality: detectedLocality || "Patna",
-          address: fields.address || null,
+          locality: detectedLocality,
+          address: fields.address || detectedLocality,
           subjects_required: subjectsArray,
           subjects_needed: subjectsArray,
           enrollment_status: "enquiry",
           tuition_type_preference: "home",
-          internal_notes: `Free Demo Booking. Address: ${fields.address || "N/A"} | Subjects: ${fields.subjects || "N/A"}`
+          gender_preference: genderPref,
+          internal_notes: noteItems.join(" | ")
         };
 
         // A) Insert into Supabase (status: enquiry)
@@ -128,11 +157,20 @@ export async function POST(req: NextRequest) {
 
         if (studentInsertError) {
           console.error("[Supabase Student Insert Error]:", studentInsertError);
-          // If conflict on phone number, update record with new enquiry details
+          // If conflict on phone number, update record with new enquiry details so admin panel shows latest
           if (studentInsertError.code === "23505") {
             const { error: updateErr } = await supabase
               .from("students")
-              .update(studentPayload)
+              .update({
+                class_studying: studentPayload.class_studying,
+                locality: studentPayload.locality,
+                address: studentPayload.address,
+                subjects_required: studentPayload.subjects_required,
+                subjects_needed: studentPayload.subjects_needed,
+                gender_preference: studentPayload.gender_preference,
+                internal_notes: studentPayload.internal_notes,
+                updated_at: new Date().toISOString()
+              })
               .eq("parent_phone", studentPayload.parent_phone);
             if (updateErr) console.error("[Supabase Student Update Conflict Error]:", updateErr);
           }
@@ -149,9 +187,9 @@ export async function POST(req: NextRequest) {
               lastname: fields.name || "Unknown",
               phone: fields.phone || "Unknown",
               class: fields.studentClass || "",
-              locality: detectedLocality || fields.address || "",
+              locality: detectedLocality,
               subjects: fields.subjects || "",
-              requirements: `Demo Request for ${fields.studentClass || "General"}`
+              requirements: `Demo Request for ${fields.studentClass || "General"}${fields.teacherPreference ? ` (${fields.teacherPreference})` : ""}`
             }),
           });
         } catch (crmErr) {

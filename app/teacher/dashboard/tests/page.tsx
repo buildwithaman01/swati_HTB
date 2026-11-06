@@ -31,7 +31,7 @@ export default async function TeacherTestsPage() {
         class_studying,
         parent_name,
         parent_phone,
-        parent_whatsapp
+        whatsapp
       )
     `)
     .eq("teacher_id", teacher.id)
@@ -55,7 +55,7 @@ export default async function TeacherTestsPage() {
         teacher_remarks,
         created_at,
         assignment:assignments (id, subject),
-        student:students (id, full_name, class_studying, parent_name, parent_phone, parent_whatsapp)
+        student:students (id, full_name, class_studying, parent_name, parent_phone, whatsapp)
       `)
       .in("assignment_id", assignmentIds)
       .order("created_at", { ascending: false });

@@ -44,7 +44,7 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
     .from("assignments")
     .select(`
       *,
-      student:students(id, full_name, student_id, class_studying, parent_name, parent_phone, parent_whatsapp)
+      student:students(id, full_name, student_id, class_studying, parent_name, parent_phone, whatsapp)
     `)
     .eq("teacher_id", teacher.id)
     .order("created_at", { ascending: false });
@@ -92,7 +92,7 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
             <div className="w-24 h-24 rounded-full bg-[#0F4C5C] text-white flex items-center justify-center font-bold text-3xl mb-4 relative shadow-md">
               {teacher.profile_photo_url ? (
                 <img src={teacher.profile_photo_url} className="w-full h-full rounded-full object-cover" />
-              ) : teacher.full_name.charAt(0)}
+              ) : (teacher.full_name || "T").charAt(0)}
               {teacher.verification_status === "approved" && (
                 <div className="absolute bottom-0 right-0 bg-emerald-500 text-white p-1 rounded-full border-2 border-white">
                   <CheckCircle2 className="w-4 h-4" />

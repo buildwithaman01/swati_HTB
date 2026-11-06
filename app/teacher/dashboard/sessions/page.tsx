@@ -22,7 +22,7 @@ export default async function SessionsPage() {
     .from("assignments")
     .select(`
       id, student_id, subject,
-      students:student_id ( id, full_name, parent_name, parent_phone, parent_whatsapp )
+      students:student_id ( id, full_name, parent_name, parent_phone, whatsapp )
     `)
     .eq("teacher_id", resolvedTeacherId)
     .eq("status", "active");
@@ -32,7 +32,7 @@ export default async function SessionsPage() {
     .from("sessions")
     .select(`
       *,
-      students:student_id ( id, full_name, parent_name, parent_phone, parent_whatsapp )
+      students:student_id ( id, full_name, parent_name, parent_phone, whatsapp )
     `)
     .eq("teacher_id", resolvedTeacherId)
     .order("session_date", { ascending: false })
@@ -208,7 +208,7 @@ export default async function SessionsPage() {
               <div className="space-y-4">
                 {recentSessions.map((session: any) => {
                   const student = session.students;
-                  const parentPhone = (student?.parent_whatsapp || student?.parent_phone || "").replace(/[^\d]/g, "");
+                  const parentPhone = (student?.whatsapp || student?.parent_phone || "").replace(/[^\d]/g, "");
                   const rawWa = parentPhone.startsWith("91") ? parentPhone : `91${parentPhone}`;
                   const waText = `*Swati Home Tuition Bureau — Class Update*\n\nDear Parent,\nClass completed for *${student?.full_name || 'Student'}*.\n\n📅 *Date:* ${new Date(session.session_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}\n⏱️ *Duration:* ${session.duration_mins} mins (${session.session_start || ''} - ${session.session_end || ''})\n📚 *Topics Covered:* ${session.topics_covered}${session.homework_given ? `\n📝 *Homework:* ${session.homework_given}` : ''}\n\n— *Swati Home Tuition Bureau*`;
                   const waUrl = parentPhone ? `https://wa.me/${rawWa}?text=${encodeURIComponent(waText)}` : null;

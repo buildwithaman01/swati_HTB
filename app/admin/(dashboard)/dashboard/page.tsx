@@ -94,11 +94,11 @@ export default async function AdminDashboard() {
               <div key={t.id} className="px-6 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm shrink-0">
-                    {t.full_name.charAt(0)}
+                    {(t.full_name || "T").charAt(0)}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold text-sm text-[#1F2937] truncate">{t.full_name}</p>
-                    <p className="text-xs text-neutral-400 font-mono truncate">{t.teacher_id} · {t.locality || "—"}</p>
+                    <p className="font-semibold text-sm text-[#1F2937] truncate">{t.full_name || "Teacher"}</p>
+                    <p className="text-xs text-neutral-400 font-mono truncate">{t.teacher_id || "TCH-PENDING"} · {t.locality || "—"}</p>
                   </div>
                 </div>
                 <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_COLORS[t.verification_status] || "bg-gray-100 text-gray-500"}`}>
@@ -123,11 +123,11 @@ export default async function AdminDashboard() {
               <div key={s.id} className="px-6 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm shrink-0">
-                    {s.full_name.charAt(0)}
+                    {(s.full_name || "S").charAt(0)}
                   </div>
                   <div className="min-w-0">
-                    <p className="font-semibold text-sm text-[#1F2937] truncate">{s.full_name}</p>
-                    <p className="text-xs text-neutral-400 truncate">{s.student_id} · {s.parent_name}</p>
+                    <p className="font-semibold text-sm text-[#1F2937] truncate">{s.full_name || "Student Lead"}</p>
+                    <p className="text-xs text-neutral-400 truncate">{s.student_id || "STD-PENDING"} · {s.parent_name || "Parent"}</p>
                   </div>
                 </div>
                 <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_COLORS[s.enrollment_status] || "bg-gray-100 text-gray-500"}`}>

@@ -45,7 +45,7 @@ export async function GET() {
       .select(`
         *,
         teacher:teachers(id, full_name, teacher_id, locality, subjects, phone, whatsapp),
-        student:students(id, full_name, student_id, class_studying, parent_name, parent_phone, parent_whatsapp)
+        student:students(id, full_name, student_id, class_studying, parent_name, parent_phone, whatsapp)
       `)
       .limit(5);
 

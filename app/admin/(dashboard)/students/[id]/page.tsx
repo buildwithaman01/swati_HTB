@@ -90,7 +90,7 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
         </Link>
         <div>
           <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Student Profile</h1>
-          <p className="text-sm text-neutral-500 font-mono mt-1">{student.student_id} · Registered {new Date(student.created_at).toLocaleDateString()}</p>
+          <p className="text-sm text-neutral-500 font-mono mt-1">{student.student_id || "STD-PENDING"} · Registered {new Date(student.created_at).toLocaleDateString()}</p>
         </div>
       </div>
 
@@ -101,10 +101,12 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
           {/* Main Card */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60 flex flex-col items-center text-center">
             <div className="w-24 h-24 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-3xl mb-4 shadow-sm border border-indigo-200">
-              {student.full_name.charAt(0)}
+              {(student.full_name || "Student").charAt(0)}
             </div>
-            <h2 className="text-xl font-bold text-[#1F2937]">{student.full_name}</h2>
-            <p className="text-sm text-neutral-500 mt-1">Class {student.class_studying} · {student.board}</p>
+            <h2 className="text-xl font-bold text-[#1F2937]">{student.full_name || "Student Lead"}</h2>
+            <p className="text-sm text-neutral-500 mt-1">
+              {(student.class_studying || "").toLowerCase().startsWith("class") ? student.class_studying : `Class ${student.class_studying || "—"}`} · {student.board || "CBSE"}
+            </p>
 
             <div className="mt-4">
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${STATUS_COLORS[student.enrollment_status] || "bg-gray-100 text-gray-700 border-gray-200"}`}>
@@ -118,20 +120,33 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
             <h3 className="font-bold text-[#1F2937] text-sm uppercase tracking-wider mb-2">Parent / Guardian</h3>
             <div className="flex items-start gap-3">
               <User className="w-4 h-4 text-neutral-400 mt-0.5 shrink-0" />
-              <p className="text-sm font-semibold text-[#1F2937]">{student.parent_name}</p>
+              <p className="text-sm font-semibold text-[#1F2937]">{student.parent_name || student.full_name}</p>
             </div>
-            <div className="flex items-start gap-3">
-              <Phone className="w-4 h-4 text-neutral-400 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-semibold text-[#1F2937]">{student.parent_phone}</p>
-                <p className="text-xs text-neutral-500">WhatsApp: {student.whatsapp || "Same"}</p>
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <Phone className="w-4 h-4 text-neutral-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-[#1F2937]">{student.parent_phone}</p>
+                  <p className="text-xs text-neutral-500">WhatsApp: {student.whatsapp || student.parent_phone || "Same"}</p>
+                </div>
               </div>
+              {(student.whatsapp || student.parent_phone) && (
+                <a
+                  href={`https://wa.me/${(student.whatsapp || student.parent_phone || "").replace(/\D/g, "")}?text=${encodeURIComponent(`Hello ${student.parent_name || ""}, I am contacting you from Swati Home Tuition Bureau regarding your enquiry for ${student.class_studying || "Home Tuition"}.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-xl bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors shrink-0"
+                  title="Chat on WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </a>
+              )}
             </div>
             <div className="flex items-start gap-3">
               <MapPin className="w-4 h-4 text-neutral-400 mt-0.5 shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-[#1F2937]">{student.locality}</p>
-                <p className="text-xs text-neutral-500 mt-0.5">{student.address}</p>
+                <p className="text-sm font-semibold text-[#1F2937]">{student.locality || "Patna"}</p>
+                <p className="text-xs text-neutral-500 mt-0.5">{student.address || student.locality}</p>
               </div>
             </div>
           </div>
@@ -140,7 +155,7 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
             studentId={student.id}
             studentName={student.full_name}
             parentEmail={student.parent_email || student.email || ""}
-            parentPhone={student.parent_whatsapp || student.parent_phone || ""}
+            parentPhone={student.whatsapp || student.parent_phone || ""}
             authUserId={authUserId}
           />
 

@@ -90,7 +90,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
                 <div className="w-16 h-16 rounded-full bg-[#0F4C5C] flex items-center justify-center text-white text-2xl font-bold overflow-hidden flex-shrink-0">
                   {teacher.profile_photo_url
                     ? <img src={teacher.profile_photo_url} alt={teacher.full_name} className="w-full h-full object-cover" />
-                    : teacher.full_name.charAt(0)}
+                    : (teacher.full_name || "T").charAt(0)}
                 </div>
                 <div>
                   <p className="font-bold text-[#1F2937] text-lg leading-tight">{teacher.full_name}</p>

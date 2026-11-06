@@ -23,7 +23,7 @@ export default async function AdminAssignments() {
           .select(`
             *,
             teacher:teachers(id, full_name, teacher_id, locality, subjects, phone, whatsapp),
-            student:students(id, full_name, student_id, class_studying, parent_name, parent_phone, parent_whatsapp)
+            student:students(id, full_name, student_id, class_studying, parent_name, parent_phone, whatsapp)
           `)
           .order("created_at", { ascending: false }),
         supabase
@@ -32,7 +32,7 @@ export default async function AdminAssignments() {
           .order("full_name"),
         supabase
           .from("students")
-          .select("id, full_name, student_id, class_studying, subjects_needed, subjects_required, locality, parent_name, parent_phone, parent_whatsapp, enrollment_status")
+          .select("id, full_name, student_id, class_studying, subjects_needed, subjects_required, locality, parent_name, parent_phone, whatsapp, enrollment_status")
           .order("full_name"),
       ]);
 
@@ -199,7 +199,7 @@ export default async function AdminAssignments() {
                           teacherName={(a.teacher as any)?.full_name}
                           parentName={(a.student as any)?.parent_name}
                           teacherPhone={(a.teacher as any)?.whatsapp || (a.teacher as any)?.phone}
-                          parentPhone={(a.student as any)?.parent_whatsapp || (a.student as any)?.parent_phone}
+                          parentPhone={(a.student as any)?.whatsapp || (a.student as any)?.parent_phone}
                           subject={a.subject}
                         />
                       </td>

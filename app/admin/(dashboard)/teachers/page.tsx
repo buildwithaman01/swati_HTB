@@ -95,7 +95,7 @@ export default async function AdminTeachers({
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-[#0F4C5C] text-white flex items-center justify-center font-bold text-sm shrink-0">
-                        {t.profile_photo_url ? <img src={t.profile_photo_url} className="w-full h-full rounded-full object-cover"/> : t.full_name.charAt(0)}
+                        {t.profile_photo_url ? <img src={t.profile_photo_url} alt="" className="w-full h-full rounded-full object-cover"/> : (t.full_name || "T").charAt(0)}
                       </div>
                       <div>
                         <p className="font-bold text-[#1F2937] text-sm">{t.full_name}</p>

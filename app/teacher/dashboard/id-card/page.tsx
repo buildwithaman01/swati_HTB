@@ -144,7 +144,7 @@ export default async function TeacherIDCardPage() {
                       />
                     ) : (
                       <div className="w-full h-full rounded-xl bg-[#0B192C] text-white flex items-center justify-center text-3xl font-bold font-serif">
-                        {teacher.full_name.charAt(0)}
+                        {(teacher.full_name || "T").charAt(0)}
                       </div>
                     )}
                   </div>
