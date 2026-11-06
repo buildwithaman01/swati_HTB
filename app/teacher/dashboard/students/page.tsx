@@ -90,9 +90,9 @@ export default async function TeacherStudentsPage() {
                     <UserCircle className="w-7 h-7" />
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-xl font-bold text-[#1F2937]">{student.full_name}</h2>
-                    <p className="text-sm font-medium text-neutral-600 mt-1">
-                      Class {student.class_studying} • {student.board} • {asg.subject}
+                    <h2 className="text-xl font-bold font-serif text-[#0B192C]">{student.full_name}</h2>
+                    <p className="text-sm font-semibold text-[#1E3E62] mt-1">
+                      Class {student.class_studying} • {student.board || "CBSE"} • {asg.subject}
                     </p>
                   </div>
                 </div>
