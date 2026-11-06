@@ -2,6 +2,7 @@ import { blogsData } from "@/lib/data/blogs";
 import { Metadata } from "next";
 import Link from "next/link";
 import { Calendar, ArrowRight, BookOpen, Clock, User, ShieldCheck, Sparkles, MapPin } from "lucide-react";
+import { CANONICAL_LINKS } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Academic Insights & Parenting Guides | Swati HTB Patna",
@@ -198,12 +199,12 @@ export default function BlogsPage() {
                 Book Free Trial Class
               </Link>
               <a
-                href="https://wa.me/919229738307?text=Hi%2C%20I%20am%20reading%20your%20articles%20and%20need%20academic%20advice%20for%20my%20child"
+                href={CANONICAL_LINKS.whatsappWithText("Hi, I am reading your articles and need academic advice for my child")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center h-12 px-6 bg-white/10 hover:bg-white/20 text-white font-bold text-sm rounded-xl border border-white/20 transition-all"
               >
-                Chat on WhatsApp
+                Chat on WhatsApp ({CANONICAL_LINKS.displayPhone})
               </a>
             </div>
           </div>
