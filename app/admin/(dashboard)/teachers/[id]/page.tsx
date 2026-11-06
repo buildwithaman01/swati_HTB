@@ -103,10 +103,17 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
             <p className="text-sm text-neutral-500 mt-1">{teacher.qualification}</p>
 
             <div className="flex flex-wrap gap-2 justify-center mt-4">
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${teacher.verification_status === "approved" ? "bg-emerald-100 text-emerald-700" :
-                  teacher.verification_status === "pending" ? "bg-amber-100 text-amber-700" :
-                    "bg-red-100 text-red-700"
-                }`}>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                teacher.verification_status === "approved" 
+                  ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
+                  : teacher.verification_status === "pending" 
+                  ? "bg-amber-100 text-amber-800 border border-amber-200"
+                  : teacher.verification_status === "on_leave"
+                  ? "bg-purple-100 text-purple-800 border border-purple-200"
+                  : teacher.verification_status === "inactive"
+                  ? "bg-neutral-100 text-neutral-700 border border-neutral-300"
+                  : "bg-red-100 text-red-800 border border-red-200"
+              }`}>
                 {teacher.verification_status}
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider border border-indigo-100">
@@ -148,6 +155,7 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
           {/* Interactive Approval Action Card */}
           <TeacherApprovalAction
             teacherId={teacher.id}
+            teacherName={teacher.full_name}
             currentStatus={teacher.verification_status}
             badgeLevel={teacher.badge_level}
             initialNotes={teacher.internal_notes}

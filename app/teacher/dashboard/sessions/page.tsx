@@ -1,6 +1,7 @@
 import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
 import { Calendar as CalendarIcon, Clock, BookOpen, CheckCircle, Share2, Users } from "lucide-react";
 import SessionLoggerForm from "./SessionLoggerForm";
+import SessionDeleteButton from "./SessionDeleteButton";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -260,6 +261,13 @@ export default async function SessionsPage() {
                               <Share2 className="w-3 h-3 text-[#128C7E]" /> WhatsApp
                             </a>
                           )}
+                          <SessionDeleteButton
+                            sessionId={session.id}
+                            studentName={student?.full_name}
+                            sessionDate={new Date(session.session_date).toLocaleDateString("en-IN", {
+                              dateStyle: "medium",
+                            })}
+                          />
                         </div>
                       </div>
 

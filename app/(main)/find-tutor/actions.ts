@@ -22,7 +22,12 @@ export async function submitLeadToCRM(formData: FormData) {
   try {
     const supabase = await createAdminClient();
 
+    const currentYear = new Date().getFullYear();
+    const randNum = Math.floor(1000 + Math.random() * 9000);
+    const fallbackStudentId = `STD-${currentYear}-${randNum}`;
+
     const studentPayload = {
+      student_id: fallbackStudentId,
       full_name: name,
       parent_name: name,
       parent_phone: phone,

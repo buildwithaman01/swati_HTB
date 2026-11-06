@@ -148,12 +148,34 @@ export async function PATCH(req: NextRequest) {
       updateData.cancellation_reason = cancellation_reason || null;
     }
 
-    const { data, error } = await adminDb
+    let { data, error } = await adminDb
       .from("assignments")
       .update(updateData)
       .eq("id", id)
       .select()
       .single();
+
+    if (error && cancellation_reason) {
+      console.warn("[assignments PATCH retry without cancellation_reason column]:", error.message);
+      // Fallback: append cancellation note to notes column
+      const fallbackData: Record<string, any> = {
+        updated_at: new Date().toISOString(),
+      };
+      if (status) fallbackData.status = status;
+      fallbackData.notes = `Status changed to ${status}: ${cancellation_reason}`;
+
+      const retryRes = await adminDb
+        .from("assignments")
+        .update(fallbackData)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (!retryRes.error) {
+        data = retryRes.data;
+        error = null;
+      }
+    }
 
     if (error) {
       console.error("[assignments PATCH error]:", error);

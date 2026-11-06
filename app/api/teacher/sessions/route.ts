@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, createClient } from "@/utils/supabase/server";
+import { createAdminClient, createClient, getTeacherProfile } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export async function POST(req: NextRequest) {
@@ -148,5 +148,81 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ sessions: sessions || [] });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Failed to fetch sessions" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    let sessionId = searchParams.get("id");
+
+    if (!sessionId) {
+      try {
+        const body = await req.json();
+        sessionId = body.id || body.session_id;
+      } catch {}
+    }
+
+    if (!sessionId) {
+      return NextResponse.json({ error: "Session ID is required for deletion." }, { status: 400 });
+    }
+
+    // Authenticate caller
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized. Please log in as a teacher." }, { status: 401 });
+    }
+
+    const teacher = await getTeacherProfile(user.id, user.email);
+    if (!teacher) {
+      return NextResponse.json({ error: "Teacher profile not found." }, { status: 403 });
+    }
+
+    const adminDb = await createAdminClient();
+
+    // Verify session belongs to this teacher
+    const { data: existingSession, error: fetchErr } = await adminDb
+      .from("sessions")
+      .select("id, teacher_id, session_date, topics_covered")
+      .eq("id", sessionId)
+      .single();
+
+    if (fetchErr || !existingSession) {
+      return NextResponse.json({ error: "Session log not found or already deleted." }, { status: 404 });
+    }
+
+    if (existingSession.teacher_id !== teacher.id) {
+      return NextResponse.json(
+        { error: "You are not authorized to delete another teacher's session log." },
+        { status: 403 }
+      );
+    }
+
+    // Delete session
+    const { error: deleteErr } = await adminDb
+      .from("sessions")
+      .delete()
+      .eq("id", sessionId);
+
+    if (deleteErr) {
+      console.error("[deleteSession error]:", deleteErr);
+      return NextResponse.json({ error: deleteErr.message || "Failed to delete session log." }, { status: 500 });
+    }
+
+    revalidatePath("/teacher/dashboard/sessions");
+    revalidatePath("/teacher/dashboard");
+    revalidatePath("/portal/sessions");
+    revalidatePath("/portal/dashboard");
+    revalidatePath("/admin/sessions");
+
+    return NextResponse.json({
+      success: true,
+      message: "Session log deleted successfully.",
+    });
+  } catch (err: any) {
+    console.error("[sessions DELETE exception]:", err);
+    return NextResponse.json({ error: err.message || "Internal server error" }, { status: 500 });
   }
 }

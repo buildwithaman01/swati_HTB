@@ -77,7 +77,8 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
     enquiry: "bg-purple-100 text-purple-700 border-purple-200",
     demo: "bg-amber-100 text-amber-700 border-amber-200",
     enrolled: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    paused: "bg-gray-100 text-gray-700 border-gray-200",
+    completed: "bg-blue-100 text-blue-700 border-blue-200",
+    paused: "bg-orange-100 text-orange-800 border-orange-200",
     dropped: "bg-red-100 text-red-700 border-red-200"
   };
 
@@ -162,6 +163,7 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
           {/* Status Box */}
           <StudentStatusAction
             studentId={student.id}
+            studentName={student.full_name}
             currentStatus={student.enrollment_status}
             initialNotes={student.internal_notes}
           />

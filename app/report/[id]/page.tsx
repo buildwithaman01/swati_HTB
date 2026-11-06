@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createAdminClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 
@@ -7,7 +7,7 @@ export const revalidate = 0;
 
 export default async function PrintReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = await createAdminClient();
   const reportId = id;
 
   const { data: report } = await supabase
@@ -21,7 +21,7 @@ export default async function PrintReportPage({ params }: { params: Promise<{ id
       )
     `)
     .eq("id", reportId)
-    .single();
+    .maybeSingle();
 
   if (!report) {
     notFound();
