@@ -23,6 +23,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { submitLeadToCRM } from "./actions";
 import { patnaAreas } from "@/lib/data/areas";
+import { CANONICAL_LINKS } from "@/lib/constants";
 import { SubmissionSuccessSocialCard } from "@/components/promotions/PromotionBanners";
 
 const POPULAR_LOCALITIES = [
@@ -73,7 +74,7 @@ function FindTutorFormContent() {
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [whatsappUrl, setWhatsappUrl] = useState("https://wa.me/919229738307");
+  const [whatsappUrl, setWhatsappUrl] = useState(CANONICAL_LINKS.whatsapp);
 
   const [selectedLocality, setSelectedLocality] = useState(
     initialLocality && !POPULAR_LOCALITIES.includes(initialLocality) ? "Other" : initialLocality
@@ -267,13 +268,13 @@ function FindTutorFormContent() {
               Skip the queue. Chat directly with Swati Ma&apos;am or our senior academic coordinator.
             </p>
             <a
-              href="https://wa.me/919229738307?text=Hello%20Swati%20HTB,%20I%20am%20looking%20for%20an%20urgent%20home%20tutor%20in%20Patna."
+              href={CANONICAL_LINKS.whatsappWithText("Hello Swati HTB, I am looking for an urgent home tutor in Patna.")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center w-full gap-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold text-sm py-3.5 px-5 rounded-xl shadow-md transition-all active:scale-[0.99]"
             >
               <MessageCircle className="w-4 h-4 fill-white" />
-              <span>Connect on WhatsApp (+91 92297 38307)</span>
+              <span>Connect on WhatsApp ({CANONICAL_LINKS.displayPhone})</span>
             </a>
           </div>
         </div>
