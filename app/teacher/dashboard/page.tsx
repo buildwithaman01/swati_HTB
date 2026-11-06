@@ -1,5 +1,6 @@
 import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
-import { Users, IndianRupee, ShieldAlert, CheckCircle2, Clock, Calendar } from "lucide-react";
+import { Users, IndianRupee, ShieldAlert, CheckCircle2, Clock, Calendar, GraduationCap, CreditCard, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,7 +16,7 @@ export default async function TeacherDashboard() {
 
   if (!resolvedTeacherId) return null;
 
-  // 2. Fetch assignments
+  // Fetch assignments
   const { data: assignments } = await supabase
     .from("assignments")
     .select(`
@@ -28,7 +29,7 @@ export default async function TeacherDashboard() {
   const activeStudentsCount = assignments?.length || 0;
   const expectedMonthlyEarnings = assignments?.reduce((acc, curr) => acc + (curr.teacher_earning || 0), 0) || 0;
 
-  // 3. Fetch Payouts (Commissions)
+  // Fetch Payouts (Commissions)
   const { data: payouts } = await supabase
     .from("commissions")
     .select("*")
@@ -36,7 +37,7 @@ export default async function TeacherDashboard() {
     .order("created_at", { ascending: false })
     .limit(3);
 
-  // 4. Fetch recent sessions
+  // Fetch recent sessions
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
@@ -47,117 +48,181 @@ export default async function TeacherDashboard() {
     .eq("teacher_id", resolvedTeacherId)
     .gte("session_date", startOfMonth.toISOString());
 
+  // Fetch total tests conducted
+  const { count: totalTestsCount } = await supabase
+    .from("progress_reports")
+    .select("*", { count: "exact", head: true })
+    .eq("teacher_id", resolvedTeacherId);
+
+  const isVerified = teacher?.verification_status === "approved";
+
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Welcome Back!</h1>
-        <p className="text-sm text-neutral-500 mt-1">Here's your teaching summary for this month.</p>
+      <div className="border-b border-[#E8E6DF] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-serif text-[#0B192C]">
+            Welcome Back, {teacher.full_name.split(" ")[0]}!
+          </h1>
+          <p className="text-sm text-[#5A6578] mt-1 font-medium">
+            Here is your teaching performance, active students, and tuition revenue summary.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Link
+            href="/teacher/dashboard/tests"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#0B192C] hover:bg-[#1E3E62] px-4 py-2.5 rounded-xl shadow-xs transition-colors"
+          >
+            <GraduationCap className="w-4 h-4 text-[#E5A93C]" />
+            Record Test
+          </Link>
+          <Link
+            href="/teacher/dashboard/id-card"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#1E3E62] bg-white hover:bg-[#F9F8F5] border border-[#E8E6DF] px-4 py-2.5 rounded-xl shadow-xs transition-colors"
+          >
+            <CreditCard className="w-4 h-4 text-[#E5A93C]" />
+            ID Badge
+          </Link>
+        </div>
       </div>
 
-      {(teacher?.verification_status !== "approved") && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-4">
+      {!isVerified && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-4 items-center">
           <ShieldAlert className="w-6 h-6 text-amber-600 shrink-0" />
-          <div>
-            <h3 className="font-bold text-amber-900 text-sm">Profile pending verification</h3>
-            <p className="text-xs text-amber-700 mt-1">Your profile is currently under review by our team. We will assign you students once your background check is complete.</p>
+          <div className="flex-1">
+            <h3 className="font-bold text-amber-900 text-sm">Faculty Profile Verification In Progress</h3>
+            <p className="text-xs text-amber-800 mt-0.5">
+              Your credentials are being reviewed by the Swati HTB verification desk. You will receive active student assignments once verified.
+            </p>
           </div>
+          <Link
+            href="/teacher/dashboard/profile"
+            className="text-xs font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg border border-amber-300 transition-colors shrink-0"
+          >
+            Complete Profile
+          </Link>
         </div>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-neutral-200/60 flex items-start gap-4">
-          <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5" />
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#E8E6DF] flex items-start gap-4">
+          <div className="w-11 h-11 bg-[#0B192C] text-white rounded-2xl flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5 text-[#E5A93C]" />
           </div>
           <div>
-            <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Active Students</p>
-            <p className="text-2xl font-bold text-[#1F2937] mt-1">{activeStudentsCount}</p>
+            <p className="text-xs font-bold text-[#5A6578] uppercase tracking-wider">Active Students</p>
+            <p className="text-2xl font-bold font-serif text-[#0B192C] mt-0.5">{activeStudentsCount}</p>
           </div>
         </div>
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-neutral-200/60 flex items-start gap-4">
-          <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shrink-0">
-            <Calendar className="w-5 h-5" />
+
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#E8E6DF] flex items-start gap-4">
+          <div className="w-11 h-11 bg-[#1E3E62] text-white rounded-2xl flex items-center justify-center shrink-0">
+            <Calendar className="w-5 h-5 text-[#E5A93C]" />
           </div>
           <div>
-            <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Sessions This Month</p>
-            <p className="text-2xl font-bold text-[#1F2937] mt-1">{sessionCountThisMonth || 0}</p>
+            <p className="text-xs font-bold text-[#5A6578] uppercase tracking-wider">Sessions Logged</p>
+            <p className="text-2xl font-bold font-serif text-[#0B192C] mt-0.5">{sessionCountThisMonth || 0}</p>
           </div>
         </div>
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-neutral-200/60 flex items-start gap-4">
-          <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shrink-0">
-            <IndianRupee className="w-5 h-5" />
+
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#E8E6DF] flex items-start gap-4">
+          <div className="w-11 h-11 bg-[#F9F8F5] text-[#0B192C] border border-[#E8E6DF] rounded-2xl flex items-center justify-center shrink-0">
+            <GraduationCap className="w-5 h-5 text-[#E5A93C]" />
           </div>
           <div>
-            <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Expected Earnings</p>
-            <p className="text-2xl font-bold text-[#1F2937] mt-1">₹{expectedMonthlyEarnings}</p>
+            <p className="text-xs font-bold text-[#5A6578] uppercase tracking-wider">Tests Conducted</p>
+            <p className="text-2xl font-bold font-serif text-[#0B192C] mt-0.5">{totalTestsCount || 0}</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#E8E6DF] flex items-start gap-4">
+          <div className="w-11 h-11 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-2xl flex items-center justify-center shrink-0">
+            <IndianRupee className="w-5 h-5 text-emerald-700" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-[#5A6578] uppercase tracking-wider">Expected Payout</p>
+            <p className="text-2xl font-bold font-serif text-emerald-800 mt-0.5">₹{expectedMonthlyEarnings}</p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Payout History */}
-        <div className="bg-white rounded-3xl shadow-sm border border-neutral-200/60 overflow-hidden h-full">
-          <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/50">
-            <h2 className="font-bold text-[#1F2937]">Recent Payouts</h2>
+        <div className="bg-white rounded-3xl shadow-sm border border-[#E8E6DF] overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="p-5 border-b border-[#E8E6DF] flex justify-between items-center bg-[#F9F8F5]">
+              <h2 className="font-bold font-serif text-[#0B192C]">Recent Payouts</h2>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#5A6578]">Bureau Settlements</span>
+            </div>
+            {(!payouts || payouts.length === 0) ? (
+              <div className="p-10 text-center text-[#5A6578]">
+                <Clock className="w-8 h-8 text-[#5A6578]/40 mx-auto mb-2" />
+                <p className="text-sm font-bold text-[#0B192C]">No payouts recorded yet</p>
+                <p className="text-xs mt-1 text-[#5A6578]">Monthly earnings will be credited after student session confirmations.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#E8E6DF]">
+                {payouts.map((p) => (
+                  <div key={p.id} className="p-5 flex items-center justify-between hover:bg-[#F9F8F5] transition-colors">
+                    <div>
+                      <p className="font-bold text-[#0B192C] text-sm">{p.month}</p>
+                      <p className="text-xs text-[#5A6578] mt-0.5">Gross Fee: ₹{p.gross_amount} (Bureau Commission Applied)</p>
+                    </div>
+                    <div className="text-right flex flex-col items-end gap-1">
+                      <p className="text-sm font-bold text-[#0B192C]">₹{p.teacher_payout}</p>
+                      {p.status === "paid" ? (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Paid
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-amber-600" /> Processing
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          {(!payouts || payouts.length === 0) ? (
-            <div className="p-8 text-center text-neutral-500">
-              <Clock className="w-8 h-8 text-neutral-200 mx-auto mb-2" />
-              <p className="text-sm font-medium">No payouts yet.</p>
-              <p className="text-xs mt-1">Payouts appear here when parents pay fees.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-neutral-100">
-              {payouts.map((p) => (
-                <div key={p.id} className="p-5 flex items-center justify-between hover:bg-neutral-50 transition-colors">
-                  <div>
-                    <p className="font-bold text-[#1F2937] text-sm">{p.month}</p>
-                    <p className="text-xs text-neutral-500 mt-1">Gross Fee: ₹{p.gross_amount} (25% Bureau Fee applied)</p>
-                  </div>
-                  <div className="text-right flex flex-col items-end gap-1.5">
-                    <p className="text-sm font-bold text-[#1F2937]">₹{p.teacher_payout}</p>
-                    {p.status === "paid" ? (
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Paid
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> Processing
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
         {/* Current Assignments Preview */}
-        <div className="bg-white rounded-3xl shadow-sm border border-neutral-200/60 overflow-hidden h-full">
-          <div className="p-5 border-b border-neutral-100 flex justify-between items-center bg-neutral-50/50">
-            <h2 className="font-bold text-[#1F2937]">Active Tuitions</h2>
+        <div className="bg-white rounded-3xl shadow-sm border border-[#E8E6DF] overflow-hidden flex flex-col justify-between">
+          <div>
+            <div className="p-5 border-b border-[#E8E6DF] flex justify-between items-center bg-[#F9F8F5]">
+              <h2 className="font-bold font-serif text-[#0B192C]">Active Tuitions</h2>
+              <Link href="/teacher/dashboard/students" className="text-xs font-bold text-[#1E3E62] hover:underline flex items-center gap-1">
+                View All <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            {activeStudentsCount === 0 ? (
+              <div className="p-10 text-center text-[#5A6578]">
+                <Users className="w-8 h-8 text-[#5A6578]/40 mx-auto mb-2" />
+                <p className="text-sm font-bold text-[#0B192C]">No active students assigned yet</p>
+                <p className="text-xs mt-1 text-[#5A6578]">Keep your preferred Patna localities up-to-date in your Profile to get matched faster.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#E8E6DF]">
+                {assignments?.map((asg) => (
+                  <div key={asg.id} className="p-5 flex items-center justify-between hover:bg-[#F9F8F5] transition-colors">
+                    <div>
+                      <h3 className="font-bold text-[#0B192C] text-sm">{asg.students?.full_name}</h3>
+                      <p className="text-xs text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" /> Active Enrollment
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-[#0B192C]">
+                        ₹{asg.teacher_earning} <span className="text-xs text-[#5A6578] font-normal">/ mo</span>
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          {activeStudentsCount === 0 ? (
-            <div className="p-8 text-center text-neutral-500">
-              <Users className="w-8 h-8 text-neutral-200 mx-auto mb-2" />
-              <p className="text-sm font-medium">No active students right now.</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-neutral-100">
-              {assignments?.map((asg) => (
-                <div key={asg.id} className="p-5 flex items-center justify-between hover:bg-neutral-50 transition-colors">
-                  <div>
-                    <h3 className="font-bold text-[#1F2937] text-sm">{asg.students?.full_name}</h3>
-                    <p className="text-xs text-emerald-600 font-semibold mt-1">● Active</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-[#1F2937]">₹{asg.teacher_earning} <span className="text-xs text-neutral-400 font-normal">/ month</span></p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>

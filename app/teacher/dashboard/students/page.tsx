@@ -58,9 +58,9 @@ export default async function TeacherStudentsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold font-serif text-[#1F2937]">My Students</h1>
-        <p className="text-sm text-neutral-500 mt-1">View details for your currently assigned students.</p>
+      <div className="border-b border-[#E8E6DF] pb-4">
+        <h1 className="text-3xl font-bold font-serif text-[#0B192C]">My Students</h1>
+        <p className="text-sm text-[#5A6578] mt-1 font-medium">View details and schedule for your currently assigned students.</p>
       </div>
 
       {/* Bureau contact policy notice */}

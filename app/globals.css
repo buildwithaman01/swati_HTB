@@ -1,17 +1,31 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #0F3D3E;
-  --color-ivory: #FDFBF7;
-  --color-gold: #D4AF37;
-  --color-emerald: #2ECC71;
-  --color-background: #FDFBF7;
-  --color-dark: #0F172A;
-  --color-text: #1E293B;
-  --color-text-muted: #64748B;
-  
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
+  /* High-Trust Institutional Academic Palette */
+  --color-primary: #0B192C;
+  --color-primary-light: #1E3E62;
+  --color-secondary: #005F56;
+  --color-accent: #E5A93C;
+  --color-accent-hover: #D49228;
+  --color-canvas: #F9F8F5;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F3F1EC;
+  --color-border: #E8E6DF;
+
+  /* Backward Compatibility Aliases */
+  --color-ivory: #F9F8F5;
+  --color-gold: #E5A93C;
+  --color-emerald: #005F56;
+  --color-background: #F9F8F5;
+  --color-dark: #0B192C;
+  --color-text: #1A1D20;
+  --color-text-muted: #5A6578;
+
+  /* Typography Tokens */
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-outfit), var(--font-sans);
+  --font-heading: var(--font-outfit), var(--font-sans);
+  --font-serif: var(--font-outfit), var(--font-sans);
 
   --animate-marquee: marquee var(--duration) linear infinite;
   --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
@@ -20,6 +34,7 @@
     from {
       transform: translateX(0);
     }
+
     to {
       transform: translateX(calc(-100% - var(--gap)));
     }
@@ -29,6 +44,7 @@
     from {
       transform: translateY(0);
     }
+
     to {
       transform: translateY(calc(-100% - var(--gap)));
     }
@@ -36,30 +52,28 @@
 }
 
 :root {
-  --background: #FAFAF8;
-  --foreground: #1E293B;
+  --background: #F9F8F5;
+  --foreground: #1A1D20;
 }
 
-/* Natively scale down the entire UI (fonts, padding, margins) on desktop to mimic 90% zoom */
-@media (min-width: 1024px) {
-  html {
-    font-size: 90%; /* Scales down all tailwind 'rem' units */
-  }
-}
-
-/* Ensure premium feeling — no dark mode for public site as per decisions */
-/* Base heading styles */
+/* Base heading styles — modern sans display hierarchy without cheap italic serif tropes */
 @layer base {
   h1 {
-    font-family: var(--font-playfair);
-    color: #0F4C5C;
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: #0B192C;
+    letter-spacing: -0.025em;
   }
 
-  h2, h3, h4, h5, h6 {
-    font-family: var(--font-sans);
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
     font-weight: 700;
-    color: #0F4C5C;
-    letter-spacing: -0.025em;
+    color: #0B192C;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -71,6 +85,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Subtle architectural dot grid */
+.bg-grid-dots {
+  background-image: radial-gradient(rgba(11, 25, 44, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.bg-grid-dots-light {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
@@ -78,6 +103,8 @@ body {
 
 /* Hide scrollbar for IE, Edge and Firefox */
 .hide-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }

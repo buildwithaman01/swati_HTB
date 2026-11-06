@@ -2,80 +2,93 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 
 const blogs = [
   {
-    title: "How to choose the right home tutor in Patna?",
+    title: "How to Choose the Right Home Tutor in Patna (Parent's Checklist)",
     category: "Parenting Guide",
     date: "August 12, 2026",
-    excerpt: "Finding a home tutor is easy, but finding the right one is hard. Here are 5 things every Patna parent must check.",
-    link: "/blogs/how-to-choose-right-tutor"
+    excerpt: "Finding a home tutor is simple, but finding the right mentor is critical. Here are 5 verification steps every Patna parent must follow.",
+    link: "/blogs/how-to-choose-right-tutor",
   },
   {
-    title: "Why Female Tutors are preferred for Girl Students",
-    category: "Safety First",
+    title: "Why Female Tutors are Preferred for High School Girl Students",
+    category: "Safety & Comfort",
     date: "August 05, 2026",
-    excerpt: "Understanding the psychology of comfort and why the Swati Female-First policy is changing the home tuition landscape.",
-    link: "/blogs/female-tutors-preference"
+    excerpt: "Understanding student psychology and why Swati HTB's Female-First Policy provides unmatched security and academic confidence.",
+    link: "/blogs/female-tutors-preference",
   },
   {
-    title: "IIT JEE Preparation from Class 9: Too Early?",
-    category: "Academics",
+    title: "IIT JEE & NEET Preparation from Class 9: Strategy & Reality",
+    category: "Entrance Strategy",
     date: "July 28, 2026",
-    excerpt: "Should your child start JEE prep in 9th grade? Our IITian mentors break down the timeline for success.",
-    link: "/blogs/iit-jee-prep-class-9"
-  }
+    excerpt: "Should your child begin foundation prep in 9th grade? Our engineering alumni mentors break down the realistic timeline for success.",
+    link: "/blogs/iit-jee-prep-class-9",
+  },
 ];
 
 export default function BlogsSection() {
   return (
-    <section className="py-24 bg-white relative">
-      <div className="container mx-auto px-4 max-w-7xl">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+    <section className="py-20 sm:py-28 bg-white relative">
+      <div className="container mx-auto px-4 sm:px-6 max-w-6xl">
+
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
           <div>
-            <h2 className="text-4xl font-bold text-[#1E293B] mb-4 font-serif">
-              Latest Insights & <span className="text-[#D4A017] italic">Updates</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0B192C]/5 text-[#0B192C] text-xs font-bold uppercase tracking-wider mb-3">
+              <BookOpen className="w-3.5 h-3.5" /> Academic Insights
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0B192C] tracking-tight">
+              Educational Guides &amp; <span className="text-[#E5A93C]">Articles</span>
             </h2>
-            <p className="text-[#64748B] text-lg max-w-xl">
-              Educational guides, safety tips, and success stories from the Swati HTB team.
+            <p className="text-[#5A6578] text-base sm:text-lg max-w-xl mt-3 leading-relaxed">
+              Actionable advice on board examinations, tutor selection, and student productivity in Patna.
             </p>
           </div>
           <Link href="/blogs">
-            <button className="text-[#0F4C5C] font-bold border-2 border-[#0F4C5C] px-6 py-3 rounded-full hover:bg-[#0F4C5C] hover:text-white transition-colors flex items-center gap-2">
-              View All Blogs <ArrowRight className="w-4 h-4" />
+            <button className="h-12 px-6 rounded-xl border-2 border-[#0B192C] text-[#0B192C] hover:bg-[#0B192C] hover:text-white font-bold text-sm transition-all flex items-center gap-2 cursor-pointer shrink-0">
+              View All Articles <ArrowRight className="w-4 h-4" />
             </button>
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* 3 Articles Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
           {blogs.map((blog, idx) => (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: idx * 0.1 }}
               className="group cursor-pointer"
             >
-              <Link href={blog.link}>
-                <div className="h-48 rounded-2xl bg-slate-100 mb-6 overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#0F4C5C]/10 to-[#D4A017]/10 mix-blend-multiply group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[#0F4C5C]">
+              <Link href={blog.link} className="block h-full bg-[#F9F8F5] p-6 rounded-2xl border border-[#E8E6DF] hover:border-[#0B192C] hover:shadow-lg transition-all duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-bold text-[#005F56] bg-[#005F56]/10 px-2.5 py-1 rounded-md uppercase tracking-wider">
                     {blog.category}
-                  </div>
+                  </span>
+                  <span className="text-xs text-[#5A6578] font-medium">{blog.date}</span>
                 </div>
-                <div className="text-sm text-[#64748B] mb-2">{blog.date}</div>
-                <h3 className="text-xl font-bold text-[#1E293B] mb-3 group-hover:text-[#D4A017] transition-colors line-clamp-2">
+
+                <h3 className="font-display text-lg font-bold text-[#0B192C] mb-3 group-hover:text-[#005F56] transition-colors line-clamp-2 leading-snug">
                   {blog.title}
                 </h3>
-                <p className="text-[#64748B] line-clamp-3">
+
+                <p className="text-sm text-[#5A6578] line-clamp-3 leading-relaxed">
                   {blog.excerpt}
                 </p>
+
+                <div className="mt-5 pt-4 border-t border-[#E8E6DF] flex items-center gap-1.5 text-xs font-bold text-[#0B192C] group-hover:text-[#E5A93C] transition-colors uppercase tracking-wider">
+                  <span>Read Full Guide</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
               </Link>
             </motion.div>
           ))}
         </div>
+
       </div>
     </section>
   );

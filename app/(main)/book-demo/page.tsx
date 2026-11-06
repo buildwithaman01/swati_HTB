@@ -2,28 +2,73 @@
 
 import { useState, useRef } from "react";
 import { toast } from "sonner";
-import { Phone, Mail, MapPin, Clock, ArrowRight, CheckCircle2, GraduationCap, MessageCircle, PartyPopper } from "lucide-react";
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Clock,
+  ArrowRight,
+  CheckCircle2,
+  GraduationCap,
+  MessageCircle,
+  ShieldCheck,
+  Sparkles,
+  Calendar,
+  Check,
+  Award
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+
+const PATNA_LOCALITY_OPTIONS = [
+  "Boring Road",
+  "Kankarbagh",
+  "Patliputra",
+  "Bailey Road",
+  "Rajendra Nagar",
+  "Ashiana Nagar",
+  "Danapur",
+  "Anisabad",
+  "Gola Road",
+  "Saguna More",
+  "SK Puri",
+  "Raja Bazar",
+  "Digha",
+  "Gardanibagh",
+  "Kidwaipuri",
+  "Exhibition Road",
+  "Kumhrar",
+  "Agam Kuan",
+  "Patna City",
+  "Other Area in Patna"
+];
 
 export default function BookDemoPage() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [selectedLocality, setSelectedLocality] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
-    const formData = new FormData(formRef.current!);
-    
+    const form = formRef.current;
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const localityVal = selectedLocality === "Other Area in Patna" 
+      ? (formData.get("customLocality") as string) || "Patna"
+      : selectedLocality || (formData.get("locality") as string);
+
     try {
       const data = {
         formType: "book-demo",
         name: formData.get("name"),
         phone: formData.get("phone"),
         studentClass: formData.get("studentClass"),
-        locality: formData.get("locality"),
+        locality: localityVal,
         subjects: formData.get("subjects"),
         address: formData.get("address"),
       };
@@ -35,26 +80,26 @@ export default function BookDemoPage() {
       });
 
       const result = await res.json();
-      
-      // Send to Web3Forms directly from the browser to bypass Cloudflare bot blocks
+
+      // Submit to Web3Forms directly from the browser if payload provided
       if (result.web3formsData) {
         try {
           await fetch("https://api.web3forms.com/submit", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Accept": "application/json"
+              Accept: "application/json",
             },
             body: JSON.stringify({
               access_key: result.web3formsData.access_key,
               subject: result.web3formsData.subject,
               from_name: "Swati HTB Website",
-              "Parent_Student_Name": data.name || "-",
-              "WhatsApp_Number": data.phone || "-",
-              "Student_Class": data.studentClass || "-",
-              "Subjects_Needed": data.subjects || "-",
-              "Home_Address": data.address || "-",
-            })
+              Parent_Student_Name: data.name || "-",
+              WhatsApp_Number: data.phone || "-",
+              Student_Class: data.studentClass || "-",
+              Subjects_Needed: data.subjects || "-",
+              Home_Address: data.address || "-",
+            }),
           });
         } catch (e) {
           console.error("Web3Forms frontend submit failed:", e);
@@ -64,248 +109,498 @@ export default function BookDemoPage() {
       if (result.success && result.whatsappUrl) {
         setWhatsappUrl(result.whatsappUrl);
         setSubmitted(true);
+        toast.success("Demo Request Registered!", {
+          description: "Our academic counselor will contact you within 2 hours.",
+        });
+        window.scrollTo({ top: 180, behavior: "smooth" });
       } else {
-        alert("Something went wrong. Please try again.");
+        toast.error("Could not register demo request", {
+          description: "Please check your inputs or message our counselor directly on WhatsApp.",
+        });
       }
     } catch (error) {
-      toast.error("Network error. Please try again or WhatsApp us.");
+      toast.error("Network connection issue", {
+        description: "Please retry or message us on WhatsApp for immediate scheduling.",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="bg-[#FAFAF8] min-h-screen">
-      
-      {/* Cinematic Hero Header */}
-      <section className="relative pt-40 pb-32 bg-[#0F4C5C] overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-20">
-          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[150%] bg-[#D4A017] blur-[150px] rounded-full mix-blend-overlay"></div>
-        </div>
-        
-        <div className="container mx-auto px-6 max-w-6xl relative z-10 text-center">
+    <div className="bg-[#F9F8F5] min-h-screen">
+      {/* ── CINEMATIC INSTITUTIONAL HERO HEADER ── */}
+      <section className="relative pt-36 pb-24 md:pt-40 md:pb-28 bg-gradient-to-b from-[#07111E] via-[#0B192C] to-[#07111E] text-white overflow-hidden">
+        {/* Subtle Architectural Dot Grid */}
+        <div className="absolute inset-0 bg-grid-dots-light opacity-25 pointer-events-none" />
+
+        {/* Soft Controlled Ambient Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[650px] h-[300px] bg-[#1E3E62]/30 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="container mx-auto px-4 sm:px-6 max-w-6xl relative z-10 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <div className="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-full mb-8 border border-white/20 shadow-[0_0_30px_rgba(212,160,23,0.15)]">
-              <GraduationCap className="w-8 h-8 text-[#D4A017]" />
+            {/* Live Trust Eyebrow */}
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md mb-6">
+              <span className="w-2 h-2 rounded-full bg-[#E5A93C] animate-pulse" />
+              <span className="text-[#E5A93C] text-xs font-bold uppercase tracking-wider">
+                100% Free Trial Class · Zero Financial Commitment
+              </span>
             </div>
-            <h1 className="text-4xl md:text-7xl font-bold text-white tracking-tight mb-6 font-serif leading-[1.1]">
-              Book your <span className="text-[#D4A017] italic">Free</span> Demo.
+
+            {/* Sans Display Headline */}
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-5 font-display leading-[1.15]">
+              Book Your <span className="text-[#E5A93C]">Free In-Home Demo</span>
             </h1>
-            <p className="text-lg md:text-2xl text-white/80 tracking-tight leading-relaxed max-w-2xl mx-auto font-medium px-4 md:px-0">
-              Experience the quality of our tutors with zero obligation. Fill the form below, and our academic counselor will contact you within 2 hours.
+
+            {/* Subtitle */}
+            <p className="text-base sm:text-xl text-white/80 tracking-tight leading-relaxed max-w-2xl mx-auto font-sans font-normal">
+              Experience the teaching quality of our verified Patna educators before taking any decision. Fill the form below, and our coordinator will confirm your slot within 2 hours.
             </p>
+
+            {/* Assurance Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-8 text-xs sm:text-sm text-white/90">
+              <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full">
+                <CheckCircle2 className="w-4 h-4 text-[#E5A93C]" />
+                1-Hour Diagnostic Class
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full">
+                <ShieldCheck className="w-4 h-4 text-[#E5A93C]" />
+                Aadhaar-Verified Teacher
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full">
+                <Award className="w-4 h-4 text-[#E5A93C]" />
+                Zero Obligation to Continue
+              </span>
+            </div>
           </motion.div>
         </div>
       </section>
 
-      <div className="container mx-auto px-6 max-w-6xl py-16 relative z-20">
-        <div className="grid md:grid-cols-5 gap-8 items-start">
+      {/* ── CONSOLE BODY ── */}
+      <section className="container mx-auto px-4 sm:px-6 max-w-6xl py-12 md:py-16 relative z-20">
+        <div className="grid lg:grid-cols-12 gap-8 items-start">
           
-          {/* Form Section — toggles to success card on submit */}
-          <AnimatePresence mode="wait">
-            {submitted ? (
-              /* ── SUCCESS CARD ── */
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.4 }}
-                className="md:col-span-3 bg-white p-8 md:p-12 rounded-[2.5rem] border border-neutral-200/60 shadow-[0_20px_60px_rgb(0,0,0,0.05)] relative overflow-hidden flex flex-col items-center text-center"
-              >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#FAF7F2] rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          {/* ── LEFT COLUMN: Protocol & Direct Bureau Info ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="lg:col-span-5 space-y-6"
+          >
+            {/* The Free Demo Guarantee Card */}
+            <div className="bg-white rounded-2xl border border-[#E8E6DF] p-6 sm:p-8 shadow-[0_4px_24px_rgba(11,25,44,0.04)]">
+              <div className="flex items-center justify-between pb-5 border-b border-[#E8E6DF] mb-6">
+                <div>
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-[#005F56] block">
+                    Swati Trial Policy
+                  </span>
+                  <h2 className="font-display text-xl font-bold text-[#0B192C]">
+                    The In-Home Demo Protocol
+                  </h2>
+                </div>
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#005F56]/10 text-[#005F56] text-xs font-bold">
+                  Complimentary
+                </span>
+              </div>
 
-                {/* Big tick */}
-                <div className="w-24 h-24 rounded-full bg-emerald-50 border-4 border-emerald-200 flex items-center justify-center mb-6 relative z-10">
-                  <CheckCircle2 className="w-12 h-12 text-emerald-500" />
+              <div className="space-y-5">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#F3F1EC] text-[#0B192C] flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                    1
+                  </div>
+                  <div>
+                    <h4 className="font-display font-bold text-[#0B192C] text-sm">
+                      Zero Upfront Registration Fee
+                    </h4>
+                    <p className="text-xs text-[#5A6578] leading-relaxed mt-0.5">
+                      You never pay to book a demo or meet a teacher. Our matching service is completely free upfront.
+                    </p>
+                  </div>
                 </div>
 
-                <h3 className="text-3xl font-bold text-[#1F2937] mb-3 font-serif relative z-10">
-                  Request Received! 🎉
+                <div className="flex items-start gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#F3F1EC] text-[#0B192C] flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                    2
+                  </div>
+                  <div>
+                    <h4 className="font-display font-bold text-[#0B192C] text-sm">
+                      Full Teacher Passport Shared First
+                    </h4>
+                    <p className="text-xs text-[#5A6578] leading-relaxed mt-0.5">
+                      Before any tutor knocks on your door, you receive their verified ID proof, qualifications, and college background via WhatsApp.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#F3F1EC] text-[#0B192C] flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                    3
+                  </div>
+                  <div>
+                    <h4 className="font-display font-bold text-[#0B192C] text-sm">
+                      Student-Teacher Chemistry Test
+                    </h4>
+                    <p className="text-xs text-[#5A6578] leading-relaxed mt-0.5">
+                      Observe the educator&apos;s patience, communication, and grasp of your child&apos;s specific syllabus during the 1-hour session.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#F3F1EC] text-[#0B192C] flex items-center justify-center shrink-0 mt-0.5 font-bold text-xs">
+                    4
+                  </div>
+                  <div>
+                    <h4 className="font-display font-bold text-[#0B192C] text-sm">
+                      48-Hour Replacement Guarantee
+                    </h4>
+                    <p className="text-xs text-[#5A6578] leading-relaxed mt-0.5">
+                      If your child is not 100% comfortable, we provide an alternate top educator within 48 hours at no additional charge.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Verified Educator Badge */}
+              <div className="mt-7 p-4 bg-[#F9F8F5] rounded-xl border border-[#E8E6DF] flex items-center gap-3">
+                <ShieldCheck className="w-8 h-8 text-[#005F56] shrink-0" />
+                <div>
+                  <p className="text-xs font-bold text-[#0B192C]">
+                    100% Background-Checked
+                  </p>
+                  <p className="text-[11px] text-[#5A6578]">
+                    Aadhaar, address verification, and degree validation verified by our bureau.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Direct Contact Card */}
+            <div className="bg-[#0B192C] text-white rounded-2xl p-6 sm:p-7 border border-[#1E3E62] shadow-[0_8px_32px_rgba(11,25,44,0.15)] relative overflow-hidden">
+              <div className="absolute right-0 top-0 w-36 h-36 bg-[#E5A93C]/10 rounded-full blur-[40px] pointer-events-none" />
+              <div className="relative z-10">
+                <span className="text-xs font-bold uppercase tracking-wider text-[#E5A93C] block mb-2">
+                  Head Office & Counselor Desk
+                </span>
+                <h3 className="font-display text-lg font-bold mb-4 text-white">
+                  Swati Home Tuition Bureau
                 </h3>
-                <p className="text-[#1F2937]/60 text-lg leading-relaxed max-w-md relative z-10">
-                  Thank you! Our academic counselor will call you on your WhatsApp number within <strong>2 hours</strong>.
-                </p>
 
-                {/* Divider */}
-                <div className="w-full border-t border-neutral-100 my-8 relative z-10" />
+                <div className="space-y-4 text-sm text-white/80">
+                  <div className="flex items-start gap-3">
+                    <Phone className="w-4 h-4 text-[#E5A93C] shrink-0 mt-1" />
+                    <div>
+                      <p className="text-xs text-white/50 uppercase font-semibold">Call or WhatsApp</p>
+                      <a href="tel:+919229738307" className="font-bold text-white hover:text-[#E5A93C] transition-colors">
+                        +91 92297 38307
+                      </a>
+                    </div>
+                  </div>
 
-                {/* WhatsApp CTA — user's CHOICE, not auto-open */}
-                <div className="relative z-10 w-full bg-[#f0fdf4] border border-emerald-200 rounded-2xl p-6">
-                  <p className="text-sm font-semibold text-emerald-800 mb-1">
-                    Want a faster reply?
-                  </p>
-                  <p className="text-sm text-emerald-700 mb-4">
-                    If you can't wait, click below to message us directly on WhatsApp — we usually reply within minutes.
-                  </p>
+                  <div className="flex items-start gap-3">
+                    <Mail className="w-4 h-4 text-[#E5A93C] shrink-0 mt-1" />
+                    <div>
+                      <p className="text-xs text-white/50 uppercase font-semibold">Academic Support</p>
+                      <p className="font-medium text-white break-all text-xs sm:text-sm">
+                        swatihometuitionbureau@gmail.com
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Clock className="w-4 h-4 text-[#E5A93C] shrink-0 mt-1" />
+                    <div>
+                      <p className="text-xs text-white/50 uppercase font-semibold">Desk Timings</p>
+                      <p className="font-medium text-white">
+                        Mon – Sun: 8:00 AM – 9:00 PM
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 pt-1 border-t border-white/10">
+                    <MapPin className="w-4 h-4 text-[#E5A93C] shrink-0 mt-1" />
+                    <div>
+                      <p className="text-xs text-white/50 uppercase font-semibold">Patna Bureau Address</p>
+                      <p className="text-xs leading-relaxed text-white/80">
+                        3rd Floor, Banke Bihari Kunj, Mithapur, Patna, Bihar 800001
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Instant WhatsApp Button */}
+                <div className="mt-6 pt-4 border-t border-white/10">
                   <a
-                    href={whatsappUrl}
+                    href="https://wa.me/919229738307?text=Hello%20Swati%20HTB,%20I%20would%20like%20to%20book%20a%20free%20demo%20class%20for%20my%20child."
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-3 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold text-base px-7 py-4 rounded-2xl shadow-[0_8px_24px_rgba(37,211,102,0.3)] transition-all group"
+                    className="inline-flex items-center justify-center w-full gap-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold text-sm py-3.5 px-5 rounded-xl shadow-md transition-all active:scale-[0.99]"
                   >
-                    <MessageCircle className="w-5 h-5" />
-                    Message us on WhatsApp
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <MessageCircle className="w-4 h-4 fill-white" />
+                    <span>Instant Booking on WhatsApp</span>
                   </a>
                 </div>
+              </div>
+            </div>
+          </motion.div>
 
-                <button
-                  onClick={() => setSubmitted(false)}
-                  className="mt-6 text-sm text-[#1F2937]/40 hover:text-[#0F4C5C] underline underline-offset-4 transition-colors relative z-10"
+          {/* ── RIGHT COLUMN: Interactive Demo Booking Form ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="lg:col-span-7"
+          >
+            <AnimatePresence mode="wait">
+              {submitted ? (
+                /* ── SUCCESS CARD ── */
+                <motion.div
+                  key="success-card"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.4 }}
+                  className="bg-white rounded-2xl border border-[#E8E6DF] p-8 sm:p-12 shadow-[0_8px_32px_rgba(11,25,44,0.06)] flex flex-col items-center text-center"
                 >
-                  Submit another request
-                </button>
-              </motion.div>
-            ) : (
-              /* ── FORM ── */
-              <motion.div
-                key="form"
-                initial={{ opacity: 0, y: 40 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="md:col-span-3 bg-white p-8 md:p-12 rounded-[2.5rem] border border-neutral-200/60 shadow-[0_20px_60px_rgb(0,0,0,0.05)] relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#FAF7F2] rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                
-                <h3 className="text-3xl font-bold text-[#1F2937] mb-8 font-serif relative z-10">Student Details</h3>
-                
-                <form ref={formRef} className="space-y-6 relative z-10" onSubmit={handleSubmit}>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Parent/Student Name</label>
-                      <input required name="name" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="Enter full name" />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">WhatsApp Number</label>
-                      <input required name="phone" type="tel" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="+91" />
-                    </div>
+                  <div className="w-20 h-20 rounded-2xl bg-[#005F56]/10 border border-[#005F56]/20 flex items-center justify-center mb-6">
+                    <CheckCircle2 className="w-10 h-10 text-[#005F56]" />
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Student&apos;s Class</label>
-                      <select required name="studentClass" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all appearance-none cursor-pointer">
-                        <option value="">Select class...</option>
-                        <option value="11-12">Class 11-12</option>
-                        <option value="9-10">Class 9-10</option>
-                        <option value="1-8">Class 1-8</option>
-                        <option value="jee">JEE / NEET Preparation</option>
-                        <option value="other">Other</option>
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Locality / Area in Patna</label>
-                      <input required name="locality" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Boring Road, Patliputra" />
-                    </div>
-                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#005F56]/10 text-[#005F56] text-xs font-bold uppercase tracking-wider mb-3">
+                    Demo Slot Request Confirmed
+                  </span>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Specific Subjects (Optional)</label>
-                    <input name="subjects" type="text" className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30" placeholder="e.g. Only Physics & Maths" />
-                  </div>
+                  <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-[#0B192C] mb-3">
+                    Thank You! We are on it.
+                  </h3>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold tracking-wide text-[#1F2937]/70 uppercase">Full Address in Patna</label>
-                    <textarea required name="address" rows={3} className="w-full bg-[#FAF7F2]/50 border border-neutral-200/60 rounded-2xl px-5 py-4 text-[#1F2937] font-medium focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] transition-all placeholder:text-[#1F2937]/30 resize-none" placeholder="House No, Street, Landmark, Area"></textarea>
+                  <p className="text-[#5A6578] text-base leading-relaxed max-w-md mb-8">
+                    Our academic counselor will call you on your WhatsApp number within <strong className="text-[#0B192C]">2 hours</strong> to confirm tutor availability and demo timing.
+                  </p>
+
+                  <div className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-2xl p-6 mb-6 text-left">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Sparkles className="w-4 h-4 text-[#E5A93C]" />
+                      <p className="text-xs font-bold uppercase tracking-wider text-[#0B192C]">
+                        Need Priority Slot Confirmation?
+                      </p>
+                    </div>
+                    <p className="text-xs sm:text-sm text-[#5A6578] mb-4">
+                      Connect directly with our counseling team on WhatsApp to review tutor profiles right away.
+                    </p>
+                    <a
+                      href={whatsappUrl || "https://wa.me/919229738307"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center w-full gap-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold text-sm sm:text-base py-4 px-6 rounded-xl shadow-[0_4px_16px_rgba(37,211,102,0.25)] transition-all group"
+                    >
+                      <MessageCircle className="w-5 h-5 fill-white" />
+                      <span>Chat with Academic Counselor</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </a>
                   </div>
 
                   <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-[#0F4C5C] disabled:opacity-70 disabled:cursor-not-allowed hover:bg-[#0a3845] text-white font-bold text-lg py-5 rounded-2xl shadow-[0_10px_30px_rgba(15,76,92,0.3)] transition-all mt-6 flex items-center justify-center gap-3 group"
+                    onClick={() => setSubmitted(false)}
+                    className="text-xs font-semibold text-[#5A6578] hover:text-[#0B192C] underline underline-offset-4 transition-colors"
                   >
-                    {loading ? (
-                      <>
-                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        Submitting Request...
-                      </>
-                    ) : (
-                      <>
-                        Request Demo Class <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                      </>
-                    )}
+                    Submit another demo request
                   </button>
-
-                  <div className="flex items-center justify-center gap-2 mt-6 text-sm font-medium text-[#1F2937]/60">
-                    <CheckCircle2 className="w-5 h-5 text-[#D4A017]" />
-                    Your data is secure and will never be shared.
+                </motion.div>
+              ) : (
+                /* ── DEMO BOOKING FORM ── */
+                <motion.div
+                  key="form-card"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-white rounded-2xl border border-[#E8E6DF] p-6 sm:p-10 shadow-[0_8px_32px_rgba(11,25,44,0.06)]"
+                >
+                  {/* Reassurance Banner */}
+                  <div className="mb-8 pb-6 border-b border-[#E8E6DF]">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[#F3F1EC] text-[#1E3E62] text-xs font-bold uppercase tracking-wider mb-2">
+                      <GraduationCap className="w-3.5 h-3.5 text-[#E5A93C]" />
+                      Official Trial Application
+                    </div>
+                    <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-[#0B192C] tracking-tight">
+                      Book Free 1-Hour In-Home Trial
+                    </h3>
+                    <p className="text-[#5A6578] text-sm mt-1">
+                      No advance payment · No registration cost · Complete teacher ID provided
+                    </p>
                   </div>
-                </form>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
+                  <form ref={formRef} className="space-y-6" onSubmit={handleSubmit}>
+                    {/* Row 1: Name and WhatsApp Number */}
+                    <div className="grid sm:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                          Parent or Student Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          required
+                          name="name"
+                          type="text"
+                          className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50"
+                          placeholder="e.g. S.K. Verma"
+                        />
+                      </div>
 
-          {/* Contact Info Section */}
-          <motion.div 
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="md:col-span-2 space-y-6"
-          >
-            
-            <div className="bg-[#0F4C5C] text-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_60px_rgba(15,76,92,0.2)] relative overflow-hidden">
-              <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#D4A017] blur-[80px] rounded-full mix-blend-overlay opacity-50"></div>
-              
-              <h3 className="text-2xl font-bold mb-8 font-serif relative z-10">Contact Us Directly</h3>
-              
-              <div className="space-y-8 relative z-10">
-                <div className="flex items-start gap-5">
-                  <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl flex-shrink-0 border border-white/10">
-                    <Phone className="w-6 h-6 text-[#D4A017]" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-white/60 mb-1 uppercase tracking-wider">Call or WhatsApp</p>
-                    <p className="font-bold text-lg">+91 92297 38307</p>
-                  </div>
-                </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                          WhatsApp Number <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          required
+                          name="phone"
+                          type="tel"
+                          pattern="[0-9]{10}"
+                          title="Please enter a valid 10-digit mobile number"
+                          className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50"
+                          placeholder="10-digit WhatsApp number"
+                        />
+                      </div>
+                    </div>
 
-                <div className="flex items-start gap-5">
-                  <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl flex-shrink-0 border border-white/10">
-                    <Mail className="w-6 h-6 text-[#D4A017]" />
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="text-sm font-medium text-white/60 mb-1 uppercase tracking-wider">Email Support</p>
-                    <p className="font-bold text-lg break-all">swatihometuitionbureau@gmail.com</p>
-                  </div>
-                </div>
+                    {/* Row 2: Student Class & Locality */}
+                    <div className="grid sm:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                          Student&apos;s Class / Stream <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          required
+                          name="studentClass"
+                          className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all cursor-pointer"
+                        >
+                          <option value="">Select class...</option>
+                          <option value="Class 1-5 (Primary Foundation)">Class 1–5 (Primary Foundation)</option>
+                          <option value="Class 6-8 (Middle School)">Class 6–8 (Middle School)</option>
+                          <option value="Class 9-10 (CBSE/ICSE/BSEB)">Class 9–10 (Board Exam Focus)</option>
+                          <option value="Class 11-12 Science (PCM/PCB)">Class 11–12 Science (PCM/PCB)</option>
+                          <option value="Class 11-12 Commerce">Class 11–12 Commerce</option>
+                          <option value="Class 11-12 Humanities/Arts">Class 11–12 Humanities/Arts</option>
+                          <option value="JEE Main & Advanced">JEE Main & Advanced</option>
+                          <option value="NEET Medical Entrance">NEET Medical Preparation</option>
+                        </select>
+                      </div>
 
-                <div className="flex items-start gap-5">
-                  <div className="p-3 bg-white/10 backdrop-blur-md rounded-2xl flex-shrink-0 border border-white/10">
-                    <Clock className="w-6 h-6 text-[#D4A017]" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-white/60 mb-1 uppercase tracking-wider">Working Hours</p>
-                    <p className="font-bold text-lg">Mon - Sun<br/>8:00 AM - 9:00 PM</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                          Locality in Patna <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          required
+                          name="locality"
+                          value={selectedLocality}
+                          onChange={(e) => setSelectedLocality(e.target.value)}
+                          className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all cursor-pointer"
+                        >
+                          <option value="">Select your area in Patna...</option>
+                          {PATNA_LOCALITY_OPTIONS.map((loc) => (
+                            <option key={loc} value={loc}>
+                              {loc}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
 
-            <div className="bg-white p-8 md:p-10 rounded-[2.5rem] border border-neutral-200/60 shadow-[0_10px_40px_rgb(0,0,0,0.03)]">
-              <h3 className="text-2xl font-bold text-[#1F2937] mb-6 font-serif">Head Office</h3>
-              <div className="flex items-start gap-4 text-[#1F2937]/70">
-                <div className="p-3 bg-[#FAF7F2] rounded-2xl flex-shrink-0 border border-neutral-200/60">
-                  <MapPin className="w-6 h-6 text-[#0F4C5C]" />
-                </div>
-                <p className="text-base font-medium leading-relaxed">
-                  <span className="font-bold text-[#1F2937]">Swati Home Tuition Bureau</span><br />
-                  Block A, Area B, 3rd Floor, Banke Bihari Kunj,<br />
-                  Mithapur, Patna, Bihar 800001
-                </p>
-              </div>
-            </div>
+                    {/* Conditional other locality */}
+                    {selectedLocality === "Other Area in Patna" && (
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                          Specify Your Exact Locality in Patna <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          required
+                          name="customLocality"
+                          type="text"
+                          className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50"
+                          placeholder="e.g. Near Mithapur Bus Stand, Anisabad More"
+                        />
+                      </div>
+                    )}
 
+                    {/* Row 3: Specific Subjects */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                        Specific Subjects for Demo Class <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        required
+                        name="subjects"
+                        type="text"
+                        className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50"
+                        placeholder="e.g. Physics & Mathematics or All Subjects"
+                      />
+                    </div>
+
+                    {/* Row 4: Home Address */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                        Complete In-Home Address & Landmark in Patna <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        required
+                        name="address"
+                        rows={3}
+                        className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50 resize-none"
+                        placeholder="House / Flat No, Apartment Name, Street, Landmark, Area in Patna"
+                      />
+                      <p className="text-[11px] text-[#5A6578]">
+                        Exact address is kept strictly confidential and shared only with the assigned verified tutor for the demo visit.
+                      </p>
+                    </div>
+
+                    {/* Action Controls */}
+                    <div className="pt-2 space-y-3">
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-[#E5A93C] hover:bg-[#D49228] text-[#0B192C] disabled:opacity-60 disabled:cursor-not-allowed font-extrabold text-base py-4 px-6 rounded-xl shadow-[0_8px_20px_rgba(229,169,60,0.32)] transition-all flex items-center justify-center gap-2 group active:scale-[0.99]"
+                      >
+                        {loading ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-[#0B192C]/30 border-t-[#0B192C] rounded-full animate-spin" />
+                            <span>Registering Demo Slot...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Request Free 1-Hour Demo Class</span>
+                            <ArrowRight className="w-5 h-5 text-[#0B192C] group-hover:translate-x-1 transition-transform" />
+                          </>
+                        )}
+                      </button>
+
+                      <div className="flex flex-wrap items-center justify-between text-xs text-[#5A6578] px-1 pt-2 gap-2">
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <Check className="w-4 h-4 text-[#005F56]" />
+                          100% Free Demo Session
+                        </span>
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <ShieldCheck className="w-4 h-4 text-[#005F56]" />
+                          Strict Safety Verification
+                        </span>
+                        <span className="flex items-center gap-1.5 font-medium">
+                          <Clock className="w-4 h-4 text-[#005F56]" />
+                          Confirmation in 2h
+                        </span>
+                      </div>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
 
         </div>
-      </div>
+      </section>
     </div>
   );
 }

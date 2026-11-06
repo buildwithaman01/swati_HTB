@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
 
 const stats = [
-  { label: "Students Enrolled", value: 500, suffix: "+" },
-  { label: "Areas Covered", value: 30, suffix: "+" },
-  { label: "Years Experience", value: 5, suffix: "+" },
-  { label: "Verified Tutors", value: 100, suffix: "%" },
+  { label: "Students Guided", sublabel: "CBSE, ICSE & BSEB", value: 500, suffix: "+" },
+  { label: "Patna Localities", sublabel: "Boring Rd to Danapur", value: 30, suffix: "+" },
+  { label: "Years in Patna", sublabel: "Continuous excellence", value: 6, suffix: "+" },
+  { label: "Verified Tutors", sublabel: "Strict Aadhaar & KYC", value: 100, suffix: "%" },
 ];
 
 function Counter({ from = 0, to, suffix, inView }: { from?: number; to: number; suffix: string; inView: boolean }) {
@@ -18,15 +17,13 @@ function Counter({ from = 0, to, suffix, inView }: { from?: number; to: number; 
     if (!inView) return;
 
     let startTime: number;
-    const duration = 2000; // 2 seconds
+    const duration = 1800;
 
     const updateCount = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
       const progress = timestamp - startTime;
-      
-      // Easing function for smooth slowdown
       const easeOutQuart = 1 - Math.pow(1 - progress / duration, 4);
-      
+
       if (progress < duration) {
         setCount(Math.floor(from + (to - from) * easeOutQuart));
         requestAnimationFrame(updateCount);
@@ -40,54 +37,45 @@ function Counter({ from = 0, to, suffix, inView }: { from?: number; to: number; 
 
   return (
     <div className="flex items-baseline justify-center">
-      <span className="font-serif text-4xl md:text-5xl font-bold text-[#0F4C5C]">{count}</span>
-      <span className="font-serif text-3xl md:text-4xl font-bold text-[#D4A017] ml-1">{suffix}</span>
+      <span className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#0B192C] tracking-tight">
+        {count}
+      </span>
+      <span className="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#E5A93C] ml-1">
+        {suffix}
+      </span>
     </div>
   );
 }
 
 export default function TrustBar() {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
-  const containerVariants: any = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants: any = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } },
-  };
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
 
   return (
-    <section className="bg-white py-16 md:py-24 border-y border-[#0F4C5C]/5 relative z-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <p className="text-center text-xs font-bold uppercase tracking-widest text-[#0F4C5C]/40 mb-10">
-          Trusted by Patna Families
-        </p>
-        <motion.div
+    <section className="bg-[#F9F8F5] py-14 sm:py-20 border-b border-[#E8E6DF] relative z-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-10">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#0B192C]/50">
+            Proven Track Record Across Patna
+          </p>
+        </div>
+
+        <div
           ref={ref}
-          variants={containerVariants}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 divide-y sm:divide-y-0 sm:divide-x divide-[#E8E6DF]"
         >
           {stats.map((stat, index) => (
-            <motion.div key={index} variants={itemVariants} className="text-center flex flex-col items-center">
+            <div key={index} className="text-center flex flex-col items-center pt-6 sm:pt-0 sm:px-4">
               <Counter to={stat.value} suffix={stat.suffix} inView={isInView} />
-              <div className="mt-2 text-sm md:text-base font-medium text-[#64748B] uppercase tracking-wider">
+              <div className="mt-2 text-sm sm:text-base font-bold text-[#0B192C] tracking-tight">
                 {stat.label}
               </div>
-            </motion.div>
+              <div className="text-xs text-[#5A6578] font-medium mt-0.5">
+                {stat.sublabel}
+              </div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

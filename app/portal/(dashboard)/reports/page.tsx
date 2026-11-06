@@ -76,6 +76,7 @@ export default async function ParentReports() {
             const testPaperMatch = (report.teacher_remarks || "").match(/Test Paper Link:\s*(https?:\/\/[^\s|]+)/i);
             const testPaperUrl = testPaperMatch ? testPaperMatch[1] : null;
             const cleanedRemarks = (report.teacher_remarks || "")
+              .replace(/<!--TEST_META:.*?-->/gs, "")
               .replace(/Test Paper Link:\s*https?:\/\/[^\s|]+/gi, "")
               .replace(/Remarks:\s*/i, "")
               .replace(/\|\s*$/, "")

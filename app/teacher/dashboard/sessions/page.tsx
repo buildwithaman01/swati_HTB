@@ -91,58 +91,58 @@ export default async function SessionsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="border-b border-[#E8E6DF] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Class Session & Attendance Tracker</h1>
-          <p className="text-sm text-neutral-500 mt-1">Log classes conducted to update parents and record your monthly teaching hours.</p>
+          <h1 className="text-3xl font-bold font-serif text-[#0B192C]">Class Session & Attendance Tracker</h1>
+          <p className="text-sm text-[#5A6578] mt-1 font-medium">Log classes conducted in Patna to update parents and record your monthly teaching hours.</p>
         </div>
       </div>
 
       {/* Monthly KPI Overview */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#0F4C5C]/10 text-[#0F4C5C] flex items-center justify-center">
-            <CheckCircle className="w-6 h-6" />
+        <div className="bg-white p-5 rounded-3xl border border-[#E8E6DF] shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#0B192C] text-white flex items-center justify-center">
+            <CheckCircle className="w-6 h-6 text-[#E5A93C]" />
           </div>
           <div>
-            <p className="text-xs font-bold text-neutral-400 uppercase tracking-wide">Sessions This Month</p>
-            <p className="text-2xl font-extrabold text-[#1F2937] mt-0.5">{monthSessions.length}</p>
+            <p className="text-xs font-bold text-[#5A6578] uppercase tracking-wide">Sessions This Month</p>
+            <p className="text-2xl font-bold font-serif text-[#0B192C] mt-0.5">{monthSessions.length}</p>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
-            <Clock className="w-6 h-6" />
+        <div className="bg-white p-5 rounded-3xl border border-[#E8E6DF] shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center">
+            <Clock className="w-6 h-6 text-emerald-600" />
           </div>
           <div>
-            <p className="text-xs font-bold text-neutral-400 uppercase tracking-wide">Teaching Hours</p>
-            <p className="text-2xl font-extrabold text-[#1F2937] mt-0.5">{totalHours} <span className="text-xs font-medium text-neutral-500">hrs</span></p>
+            <p className="text-xs font-bold text-[#5A6578] uppercase tracking-wide">Teaching Hours</p>
+            <p className="text-2xl font-bold font-serif text-emerald-800 mt-0.5">{totalHours} <span className="text-xs font-medium text-[#5A6578]">hrs</span></p>
           </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-neutral-200/60 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
-            <Users className="w-6 h-6" />
+        <div className="bg-white p-5 rounded-3xl border border-[#E8E6DF] shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#1E3E62] text-white flex items-center justify-center">
+            <Users className="w-6 h-6 text-[#E5A93C]" />
           </div>
           <div>
-            <p className="text-xs font-bold text-neutral-400 uppercase tracking-wide">Active Students</p>
-            <p className="text-2xl font-extrabold text-[#1F2937] mt-0.5">{uniqueStudents || assignments?.length || 0}</p>
+            <p className="text-xs font-bold text-[#5A6578] uppercase tracking-wide">Active Students</p>
+            <p className="text-2xl font-bold font-serif text-[#0B192C] mt-0.5">{uniqueStudents || assignments?.length || 0}</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Form Column */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60">
-            <h2 className="text-lg font-bold text-[#1F2937] mb-6 flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-[#0F4C5C]" /> Log New Session
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#E8E6DF]">
+            <h2 className="text-lg font-bold font-serif text-[#0B192C] mb-6 flex items-center gap-2 border-b border-[#E8E6DF] pb-3">
+              <CheckCircle className="w-5 h-5 text-[#E5A93C]" /> Log New Session
             </h2>
 
             <form action={logSession} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">Select Student</label>
-                <select name="assignment_id" required className="w-full text-sm border border-neutral-200 rounded-xl p-3 bg-white outline-none focus:ring-2 focus:ring-[#0F4C5C]/20">
+                <label className="block text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5">Select Student</label>
+                <select name="assignment_id" required className="w-full text-sm font-semibold border border-[#E8E6DF] rounded-xl p-3 bg-white outline-none focus:ring-2 focus:ring-[#0B192C]/20 text-[#0B192C]">
                   <option value="">Select Student...</option>
                   {assignments?.map((a: any) => (
                     <option key={a.id} value={`${a.id}|${a.student_id}`}>
@@ -153,37 +153,38 @@ export default async function SessionsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">Date</label>
-                <input type="date" name="session_date" required defaultValue={new Date().toISOString().split('T')[0]} className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
+                <label className="block text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5">Date</label>
+                <input type="date" name="session_date" required defaultValue={new Date().toISOString().split('T')[0]} className="w-full text-sm border border-[#E8E6DF] rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0B192C]/20 text-[#0B192C]" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">Start Time</label>
-                  <input type="time" name="session_start" required defaultValue="16:00" className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
+                  <label className="block text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5">Start Time</label>
+                  <input type="time" name="session_start" required defaultValue="16:00" className="w-full text-sm border border-[#E8E6DF] rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0B192C]/20 text-[#0B192C]" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">End Time</label>
-                  <input type="time" name="session_end" required defaultValue="17:00" className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
+                  <label className="block text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5">End Time</label>
+                  <input type="time" name="session_end" required defaultValue="17:00" className="w-full text-sm border border-[#E8E6DF] rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0B192C]/20 text-[#0B192C]" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">Topics Covered</label>
-                <input type="text" name="topics_covered" required placeholder="e.g. NCERT Chapter 4 - Quadratic Equations" className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
+                <label className="block text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5">Topics Covered</label>
+                <input type="text" name="topics_covered" required placeholder="e.g. NCERT Chapter 4 - Quadratic Equations" className="w-full text-sm border border-[#E8E6DF] rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0B192C]/20 text-[#0B192C]" />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">Homework Given</label>
-                <input type="text" name="homework_given" placeholder="e.g. Exercise 4.2 Q1 to Q8" className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
+                <label className="block text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5">Homework Given</label>
+                <input type="text" name="homework_given" placeholder="e.g. Exercise 4.2 Q1 to Q8" className="w-full text-sm border border-[#E8E6DF] rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0B192C]/20 text-[#0B192C]" />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-neutral-600 uppercase tracking-wide mb-1.5">Private Tutor Notes (Optional)</label>
-                <textarea name="teacher_notes" rows={2} placeholder="Observations, student focus, or reminders..." className="w-full text-sm border border-neutral-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0F4C5C]/20"></textarea>
+                <label className="block text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5">Private Tutor Notes (Optional)</label>
+                <textarea name="teacher_notes" rows={2} placeholder="Observations, student focus, or reminders..." className="w-full text-sm border border-[#E8E6DF] rounded-xl p-3 outline-none focus:ring-2 focus:ring-[#0B192C]/20 resize-none text-[#1A1D20]"></textarea>
               </div>
 
-              <button type="submit" className="w-full bg-[#0F4C5C] hover:bg-[#0a3a47] text-white font-bold py-3 rounded-xl transition-colors shadow-sm">
+              <button type="submit" className="w-full bg-[#0B192C] hover:bg-[#1E3E62] text-white font-bold py-3.5 rounded-xl transition-all shadow-md text-sm flex items-center justify-center gap-2">
+                <CheckCircle className="w-4 h-4 text-[#E5A93C]" />
                 Save & Record Class
               </button>
             </form>
@@ -192,16 +193,16 @@ export default async function SessionsPage() {
 
         {/* History Column */}
         <div className="lg:col-span-2">
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-neutral-200/60 h-full">
-            <h2 className="text-lg font-bold text-[#1F2937] mb-6 flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-[#0F4C5C]" /> Logged Sessions History
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#E8E6DF]">
+            <h2 className="text-lg font-bold font-serif text-[#0B192C] mb-6 flex items-center gap-2 border-b border-[#E8E6DF] pb-3">
+              <CalendarIcon className="w-5 h-5 text-[#E5A93C]" /> Logged Sessions History ({recentSessions?.length || 0})
             </h2>
 
             {!recentSessions || recentSessions.length === 0 ? (
-              <div className="py-12 text-center text-neutral-500">
-                <BookOpen className="w-8 h-8 mx-auto mb-3 text-neutral-300" />
-                <p className="text-sm font-medium">No sessions logged yet.</p>
-                <p className="text-xs mt-1 text-neutral-400">Log your first class using the form on the left to start tracking hours.</p>
+              <div className="py-12 text-center text-[#5A6578]">
+                <BookOpen className="w-8 h-8 mx-auto mb-3 text-[#5A6578]/30" />
+                <p className="text-sm font-bold text-[#0B192C]">No sessions logged yet.</p>
+                <p className="text-xs mt-1 text-[#5A6578]">Log your first class using the form on the left to start tracking hours.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -213,18 +214,18 @@ export default async function SessionsPage() {
                   const waUrl = parentPhone ? `https://wa.me/${rawWa}?text=${encodeURIComponent(waText)}` : null;
 
                   return (
-                    <div key={session.id} className="p-4 border border-neutral-200/70 rounded-2xl hover:bg-neutral-50/80 transition-colors">
+                    <div key={session.id} className="p-4 border border-[#E8E6DF] rounded-2xl bg-[#F9F8F5]/60 hover:bg-white transition-colors">
                       <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
                         <div>
-                          <h3 className="font-bold text-[#1F2937] text-base">{student?.full_name}</h3>
-                          <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-neutral-500">
-                            <span className="flex items-center gap-1"><CalendarIcon className="w-3.5 h-3.5 text-[#0F4C5C]" /> {new Date(session.session_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}</span>
-                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-neutral-400" /> {session.session_start?.slice(0, 5)} - {session.session_end?.slice(0, 5)} ({session.duration_mins}m)</span>
+                          <h3 className="font-bold font-serif text-[#0B192C] text-base">{student?.full_name}</h3>
+                          <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-[#5A6578]">
+                            <span className="flex items-center gap-1"><CalendarIcon className="w-3.5 h-3.5 text-[#E5A93C]" /> {new Date(session.session_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}</span>
+                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#5A6578]" /> {session.session_start?.slice(0, 5)} - {session.session_end?.slice(0, 5)} ({session.duration_mins}m)</span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span className="bg-emerald-100 text-emerald-800 text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full">
+                          <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full">
                             Completed
                           </span>
                           {waUrl && (
@@ -232,22 +233,22 @@ export default async function SessionsPage() {
                               href={waUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-2.5 py-1 rounded-lg transition-colors"
+                              className="inline-flex items-center gap-1 text-xs bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C7E] border border-[#25D366]/30 font-semibold px-2.5 py-1 rounded-lg transition-colors"
                               title="Share session update to parent WhatsApp"
                             >
-                              <Share2 className="w-3 h-3" /> WhatsApp
+                              <Share2 className="w-3 h-3 text-[#128C7E]" /> WhatsApp
                             </a>
                           )}
                         </div>
                       </div>
 
-                      <div className="mt-3 text-sm space-y-1 bg-neutral-50/80 p-3 rounded-xl border border-neutral-100">
-                        <p><span className="font-bold text-neutral-700">Topics:</span> {session.topics_covered}</p>
+                      <div className="mt-3 text-xs space-y-1 bg-white p-3 rounded-xl border border-[#E8E6DF]">
+                        <p><span className="font-bold text-[#0B192C]">Topics:</span> {session.topics_covered}</p>
                         {session.homework_given && (
-                          <p className="text-neutral-600"><span className="font-semibold text-neutral-700">Homework:</span> {session.homework_given}</p>
+                          <p className="text-[#5A6578]"><span className="font-semibold text-[#0B192C]">Homework:</span> {session.homework_given}</p>
                         )}
                         {session.teacher_notes && (
-                          <p className="text-xs text-neutral-400 italic">Notes: {session.teacher_notes}</p>
+                          <p className="text-[#5A6578] italic">Notes: {session.teacher_notes}</p>
                         )}
                       </div>
                     </div>

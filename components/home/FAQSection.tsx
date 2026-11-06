@@ -2,32 +2,37 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown, HelpCircle } from "lucide-react";
 
 const faqs = [
   {
     question: "How do you verify your home tutors in Patna?",
-    answer: "We enforce an 8-Step Safety Shield. This includes Aadhar verification, face-match visits, subject pre-testing, and local reference checks before any tutor is sent to your home."
+    answer: "Every educator completes our strict 4-Pillar Trust Standard: physical Aadhaar KYC verification, verified educational degree checks (IIT/NIT/B.Ed/post-graduate), past teaching track record review, and police clearance declaration before any home visit."
   },
   {
-    question: "Do you provide female home tutors for girls?",
-    answer: "Yes, we have a strict Female-First Policy. By default, we prioritize matching female students with highly qualified female educators to ensure maximum comfort and safety."
+    question: "Do you provide dedicated female home tutors for girls?",
+    answer: "Yes, absolutely. We maintain a large roster of highly qualified, background-verified female tutors across Patna for female students and families who prefer female home mentors."
   },
   {
     question: "What happens if I'm not satisfied with the tutor?",
-    answer: "We offer a 48-Hour Replacement Guarantee. If you are not completely satisfied with the teaching style or progress, we will arrange a new tutor with zero questions asked."
+    answer: "We provide an ironclad 48-Hour Free Replacement Guarantee. If the teaching chemistry is not an ideal match after the free demo or anytime during the first month, our academic counselors assign an alternate verified tutor with zero extra fees."
   },
   {
     question: "Which areas in Patna do you cover?",
-    answer: "We cover 86+ localities in Patna, including major areas like Boring Road, Kankarbagh, Patliputra Colony, Rajendra Nagar, Bailey Road, and Danapur."
+    answer: "We provide home tutors across 30+ major localities in Patna, including Boring Road, Kankarbagh, Patliputra Colony, Rajendra Nagar, Bailey Road, Danapur, Ashiana Nagar, Anisabad, and SK Puri."
   },
   {
-    question: "Do you offer demo classes before I commit?",
-    answer: "Absolutely! We provide a free demo class so you can observe the tutor's teaching methodology and ensure they are the right fit for your child's academic needs."
+    question: "Do you offer a free demo class before I commit?",
+    answer: "Yes. Every student is entitled to a 100% free 1-hour in-home demo class. You can observe the educator's communication, patience, and subject clarity firsthand before finalizing tuition."
+  },
+  {
+    question: "What are your tuition fees and payment terms?",
+    answer: "Our fees are completely transparent with zero bureau registration charges. Monthly fees are calculated based on grade level (Class 1-8, 9-10, 11-12, or JEE/NEET) and weekly session frequency. Use our interactive fee estimator above for instant estimates."
   }
 ];
 
 export default function FAQSection() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   const faqSchema = {
     "@context": "https://schema.org",
@@ -43,50 +48,72 @@ export default function FAQSection() {
   };
 
   return (
-    <section className="py-24 bg-white relative">
+    <section className="py-20 sm:py-28 bg-[#F9F8F5] relative border-b border-[#E8E6DF]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+
+        {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-[#D4A017] font-semibold tracking-wider uppercase text-sm mb-3">Questions & Answers</h2>
-          <h3 className="font-serif text-4xl font-bold text-[#0F4C5C] mb-4">Frequently Asked Questions</h3>
-          <p className="text-[#64748B] text-lg">Everything you need to know about Patna's most trusted home tuition bureau.</p>
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#005F56]/10 text-[#005F56] text-xs font-bold uppercase tracking-wider mb-3">
+            <HelpCircle className="w-3.5 h-3.5" /> Direct Parent Answers
+          </div>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0B192C] mb-4">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-[#5A6578] text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+            Everything you need to know about Patna's premier home tuition bureau.
+          </p>
         </div>
 
-        <div className="space-y-4">
-          {faqs.map((faq, index) => (
-            <div key={index} className="border border-neutral-200 rounded-2xl overflow-hidden bg-[#FAFAF8] shadow-sm">
-              <button
-                onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full text-left px-6 py-5 flex justify-between items-center focus:outline-none hover:bg-white transition-colors"
+        {/* FAQ Accordion List */}
+        <div className="space-y-3.5">
+          {faqs.map((faq, index) => {
+            const isOpen = openIndex === index;
+            return (
+              <div
+                key={index}
+                className={`rounded-2xl overflow-hidden border transition-all duration-200 ${isOpen
+                    ? "bg-white border-[#0B192C] shadow-md"
+                    : "bg-white border-[#E8E6DF] hover:border-[#0B192C]/40"
+                  }`}
               >
-                <span className="font-bold text-[#1F2937] text-lg">{faq.question}</span>
-                <span className={`transform transition-transform duration-300 ${openIndex === index ? 'rotate-180 text-[#D4A017]' : 'text-[#64748B]'}`}>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </span>
-              </button>
-              <AnimatePresence>
-                {openIndex === index && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    <div className="px-6 pb-5 text-[#64748B] text-base border-t border-neutral-100 pt-4 bg-white">
-                      {faq.answer}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          ))}
+                <button
+                  type="button"
+                  onClick={() => setOpenIndex(isOpen ? null : index)}
+                  className="w-full text-left px-6 py-5 flex justify-between items-center gap-4 focus:outline-none cursor-pointer"
+                >
+                  <span className="font-display font-bold text-[#0B192C] text-base sm:text-lg leading-snug">
+                    {faq.question}
+                  </span>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180 bg-[#0B192C] text-white" : "bg-[#F3F1EC] text-[#5A6578]"
+                    }`}>
+                    <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+                </button>
+
+                <AnimatePresence>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-6 pb-6 text-[#5A6578] text-sm sm:text-base leading-relaxed border-t border-[#E8E6DF] pt-4 font-sans">
+                        {faq.answer}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
+
       </div>
     </section>
   );

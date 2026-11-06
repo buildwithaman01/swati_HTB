@@ -1,48 +1,53 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
+import { ArrowRight, MapPin } from "lucide-react";
 
 const areas = [
   "Boring Road", "Kankarbagh", "Patliputra", "Rajendra Nagar",
   "Bailey Road", "Frazer Road", "Dak Bungalow", "Ashiana Nagar",
   "Phulwari Sharif", "Danapur", "Gandhi Maidan", "Anisabad",
-  "Kurji", "SK Puri", "Gola Road", "Rukanpura"
+  "Kurji", "SK Puri", "Gola Road", "Rukanpura", "Raja Bazar", "Saguna More"
 ];
 
-const marqueeItems = [...areas, ...areas, ...areas];
+const marqueeItems = [...areas, ...areas];
 const marqueeItemsReversed = [...marqueeItems].reverse();
 
 export default function ServiceAreas() {
   return (
-    <section className="py-20 bg-[#0F4C5C] overflow-hidden relative">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 text-center">
-        <h2 className="font-serif text-3xl md:text-4xl font-bold text-white mb-4">
-          Serving All of Patna
+    <section className="py-20 sm:py-24 bg-[#0B192C] overflow-hidden relative border-b border-[#1E3E62]">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 mb-12 text-center relative z-10">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 text-[#E5A93C] text-xs font-semibold uppercase tracking-wider mb-3">
+          <MapPin className="w-3.5 h-3.5" /> Citywide Coverage
+        </div>
+        <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4">
+          Serving Every Neighborhood Across Patna
         </h2>
-        <p className="text-white/80 text-lg max-w-2xl mx-auto font-sans">
-          From Boring Road to Danapur, our network of verified home tutors covers every major neighborhood in the city.
+        <p className="text-white/75 text-base sm:text-lg max-w-2xl mx-auto font-sans leading-relaxed">
+          From Boring Road and Kankarbagh to Bailey Road and Danapur, our verified tutor network brings exceptional home education to your doorstep.
         </p>
       </div>
 
       {/* Infinite Marquee */}
-      <div className="relative flex flex-col gap-6 transform -rotate-2 scale-105">
-        
+      <div className="relative flex flex-col gap-5 py-4">
+
         {/* Row 1: Left to Right */}
         <div className="flex w-max">
           <motion.div
             initial={{ x: "0%" }}
-            animate={{ x: "-33.33%" }}
-            transition={{ 
+            animate={{ x: "-50%" }}
+            transition={{
               ease: "linear",
-              duration: 25, 
-              repeat: Infinity 
+              duration: 30,
+              repeat: Infinity
             }}
-            className="flex gap-4 px-2"
+            className="flex gap-3 px-2"
           >
             {marqueeItems.map((area, index) => (
-              <div 
+              <div
                 key={`row1-${index}`}
-                className="bg-white/10 backdrop-blur-sm border border-white/20 px-8 py-4 rounded-full text-white font-medium whitespace-nowrap hover:bg-[#D4A017] hover:border-[#D4A017] transition-colors cursor-default"
+                className="bg-white/10 backdrop-blur-sm border border-white/15 px-6 py-3 rounded-full text-white/90 text-sm font-semibold whitespace-nowrap hover:bg-[#E5A93C] hover:border-[#E5A93C] hover:text-[#0B192C] transition-colors cursor-default"
               >
                 {area}
               </div>
@@ -51,21 +56,21 @@ export default function ServiceAreas() {
         </div>
 
         {/* Row 2: Right to Left */}
-        <div className="flex w-max -ml-[50vw]">
+        <div className="flex w-max -ml-[30vw]">
           <motion.div
-            initial={{ x: "-33.33%" }}
+            initial={{ x: "-50%" }}
             animate={{ x: "0%" }}
-            transition={{ 
+            transition={{
               ease: "linear",
-              duration: 35, 
-              repeat: Infinity 
+              duration: 35,
+              repeat: Infinity
             }}
-            className="flex gap-4 px-2"
+            className="flex gap-3 px-2"
           >
             {marqueeItemsReversed.map((area, index) => (
-              <div 
+              <div
                 key={`row2-${index}`}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 px-8 py-4 rounded-full text-white/80 font-medium whitespace-nowrap hover:bg-[#D4A017] hover:border-[#D4A017] hover:text-white transition-colors cursor-default"
+                className="bg-white/5 backdrop-blur-sm border border-white/10 px-6 py-3 rounded-full text-white/80 text-sm font-semibold whitespace-nowrap hover:bg-[#E5A93C] hover:border-[#E5A93C] hover:text-[#0B192C] transition-colors cursor-default"
               >
                 {area}
               </div>
@@ -74,10 +79,21 @@ export default function ServiceAreas() {
         </div>
 
       </div>
-      
-      {/* Fog gradients to smooth the edges of the screen */}
-      <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-[#0F4C5C] to-transparent pointer-events-none" />
-      <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-[#0F4C5C] to-transparent pointer-events-none" />
+
+      {/* Edge gradient fog */}
+      <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#0B192C] to-transparent pointer-events-none z-10" />
+      <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#0B192C] to-transparent pointer-events-none z-10" />
+
+      {/* Bottom Link */}
+      <div className="text-center mt-10 relative z-10">
+        <Link
+          href="/areas"
+          className="inline-flex items-center gap-2 text-sm font-bold text-[#E5A93C] hover:text-[#D49228] transition-colors uppercase tracking-wider"
+        >
+          <span>View All 80+ Supported Patna Localities</span>
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
     </section>
   );
 }

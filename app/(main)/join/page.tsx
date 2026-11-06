@@ -2,14 +2,14 @@
 
 import { useState, useRef } from "react";
 import { toast } from "sonner";
-import { 
-  Shield, 
-  BookOpen, 
-  GraduationCap, 
-  ArrowRight, 
+import {
+  Shield,
+  BookOpen,
+  GraduationCap,
+  ArrowRight,
   ArrowLeft,
-  CheckCircle2, 
-  UserPlus, 
+  CheckCircle2,
+  UserPlus,
   MessageCircle,
   FileText,
   UploadCloud,
@@ -99,7 +99,7 @@ export default function JoinPage() {
     setCurrentStep(prev => Math.min(prev + 1, 3));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  
+
   const handleBack = () => {
     setCurrentStep(prev => Math.max(prev - 1, 1));
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -132,7 +132,7 @@ export default function JoinPage() {
       });
 
       const result = await res.json();
-      
+
       if (result.success) {
         // Send email via Web3Forms if data is provided
         if (result.web3formsData) {
@@ -166,36 +166,35 @@ export default function JoinPage() {
   };
 
   return (
-    <div className="bg-[#FAFAF8] min-h-screen">
-      
-      {/* Cinematic Hero Header */}
-      <section className="relative pt-40 pb-32 bg-[#0F4C5C] overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-20">
-          <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[150%] bg-[#D4A017] blur-[150px] rounded-full mix-blend-overlay"></div>
-        </div>
-        
-        <div className="container mx-auto px-6 max-w-6xl relative z-10 text-center">
+    <div className="bg-[#F9F8F5] min-h-screen">
+
+      {/* Institutional Hero Header */}
+      <section className="relative pt-36 pb-32 bg-[#0B192C] overflow-hidden border-b border-[#1E3E62]">
+        <div className="absolute inset-0 bg-grid-dots-light opacity-25 pointer-events-none" />
+
+        <div className="container mx-auto px-4 sm:px-6 max-w-4xl relative z-10 text-center">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            <div className="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-full mb-8 border border-white/20 shadow-[0_0_30px_rgba(212,160,23,0.15)]">
-              <GraduationCap className="w-8 h-8 text-[#D4A017]" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-[#E5A93C] text-xs font-semibold uppercase tracking-wider mb-6">
+              <GraduationCap className="w-4 h-4" />
+              Teacher Career Network
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white tracking-tight mb-6 font-serif leading-[1.1]">
-              Become a Verified <br />
-              <span className="text-[#D4A017] italic">Swati Home Tutor</span>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight mb-5 leading-tight">
+              Teach with Patna's Most Respected <br className="hidden sm:inline" />
+              <span className="text-[#E5A93C]">Home Tuition Bureau</span>
             </h1>
-            <p className="text-lg md:text-xl text-white/80 tracking-tight leading-relaxed max-w-2xl mx-auto font-medium">
-              Join Patna's most premium home tuition network. Earn premium fees, get guaranteed students, and build your reputation.
+            <p className="text-base sm:text-lg text-white/75 leading-relaxed max-w-2xl mx-auto font-sans">
+              Connect with serious, verified students near your locality. Earn predictable monthly fees, receive a verified Teacher ID passport, and build long-term teaching authority.
             </p>
           </motion.div>
         </div>
       </section>
 
       <div className="container mx-auto px-4 md:px-6 max-w-4xl py-12 relative z-20 -mt-20">
-        
+
         <AnimatePresence mode="wait">
           {submitted ? (
             /* ── SUCCESS CARD ── */
@@ -251,16 +250,14 @@ export default function JoinPage() {
                   <div className="flex justify-between mb-2">
                     {steps.map((step) => (
                       <div key={step.id} className="flex flex-col items-center gap-2 relative z-10 w-1/3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors duration-300 ${
-                          currentStep >= step.id 
-                            ? "bg-[#0F4C5C] text-white shadow-md" 
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-colors duration-300 ${currentStep >= step.id
+                            ? "bg-[#0F4C5C] text-white shadow-md"
                             : "bg-white text-[#1F2937]/30 border border-neutral-200"
-                        }`}>
+                          }`}>
                           {currentStep > step.id ? <Check className="w-5 h-5" /> : step.id}
                         </div>
-                        <span className={`text-xs md:text-sm font-semibold text-center ${
-                          currentStep >= step.id ? "text-[#0F4C5C]" : "text-[#1F2937]/40"
-                        }`}>
+                        <span className={`text-xs md:text-sm font-semibold text-center ${currentStep >= step.id ? "text-[#0F4C5C]" : "text-[#1F2937]/40"
+                          }`}>
                           {step.title}
                         </span>
                       </div>
@@ -268,7 +265,7 @@ export default function JoinPage() {
                   </div>
                   {/* Progress Line */}
                   <div className="relative mt-[-2.75rem] mx-auto w-[66%] h-1 bg-neutral-200 rounded-full z-0">
-                    <div 
+                    <div
                       className="absolute top-0 left-0 h-full bg-[#0F4C5C] rounded-full transition-all duration-500 ease-out"
                       style={{ width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%' }}
                     />
@@ -279,7 +276,7 @@ export default function JoinPage() {
               {/* Form Content */}
               <div className="p-6 md:p-12">
                 <form ref={formRef} onSubmit={handleSubmit} noValidate className="space-y-8">
-                  
+
                   {/* STEP 1: PERSONAL DETAILS */}
                   <div className={currentStep === 1 ? "block" : "hidden"}>
                     <div className="mb-8">

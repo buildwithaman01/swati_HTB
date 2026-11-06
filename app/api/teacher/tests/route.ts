@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
       test_date,
       total_marks,
       obtained_marks,
+      key_topics,
       remarks,
       test_paper_url,
     } = body;
@@ -44,13 +45,58 @@ export async function POST(req: NextRequest) {
     const obtained = parseFloat(obtained_marks) || 0;
     const percentage = Math.round((obtained / total) * 100);
 
-    const scoreString = `${obtained}/${total} (${percentage}%)`;
-    const formattedDate = test_date && test_date.trim() !== "" ? test_date.trim() : new Date().toISOString().slice(0, 10);
+    // Performance Badge text
+    let performanceLabel = "Good Progress";
+    let rating = 3;
+    if (percentage >= 90) {
+      performanceLabel = "Outstanding";
+      rating = 5;
+    } else if (percentage >= 75) {
+      performanceLabel = "Excellent";
+      rating = 4;
+    } else if (percentage >= 60) {
+      performanceLabel = "Good Progress";
+      rating = 3;
+    } else if (percentage >= 45) {
+      performanceLabel = "Average";
+      rating = 2;
+    } else {
+      performanceLabel = "Needs Attention";
+      rating = 1;
+    }
 
-    const remarksText = [
-      remarks ? `Remarks: ${remarks}` : null,
-      test_paper_url ? `Test Paper Link: ${test_paper_url}` : null,
-    ].filter(Boolean).join(" | ");
+    const scoreString = `${obtained}/${total} (${percentage}%)`;
+    const formattedDate =
+      test_date && test_date.trim() !== ""
+        ? test_date.trim()
+        : new Date().toISOString().slice(0, 10);
+
+    // Topic string combining Test Title and Key Topics Covered
+    const cleanTitle = test_title.trim();
+    const cleanTopics = (key_topics || "").trim();
+    const fullTopicsString = cleanTopics
+      ? `${cleanTitle} (Topics: ${cleanTopics})`
+      : cleanTitle;
+
+    // Structured metadata for rich parsing
+    const metaObj = {
+      test_title: cleanTitle,
+      key_topics: cleanTopics,
+      total_marks: total,
+      obtained_marks: obtained,
+      percentage,
+      performance_badge: `${performanceLabel} (${percentage}%)`,
+      test_paper_url: test_paper_url ? test_paper_url.trim() : "",
+    };
+
+    const cleanRemarks = (remarks || "").trim();
+    const remarksFormatted = [
+      cleanRemarks || `Test conducted on ${formattedDate}.`,
+      test_paper_url ? `Test Paper Link: ${test_paper_url.trim()}` : null,
+      `<!--TEST_META:${JSON.stringify(metaObj)}-->`,
+    ]
+      .filter(Boolean)
+      .join(" | ");
 
     // Insert into progress_reports table
     const { data: record, error: insertErr } = await adminDb
@@ -60,15 +106,30 @@ export async function POST(req: NextRequest) {
         teacher_id: resolvedTeacherId,
         student_id: resolvedStudentId,
         report_month: formattedDate,
-        topics_covered: `${subject || asgn.subject} - ${test_title}`,
+        topics_covered: fullTopicsString,
         test_scores: scoreString,
-        strengths: percentage >= 80 ? "Excellent understanding of core concepts" : "Solid attempt, improving",
-        areas_of_improvement: percentage < 75 ? "Needs practice in numericals and derivations" : "Minor formula revision",
-        teacher_remarks: remarksText || `Test completed on ${formattedDate}.`,
+        overall_rating: rating,
+        strengths:
+          percentage >= 80
+            ? "Strong conceptual clarity, accurate problem-solving, and good test presentation."
+            : percentage >= 60
+            ? "Solid understanding of standard questions; active participation in doubt-clearing."
+            : "Shows sincere effort; responsive to guided corrections and hints.",
+        areas_of_improvement:
+          percentage < 60
+            ? "Needs focused revision of core formulas, step-by-step derivations, and speed practice."
+            : percentage < 80
+            ? "Work on reducing silly calculation errors and handling higher-order thinking problems."
+            : "Continue regular mock papers to maintain top percentile in school examinations.",
+        teacher_remarks: remarksFormatted,
         sent_to_parent: true,
         sent_at: new Date().toISOString(),
       })
-      .select()
+      .select(`
+        *,
+        assignment:assignments (id, subject),
+        student:students (id, full_name, class_studying, parent_name, parent_phone, parent_whatsapp)
+      `)
       .single();
 
     if (insertErr) {
@@ -80,14 +141,13 @@ export async function POST(req: NextRequest) {
     revalidatePath("/teacher/dashboard/reports");
     revalidatePath("/teacher/dashboard");
     revalidatePath("/portal/reports");
-    revalidatePath("/portal/tests");
     revalidatePath("/portal/dashboard");
     revalidatePath("/admin/reports");
 
     return NextResponse.json({
       success: true,
       test: record,
-      message: `Test score for "${test_title}" saved successfully!`,
+      message: `Test score for "${cleanTitle}" saved successfully!`,
     });
   } catch (err: any) {
     console.error("[teacher/tests POST exception]:", err);
@@ -107,7 +167,7 @@ export async function GET(req: NextRequest) {
       .select(`
         *,
         assignment:assignments(id, subject),
-        student:students(id, full_name, class_studying, parent_name),
+        student:students(id, full_name, class_studying, parent_name, parent_phone, parent_whatsapp),
         teacher:teachers(id, full_name, teacher_id)
       `)
       .order("created_at", { ascending: false });

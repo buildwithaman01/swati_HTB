@@ -69,15 +69,15 @@ export default function AssignmentCreationForm({
   const studentSubjects: string[] = Array.isArray(rawStudentSubs)
     ? rawStudentSubs
     : typeof rawStudentSubs === "string"
-    ? (rawStudentSubs as string).split(",").map((s) => s.trim()).filter(Boolean)
-    : [];
+      ? (rawStudentSubs as string).split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
 
   const rawTeacherSubs = selectedTeacher?.subjects;
   const teacherSubjectsText = Array.isArray(rawTeacherSubs)
     ? rawTeacherSubs.join(", ")
     : typeof rawTeacherSubs === "string"
-    ? rawTeacherSubs
-    : "General";
+      ? rawTeacherSubs
+      : "General";
 
   const feeNum = parseFloat(monthlyFee) || 0;
   const bureauCommission = Math.round(feeNum * 0.25);
@@ -186,11 +186,10 @@ export default function AssignmentCreationForm({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => !teacherPhone && e.preventDefault()}
-              className={`p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-                teacherPhone
+              className={`p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${teacherPhone
                   ? "bg-[#25D366] hover:bg-[#20ba59] text-white shadow-sm"
                   : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
-              }`}
+                }`}
             >
               <MessageCircle className="w-4 h-4" /> Notify Teacher on WhatsApp
             </a>
@@ -200,11 +199,10 @@ export default function AssignmentCreationForm({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => !parentPhone && e.preventDefault()}
-              className={`p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-                parentPhone
+              className={`p-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${parentPhone
                   ? "bg-[#0F4C5C] hover:bg-[#0a3a47] text-white shadow-sm"
                   : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
-              }`}
+                }`}
             >
               <MessageCircle className="w-4 h-4" /> Notify Parent on WhatsApp
             </a>

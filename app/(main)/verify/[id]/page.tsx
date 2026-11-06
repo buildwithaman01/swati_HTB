@@ -46,6 +46,17 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
   const isValid = !!(teacher && teacher.verification_status === "approved" && teacher.is_active);
   const displayId = teacher?.teacher_id || rawId.toUpperCase();
 
+  let displayBio = teacher?.bio || "";
+  if (!displayBio && teacher?.internal_notes) {
+    try {
+      const match = teacher.internal_notes.match(/<!--PROFILE_META:(.*?)-->/s);
+      if (match && match[1]) {
+        const meta = JSON.parse(match[1]);
+        displayBio = meta.bio || "";
+      }
+    } catch {}
+  }
+
   return (
     <main className="min-h-screen bg-[#FAF7F2] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
@@ -89,21 +100,20 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
 
               <div className="space-y-3 pt-3 border-t border-neutral-100">
                 <Row label="Teacher ID" value={teacher.teacher_id} />
+                {teacher.qualification && <Row label="Qualification" value={`${teacher.qualification}${teacher.institution ? ` (${teacher.institution})` : ''}`} />}
                 <Row label="Subjects" value={(teacher.subjects || []).join(", ") || "—"} />
                 <Row label="Classes" value={(teacher.classes_taught || []).join(", ") || "—"} />
-                <Row label="Boards" value={(teacher.board_expertise || []).join(", ") || "—"} />
                 <Row label="Service Areas" value={(teacher.areas_serviceable || []).join(", ") || "—"} />
-                <Row label="Languages" value={(teacher.languages || []).join(", ") || "—"} />
                 {teacher.gender && <Row label="Gender" value={teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1)} />}
                 {teacher.approved_date && (
                   <Row label="Approved Since" value={new Date(teacher.approved_date).toLocaleDateString("en-IN", { month: "long", year: "numeric" })} />
                 )}
               </div>
 
-              {teacher.bio && (
+              {displayBio && (
                 <div className="pt-3 border-t border-neutral-100">
                   <span className="text-xs font-semibold text-[#1F2937]/40 uppercase tracking-wide block mb-2">About</span>
-                  <p className="text-sm text-[#1F2937] leading-relaxed whitespace-pre-wrap">{teacher.bio}</p>
+                  <p className="text-sm text-[#1F2937] leading-relaxed whitespace-pre-wrap">{displayBio}</p>
                 </div>
               )}
 
@@ -163,6 +173,17 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
 }
 
 function Row({ label, value }: { label: string; value: string }) {
+  let displayBio = teacher?.bio || "";
+  if (!displayBio && teacher?.internal_notes) {
+    try {
+      const match = teacher.internal_notes.match(/<!--PROFILE_META:(.*?)-->/s);
+      if (match && match[1]) {
+        const meta = JSON.parse(match[1]);
+        displayBio = meta.bio || "";
+      }
+    } catch {}
+  }
+
   return (
     <div className="flex justify-between items-center gap-4">
       <span className="text-xs font-semibold text-[#1F2937]/40 uppercase tracking-wide">{label}</span>

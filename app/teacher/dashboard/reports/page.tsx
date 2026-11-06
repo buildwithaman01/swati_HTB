@@ -1,5 +1,5 @@
 import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
-import { FileText, Plus, CheckCircle2, Search, ArrowRight, User } from "lucide-react";
+import { FileText, Plus, CheckCircle2, Search, ArrowRight, User, Award } from "lucide-react";
 import Link from "next/link";
 import { revalidatePath } from "next/cache";
 
@@ -48,14 +48,12 @@ export default async function TeacherReportsPage() {
     await supabase.from("progress_reports").insert({
       assignment_id: formData.get("assignment_id"),
       report_month: formData.get("report_month"),
-      topics_covered: (formData.get("topics_covered") as string).split(",").map(s => s.trim()),
-      test_score_before: parseInt(formData.get("test_score_before") as string) || null,
-      test_score_after: parseInt(formData.get("test_score_after") as string) || null,
+      topics_covered: (formData.get("topics_covered") as string),
       strengths: formData.get("strengths"),
-      gap_areas: formData.get("gap_areas"),
-      next_month_plan: formData.get("next_month_plan"),
-      tutor_message: formData.get("tutor_message"),
-      sent_to_parent: false
+      areas_of_improvement: formData.get("gap_areas"),
+      teacher_remarks: formData.get("tutor_message") || "Monthly progress evaluation submitted.",
+      sent_to_parent: true,
+      sent_at: new Date().toISOString()
     });
 
     revalidatePath("/teacher/dashboard/reports");
@@ -63,24 +61,36 @@ export default async function TeacherReportsPage() {
 
   return (
     <div className="space-y-8 max-w-5xl">
-      <div>
-        <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Progress Reports</h1>
-        <p className="text-sm text-neutral-500 mt-1">Submit monthly evaluation reports for your students to share with parents.</p>
+      <div className="border-b border-[#E8E6DF] pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold font-serif text-[#0B192C]">Progress Reports</h1>
+          <p className="text-sm text-[#5A6578] mt-1 font-medium">
+            Submit monthly evaluations and track academic milestones across your tuitions in Patna.
+          </p>
+        </div>
+
+        <Link
+          href="/teacher/dashboard/tests"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-[#0B192C] hover:bg-[#1E3E62] px-4 py-2.5 rounded-xl transition-colors shadow-xs"
+        >
+          <Award className="w-4 h-4 text-[#E5A93C]" />
+          Record Topic Assessment
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* Left Col - Create Report Form */}
         <div className="lg:col-span-1 space-y-6">
-          <form action={submitReport} className="bg-white p-6 rounded-3xl shadow-sm border border-neutral-200/60">
-            <div className="flex items-center gap-2 mb-6 border-b border-neutral-100 pb-4">
-              <Plus className="text-[#0F4C5C] w-5 h-5" />
-              <h2 className="text-lg font-bold text-[#1F2937]">New Report</h2>
+          <form action={submitReport} className="bg-white p-6 rounded-3xl shadow-sm border border-[#E8E6DF]">
+            <div className="flex items-center gap-2 mb-6 border-b border-[#E8E6DF] pb-4">
+              <Plus className="text-[#E5A93C] w-5 h-5" />
+              <h2 className="text-lg font-bold font-serif text-[#0B192C]">New Monthly Evaluation</h2>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Select Student</label>
-                <select name="assignment_id" required className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none">
+                <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5 block">Select Student</label>
+                <select name="assignment_id" required className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none text-[#0B192C] font-semibold bg-white">
                   <option value="">Choose student...</option>
                   {assignments?.map((a: any) => (
                     <option key={a.id} value={a.id}>
@@ -91,96 +101,73 @@ export default async function TeacherReportsPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Report Month</label>
-                <input type="month" name="report_month" required className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
+                <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5 block">Report Month</label>
+                <input type="month" name="report_month" required className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none text-[#0B192C]" />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Topics Covered (comma separated)</label>
-                <textarea name="topics_covered" rows={2} required className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none resize-none" placeholder="e.g. Algebra, Linear Equations" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Previous Score %</label>
-                  <input type="number" name="test_score_before" className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" placeholder="e.g. 60" />
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Current Score %</label>
-                  <input type="number" name="test_score_after" className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" placeholder="e.g. 85" />
-                </div>
+                <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5 block">Syllabus / Topics Covered</label>
+                <textarea name="topics_covered" rows={2} required className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none resize-none text-[#1A1D20]" placeholder="e.g. Chapter 4: Quadratic Equations & Chapter 5: AP" />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Student Strengths</label>
-                <textarea name="strengths" rows={2} required className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none resize-none" placeholder="What did they do well?" />
+                <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5 block">Student Strengths</label>
+                <textarea name="strengths" rows={2} required className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none resize-none text-[#1A1D20]" placeholder="What did they excel in this month?" />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Areas for Improvement</label>
-                <textarea name="gap_areas" rows={2} required className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none resize-none" placeholder="Where do they struggle?" />
+                <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5 block">Areas for Improvement</label>
+                <textarea name="gap_areas" rows={2} required className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none resize-none text-[#1A1D20]" placeholder="Formulas, calculations, or homework regularity?" />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Plan for Next Month</label>
-                <textarea name="next_month_plan" rows={2} required className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none resize-none" placeholder="Topics to cover next..." />
+                <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide mb-1.5 block">Tutor Note to Parents</label>
+                <textarea name="tutor_message" rows={2} className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none resize-none text-[#1A1D20]" placeholder="Guidance for parents at home..." />
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-neutral-500 mb-1.5 block">Message to Parent</label>
-                <textarea name="tutor_message" rows={2} className="w-full text-sm border border-neutral-200 rounded-lg p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none resize-none" placeholder="Optional notes for parent..." />
-              </div>
-
-              <button type="submit" className="w-full bg-[#0F4C5C] hover:bg-[#0a3a47] text-white font-bold py-2.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2 mt-4">
-                <CheckCircle2 size={16} /> Submit Report
+              <button type="submit" className="w-full bg-[#0B192C] hover:bg-[#1E3E62] text-white font-bold py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2 mt-4 shadow-sm">
+                <CheckCircle2 size={16} className="text-[#E5A93C]" /> Submit Report
               </button>
-              <p className="text-[10px] text-neutral-400 text-center mt-2">Reports are sent to parents upon admin review.</p>
             </div>
           </form>
         </div>
 
         {/* Right Col - Past Reports */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-neutral-200/60">
-            <h2 className="text-lg font-bold text-[#1F2937] mb-6 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-[#0F4C5C]" /> Submitted Reports
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-[#E8E6DF]">
+            <h2 className="text-lg font-bold font-serif text-[#0B192C] mb-6 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#E5A93C]" /> Submitted Reports ({reports?.length || 0})
             </h2>
 
             {(!reports || reports.length === 0) ? (
               <div className="text-center py-12">
-                <FileText className="w-10 h-10 text-neutral-200 mx-auto mb-3" />
-                <p className="text-neutral-500 font-medium text-sm">You haven't submitted any reports yet.</p>
-                <p className="text-xs text-neutral-400 mt-1">Submit your first report using the form on the left.</p>
+                <FileText className="w-10 h-10 text-[#5A6578]/30 mx-auto mb-3" />
+                <p className="text-[#0B192C] font-bold text-sm">No monthly reports submitted yet.</p>
+                <p className="text-xs text-[#5A6578] mt-1">Submit your first monthly report using the form on the left, or record topic tests.</p>
               </div>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid gap-3.5">
                 {reports.map((report: any) => (
-                  <div key={report.id} className="p-4 border border-neutral-100 rounded-2xl bg-neutral-50/50 flex justify-between items-center hover:bg-neutral-50 transition-colors">
+                  <div key={report.id} className="p-4 border border-[#E8E6DF] rounded-2xl bg-[#F9F8F5]/60 flex justify-between items-center hover:bg-white transition-colors">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-[#1F2937] text-sm">{report.assignment?.student?.full_name}</p>
-                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider bg-white border border-neutral-200 px-2 py-0.5 rounded-md">
+                        <p className="font-bold text-[#0B192C] text-sm">{report.assignment?.student?.full_name}</p>
+                        <span className="text-[10px] font-bold text-[#1E3E62] uppercase tracking-wider bg-white border border-[#E8E6DF] px-2 py-0.5 rounded-md">
                           {report.assignment?.subject}
                         </span>
                       </div>
-                      <p className="text-xs text-neutral-500">
-                        Month: {report.report_month} • Topics: {report.topics_covered?.length}
+                      <p className="text-xs text-[#5A6578]">
+                        Month: {report.report_month} • Topics: {report.topics_covered?.slice(0, 40)}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      {report.sent_to_parent ? (
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3" /> Sent to Parent
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-                          Pending Admin
-                        </span>
-                      )}
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Active Report
+                      </span>
 
-                      <Link href={`/report/${report.id}`} target="_blank" className="p-2 hover:bg-white rounded-lg border border-transparent hover:border-neutral-200 transition-colors">
-                        <ArrowRight className="w-4 h-4 text-neutral-400" />
+                      <Link href={`/report/${report.id}`} target="_blank" className="p-2 hover:bg-[#F9F8F5] rounded-lg border border-[#E8E6DF] transition-colors" title="View Report">
+                        <ArrowRight className="w-4 h-4 text-[#0B192C]" />
                       </Link>
                     </div>
                   </div>

@@ -82,9 +82,9 @@ export async function POST(req: NextRequest) {
     if (experience_years !== undefined) updatePayload.experience_years = parseInt(experience_years) || 0;
     if (locality !== undefined) updatePayload.locality = locality;
     if (address !== undefined) updatePayload.address = address;
-    if (subjectsArr.length > 0) updatePayload.subjects = subjectsArr;
-    if (classesArr.length > 0) updatePayload.classes_taught = classesArr;
-    if (areasArr.length > 0) updatePayload.areas_serviceable = areasArr;
+    if (subjects !== undefined) updatePayload.subjects = subjectsArr;
+    if (classes_taught !== undefined) updatePayload.classes_taught = classesArr;
+    if (areas_serviceable !== undefined) updatePayload.areas_serviceable = areasArr;
     if (profile_photo_url !== undefined) updatePayload.profile_photo_url = profile_photo_url;
     updatePayload.internal_notes = enrichedNotes;
 

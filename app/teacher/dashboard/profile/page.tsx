@@ -17,10 +17,10 @@ export default async function TeacherProfilePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold font-serif text-[#1F2937]">Faculty Profile</h1>
-        <p className="text-sm text-neutral-500 mt-1">
-          Customize your public educator profile, photo, qualifications, and teaching specializations.
+      <div className="border-b border-[#E8E6DF] pb-4">
+        <h1 className="text-3xl font-bold font-serif text-[#0B192C]">Faculty Profile</h1>
+        <p className="text-sm text-[#5A6578] mt-1 font-medium">
+          Customize your public educator profile, photo, qualifications, preferred Patna localities, and teaching credentials.
         </p>
       </div>
 

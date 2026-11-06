@@ -1,53 +1,63 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { PhoneCall, ArrowRight } from "lucide-react";
+import { PhoneCall, ArrowRight, MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 export default function CallbackCTA() {
   return (
-    <section className="relative bg-[#0F4C5C] overflow-hidden">
-      {/* Background Ornaments */}
-      <div className="absolute inset-0 z-0 opacity-10">
-        <div className="absolute top-[-50%] left-[-10%] w-[50%] h-[200%] bg-[#D4A017] blur-[150px] rounded-full mix-blend-overlay"></div>
-        <div className="absolute bottom-[-50%] right-[-10%] w-[50%] h-[200%] bg-white blur-[150px] rounded-full mix-blend-overlay"></div>
-      </div>
-      
-      <div className="container mx-auto px-6 max-w-6xl relative z-10 py-24 text-center">
+    <section className="relative bg-[#0B192C] py-20 sm:py-24 overflow-hidden border-t-2 border-[#E5A93C]">
+      {/* Crisp Architectural Grid */}
+      <div className="absolute inset-0 bg-grid-dots-light opacity-20 pointer-events-none" />
+
+      <div className="container mx-auto px-4 sm:px-6 max-w-4xl relative z-10 text-center">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5 }}
           className="max-w-3xl mx-auto"
         >
-          <div className="inline-flex items-center justify-center p-4 bg-white/10 backdrop-blur-md rounded-full mb-8 border border-white/20 shadow-[0_0_30px_rgba(212,160,23,0.15)]">
-            <PhoneCall className="w-8 h-8 text-[#D4A017]" />
+          {/* Eyebrow */}
+          <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#E5A93C] mb-4">
+            <span className="h-px w-6 bg-[#E5A93C]/50" />
+            Direct Bureau Accountability
+            <span className="h-px w-6 bg-[#E5A93C]/50" />
           </div>
-          
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 font-serif">
-            Ready to give your child the <span className="text-[#D4A017] italic">academic edge?</span>
+
+          {/* Headline */}
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-5 leading-tight">
+            Ready to Pair Your Child with Patna's <span className="text-[#E5A93C]">Finest Tutors?</span>
           </h2>
-          
-          <p className="text-xl text-white/80 mb-10 font-medium">
-            Join hundreds of successful students in Patna. Book a free demo class today and experience the Swati difference.
+
+          <p className="text-white/75 text-base sm:text-lg mb-10 max-w-2xl mx-auto leading-relaxed font-sans">
+            Book a zero-obligation free trial class. We arrange the verified teacher profile with Aadhaar &amp; qualification proofs delivered straight to your WhatsApp.
           </p>
-          
+
+          {/* Dual CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/book-demo">
-              <button className="bg-white hover:bg-[#FAF7F2] text-[#0F4C5C] font-bold text-lg px-8 py-4 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 group w-full sm:w-auto">
-                Book Free Demo
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
+            <Link
+              href="/book-demo"
+              className="w-full sm:w-auto inline-flex items-center justify-center h-13 px-8 bg-[#E5A93C] hover:bg-[#D49228] text-[#0B192C] font-extrabold text-sm sm:text-base rounded-xl transition-all border-b-[3px] border-[#B87C1C] hover:-translate-y-0.5 active:translate-y-0 shadow-lg cursor-pointer gap-2"
+            >
+              Book Free In-Home Demo
+              <ArrowRight className="w-4 h-4 stroke-[2.5]" />
             </Link>
-            
-            <a href="tel:+919229738307">
-              <button className="bg-transparent border border-white/30 hover:border-white/60 text-white font-bold text-lg px-8 py-4 rounded-2xl transition-all flex items-center justify-center gap-2 w-full sm:w-auto">
-                <PhoneCall className="w-5 h-5 text-[#D4A017]" />
-                Call +91 92297 38307
-              </button>
+
+            <a
+              href="https://wa.me/919229738307?text=Hi%2C%20I%20am%20looking%20for%20a%20home%20tutor%20in%20Patna"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 h-13 px-8 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-sm sm:text-base rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+            >
+              <MessageCircle className="w-5 h-5 text-[#25D366]" />
+              WhatsApp Us (+91 92297 38307)
             </a>
           </div>
+
+          <p className="mt-8 text-white/50 text-xs tracking-wide">
+            📍 Banke Bihari Kunj, Mithapur, Patna · Mon–Sun 8:00 AM – 9:00 PM · 48-Hour Replacement Guarantee
+          </p>
         </motion.div>
       </div>
     </section>

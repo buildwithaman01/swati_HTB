@@ -2,45 +2,50 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Quote } from "lucide-react";
+import { Star, Quote, MapPin, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const testimonials = [
   {
     name: "Rajesh Kumar",
-    role: "Parent from Boring Road",
-    review: "The Safety Shield protocol gave my wife and I total peace of mind. Our daughter's tutor is fantastic, and knowing she's ID-verified makes all the difference.",
+    locality: "Boring Road",
+    childGrade: "Class 10 CBSE",
+    review: "The ID verification protocol gave my wife and I total peace of mind. Our daughter's science tutor from NIT Patna is exceptional, patient, and punctual. Knowing she's police and Aadhaar verified makes all the difference.",
     rating: 5,
-    avatar: "R"
+    avatar: "R",
   },
   {
     name: "Sneha Sinha",
-    role: "Parent from Kankarbagh",
-    review: "We changed 3 tutors before finding Swati HTB. The IITian mentor they sent for my son's JEE prep completely changed his approach to Physics.",
+    locality: "Kankarbagh",
+    childGrade: "Class 12 JEE Aspirant",
+    review: "We tried finding tutors through local contacts with very inconsistent results. The engineering mentor Swati HTB matched for my son's JEE physics completely changed his problem-solving speed. Within 3 months his mock test percentile jumped from 78 to 94.",
     rating: 5,
-    avatar: "S"
+    avatar: "S",
   },
   {
     name: "Vikash Singh",
-    role: "Parent from Patliputra",
-    review: "I love the monthly Progress Pulse reports on WhatsApp. I don't have to constantly ask the teacher how my child is doing; the bureau updates me automatically.",
+    locality: "Patliputra Colony",
+    childGrade: "Class 8 ICSE",
+    review: "I appreciate the transparency. We received a complete Teacher Passport on WhatsApp before the demo even took place. No surprises, no hidden charges. Highly recommended for busy working parents in Patna.",
     rating: 5,
-    avatar: "V"
+    avatar: "V",
   },
   {
     name: "Neha Agarwal",
-    role: "Parent from Rajendra Nagar",
-    review: "We requested a female tutor for my 9th-grade daughter and they sent a brilliant M.Sc Chemistry grad the very next day. Extremely professional.",
+    locality: "Rajendra Nagar",
+    childGrade: "Class 9 ICSE",
+    review: "We specifically requested an experienced female home tutor for my 9th-grade daughter. Swati HTB arranged a brilliant post-graduate tutor in Chemistry within 24 hours. The free trial demo gave us immediate confidence.",
     rating: 5,
-    avatar: "N"
+    avatar: "N",
   },
   {
     name: "Amit Mishra",
-    role: "Parent from Bailey Road",
-    review: "The Teacher Passport is a game changer. We received a WhatsApp PDF with the teacher's qualifications and ID proof before the demo even started. Highly recommend.",
+    locality: "Bailey Road (RPS More)",
+    childGrade: "Class 6 All Subjects",
+    review: "The 48-hour replacement guarantee removed all the anxiety. Their academic counselor stays in touch regularly to check on syllabus coverage and attendance. Genuine, professional home tuition bureau.",
     rating: 5,
-    avatar: "A"
-  }
+    avatar: "A",
+  },
 ];
 
 export default function Testimonials() {
@@ -51,58 +56,73 @@ export default function Testimonials() {
     if (!autoplay) return;
     const interval = setInterval(() => {
       setCurrent((prev) => (prev + 1) % testimonials.length);
-    }, 6000);
+    }, 6500);
     return () => clearInterval(interval);
   }, [autoplay]);
 
   return (
-    <section className="py-24 bg-[#FAF7F2] relative overflow-hidden" onMouseEnter={() => setAutoplay(false)} onMouseLeave={() => setAutoplay(true)}>
-      
-      <div className="container mx-auto px-6 max-w-4xl relative z-10">
-        
+    <section
+      className="py-20 sm:py-28 bg-[#F9F8F5] relative overflow-hidden border-b border-[#E8E6DF]"
+      onMouseEnter={() => setAutoplay(false)}
+      onMouseLeave={() => setAutoplay(true)}
+    >
+      <div className="container mx-auto px-4 sm:px-6 max-w-4xl relative z-10">
+
+        {/* Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-[#1F2937] mb-4 tracking-tight font-serif">
-            Trusted by <span className="text-[#D4A017] italic">500+</span> Patna Parents
+          <p className="text-xs font-bold uppercase tracking-widest text-[#005F56] mb-3">
+            Real Patna Parent Experiences
+          </p>
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0B192C] mb-4">
+            Trusted by <span className="text-[#E5A93C]">500+</span> Patna Families
           </h2>
-          <p className="text-lg text-[#1F2937]/60 max-w-2xl mx-auto font-medium">
-            Hear what families across Patna have to say about the Swati System.
+          <p className="text-[#5A6578] text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
+            Authentic feedback from parents across Boring Road, Kankarbagh, Patliputra, and Bailey Road.
           </p>
         </div>
 
-        <div className="relative min-h-[380px] md:min-h-[300px] flex flex-col items-center justify-center">
-          <Quote className="absolute top-0 text-[#D4A017]/10 w-32 h-32 -z-10" />
-          
+        {/* Testimonial Display Card */}
+        <div className="relative min-h-[340px] sm:min-h-[280px] bg-white rounded-3xl p-8 sm:p-12 border border-[#E8E6DF] shadow-lg flex flex-col items-center justify-center text-center">
+          <Quote className="absolute top-6 left-8 text-[#0B192C]/5 w-20 h-20 pointer-events-none" />
+
           <AnimatePresence mode="wait">
             <motion.div
               key={current}
-              initial={{ opacity: 0, y: 20, filter: "blur(10px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -20, filter: "blur(10px)" }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="flex flex-col items-center text-center w-full"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="flex flex-col items-center w-full relative z-10"
             >
-              
-              <div className="flex gap-1 mb-8">
+              {/* Star Rating */}
+              <div className="flex gap-1 mb-6">
                 {[...Array(testimonials[current].rating)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-[#D4A017] text-[#D4A017]" />
+                  <Star key={i} className="w-5 h-5 fill-[#E5A93C] text-[#E5A93C]" />
                 ))}
               </div>
 
-              <p className="max-w-3xl text-2xl md:text-3xl text-[#1F2937] leading-tight font-medium mb-10 text-balance">
+              {/* Quote */}
+              <p className="max-w-2xl text-lg sm:text-xl md:text-2xl text-[#1A1D20] leading-snug font-medium mb-8 text-balance">
                 "{testimonials[current].review}"
               </p>
 
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-14 h-14 rounded-full bg-[#0F4C5C] text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-[#0F4C5C]/20 border-2 border-white">
+              {/* Author & Verification Info */}
+              <div className="flex items-center gap-4 pt-4 border-t border-[#E8E6DF] w-full max-w-md justify-center">
+                <div className="w-11 h-11 rounded-full bg-[#0B192C] text-white flex items-center justify-center text-base font-bold shadow-md">
                   {testimonials[current].avatar}
                 </div>
-                <div>
-                  <h5 className="font-bold text-lg text-[#1F2937]">
+                <div className="text-left">
+                  <div className="flex items-center gap-1.5 font-display font-bold text-base text-[#0B192C]">
                     {testimonials[current].name}
-                  </h5>
-                  <p className="text-sm font-semibold text-[#1F2937]/50 uppercase tracking-widest">
-                    {testimonials[current].role}
-                  </p>
+                    <CheckCircle2 className="w-4 h-4 text-[#005F56] fill-[#005F56]/20" />
+                  </div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#5A6578]">
+                    <span className="flex items-center gap-0.5 text-[#005F56]">
+                      <MapPin className="w-3 h-3" /> {testimonials[current].locality}
+                    </span>
+                    <span>•</span>
+                    <span>{testimonials[current].childGrade}</span>
+                  </div>
                 </div>
               </div>
 
@@ -110,13 +130,14 @@ export default function Testimonials() {
           </AnimatePresence>
         </div>
 
-        <div className="mt-16 flex items-center justify-center gap-3">
+        {/* Carousel Dots */}
+        <div className="mt-8 flex items-center justify-center gap-2.5">
           {testimonials.map((_, index) => (
             <button
               key={index}
               className={cn(
-                "h-2 rounded-full transition-all duration-300",
-                index === current ? "bg-[#0F4C5C] w-8" : "bg-[#0F4C5C]/20 w-2 hover:bg-[#0F4C5C]/40"
+                "h-2 rounded-full transition-all duration-300 cursor-pointer",
+                index === current ? "bg-[#0B192C] w-8" : "bg-[#0B192C]/20 w-2 hover:bg-[#0B192C]/40"
               )}
               onClick={() => setCurrent(index)}
               aria-label={`Go to slide ${index + 1}`}
