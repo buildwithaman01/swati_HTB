@@ -24,7 +24,7 @@ export default async function TeacherStudentsPage() {
     .select(`
       id, monthly_fee, session_duration_mins, classes_per_week, subject, session_days, session_time,
       students:student_id ( 
-        id, student_id, full_name, class_studying, locality, address,
+        id, student_id, full_name, class_studying, board, locality, address,
         parent_name, special_needs, preferred_timing
       )
     `)
@@ -45,7 +45,7 @@ export default async function TeacherStudentsPage() {
       const studentIds = flatAs.map((a) => a.student_id);
       const { data: stList } = await adminClient
         .from("students")
-        .select("id, student_id, full_name, class_studying, locality, address, parent_name, special_needs, preferred_timing")
+        .select("id, student_id, full_name, class_studying, board, locality, address, parent_name, special_needs, preferred_timing")
         .in("id", studentIds);
 
       const stMap = new Map((stList || []).map((s) => [s.id, s]));

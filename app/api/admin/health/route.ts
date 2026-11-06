@@ -55,6 +55,30 @@ export async function GET() {
       diagnostics.database_access.assignments_count = asData?.length || 0;
     }
 
+    // Test sessions count & join
+    const { data: sessData, error: sessErr } = await adminDb
+      .from("sessions")
+      .select(`
+        *,
+        teacher:teachers(id, full_name),
+        student:students(id, full_name),
+        assignment:assignments(id, subject)
+      `)
+      .limit(5);
+
+    diagnostics.database_access.sessions_test = {
+      count: sessData?.length ?? 0,
+      error: sessErr?.message || null,
+      sample_keys: sessData && sessData[0] ? Object.keys(sessData[0]) : null
+    };
+
+    // Test old syntax students:student_id vs student:students
+    const { error: oldJoinErr } = await adminDb
+      .from("assignments")
+      .select("id, students:student_id(id, full_name)")
+      .limit(1);
+    diagnostics.database_access.old_students_student_id_syntax_error = oldJoinErr?.message || null;
+
     // Sample students columns
     const { data: stSample } = await adminDb.from("students").select("*").limit(1);
     if (stSample && stSample[0]) {

@@ -17,46 +17,105 @@ export default async function TeacherReportsPage() {
   if (!resolvedTeacherId) return null;
 
   // Get teacher's assignments
-  const { data: assignments } = await supabase
+  const adminClient = await createAdminClient();
+
+  // Get teacher's assignments (with flat fallback)
+  let assignments: any[] = [];
+  const { data: asData, error: asErr } = await adminClient
     .from("assignments")
     .select(`
       id,
+      student_id,
       subject,
-      student:students (full_name, class_studying, parent_name)
+      student:students (id, full_name, class_studying, parent_name)
     `)
     .eq("teacher_id", resolvedTeacherId)
     .eq("status", "active");
 
+  if (!asErr && asData && asData.length > 0) {
+    assignments = asData.map((a: any) => ({
+      ...a,
+      student: a.student || a.students,
+    }));
+  } else {
+    const { data: flatAs } = await adminClient
+      .from("assignments")
+      .select("id, student_id, subject, teacher_id, status")
+      .eq("teacher_id", resolvedTeacherId)
+      .eq("status", "active");
+
+    if (flatAs && flatAs.length > 0) {
+      const studentIds = flatAs.map((a: any) => a.student_id).filter(Boolean);
+      const { data: stList } = await adminClient
+        .from("students")
+        .select("id, full_name, class_studying, parent_name")
+        .in("id", studentIds);
+
+      const stMap = new Map((stList || []).map((s: any) => [s.id, s]));
+      assignments = flatAs.map((a: any) => ({
+        ...a,
+        student: stMap.get(a.student_id) || null,
+      }));
+    }
+  }
+
   // Get past reports
-  const { data: reports } = await supabase
-    .from("progress_reports")
-    .select(`
-      *,
-      assignment:assignments (
-        subject,
-        student:students (full_name)
-      )
-    `)
-    .in("assignment_id", assignments?.map(a => a.id) || [])
-    .order("created_at", { ascending: false });
+  const assignmentIds = assignments.map(a => a.id);
+  let reports: any[] = [];
+  if (assignmentIds.length > 0) {
+    const { data: repData } = await adminClient
+      .from("progress_reports")
+      .select(`
+        *,
+        assignment:assignments (
+          subject,
+          student:students (full_name)
+        )
+      `)
+      .in("assignment_id", assignmentIds)
+      .order("created_at", { ascending: false });
+
+    reports = repData || [];
+  }
 
   // Add new report action
   async function submitReport(formData: FormData) {
     "use server";
-    const supabase = await createClient();
+    try {
+      const adminDb = await createAdminClient();
+      const assignmentId = String(formData.get("assignment_id") || "");
+      if (!assignmentId) return;
 
-    await supabase.from("progress_reports").insert({
-      assignment_id: formData.get("assignment_id"),
-      report_month: formData.get("report_month"),
-      topics_covered: (formData.get("topics_covered") as string),
-      strengths: formData.get("strengths"),
-      areas_of_improvement: formData.get("gap_areas"),
-      teacher_remarks: formData.get("tutor_message") || "Monthly progress evaluation submitted.",
-      sent_to_parent: true,
-      sent_at: new Date().toISOString()
-    });
+      // Resolve student_id & teacher_id from assignment
+      const { data: asg } = await adminDb
+        .from("assignments")
+        .select("teacher_id, student_id")
+        .eq("id", assignmentId)
+        .maybeSingle();
 
-    revalidatePath("/teacher/dashboard/reports");
+      const reportMonth = String(formData.get("report_month") || new Date().toISOString().slice(0, 7));
+      // Format as date: YYYY-MM-01
+      const normalizedMonth = reportMonth.length === 7 ? `${reportMonth}-01` : reportMonth;
+
+      await adminDb.from("progress_reports").insert({
+        assignment_id: assignmentId,
+        teacher_id: asg?.teacher_id || resolvedTeacherId,
+        student_id: asg?.student_id,
+        report_month: normalizedMonth,
+        topics_covered: formData.get("topics_covered") as string,
+        strengths: formData.get("strengths") as string,
+        areas_of_improvement: formData.get("gap_areas") as string,
+        teacher_remarks: formData.get("tutor_message") || "Monthly progress evaluation submitted.",
+        sent_to_parent: true,
+        sent_at: new Date().toISOString(),
+      });
+
+      revalidatePath("/teacher/dashboard/reports");
+      revalidatePath("/portal/reports");
+      revalidatePath("/admin/reports");
+    } catch (err) {
+      console.error("[submitReport error]:", err);
+    }
   }
 
   return (
@@ -94,7 +153,7 @@ export default async function TeacherReportsPage() {
                   <option value="">Choose student...</option>
                   {assignments?.map((a: any) => (
                     <option key={a.id} value={a.id}>
-                      {a.student.full_name} ({a.subject})
+                      {a.student?.full_name || a.students?.full_name || 'Student'} ({a.subject || 'All Subjects'})
                     </option>
                   ))}
                 </select>
@@ -151,9 +210,11 @@ export default async function TeacherReportsPage() {
                   <div key={report.id} className="p-4 border border-[#E8E6DF] rounded-2xl bg-[#F9F8F5]/60 flex justify-between items-center hover:bg-white transition-colors">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-bold text-[#0B192C] text-sm">{report.assignment?.student?.full_name}</p>
+                        <p className="font-bold text-[#0B192C] text-sm">
+                          {report.assignment?.student?.full_name || report.student?.full_name || "Enrolled Student"}
+                        </p>
                         <span className="text-[10px] font-bold text-[#1E3E62] uppercase tracking-wider bg-white border border-[#E8E6DF] px-2 py-0.5 rounded-md">
-                          {report.assignment?.subject}
+                          {report.assignment?.subject || "General"}
                         </span>
                       </div>
                       <p className="text-xs text-[#5A6578]">

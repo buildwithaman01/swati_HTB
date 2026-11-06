@@ -20,7 +20,8 @@ export default async function ParentSessions() {
 
   if (!student) redirect("/portal/login");
 
-  const { data: sessions } = await adminClient
+  let sessions: any[] = [];
+  const { data: sessData, error: sessErr } = await adminClient
     .from("sessions")
     .select(`
       *,
@@ -28,6 +29,31 @@ export default async function ParentSessions() {
     `)
     .eq("student_id", student.id)
     .order("session_date", { ascending: false });
+
+  if (!sessErr && sessData) {
+    sessions = sessData;
+  } else {
+    // Resilient flat query fallback
+    const { data: flatSess } = await adminClient
+      .from("sessions")
+      .select("*")
+      .eq("student_id", student.id)
+      .order("session_date", { ascending: false });
+
+    if (flatSess && flatSess.length > 0) {
+      const teacherIds = flatSess.map((s: any) => s.teacher_id).filter(Boolean);
+      const { data: tList } = await adminClient
+        .from("teachers")
+        .select("id, full_name, phone, whatsapp")
+        .in("id", teacherIds);
+
+      const tMap = new Map((tList || []).map((t: any) => [t.id, t]));
+      sessions = flatSess.map((s: any) => ({
+        ...s,
+        teacher: tMap.get(s.teacher_id) || null,
+      }));
+    }
+  }
 
   const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
     completed: { label: "Completed", color: "bg-emerald-100 text-emerald-700", icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
@@ -108,17 +134,20 @@ export default async function ParentSessions() {
                         <span className="font-semibold text-neutral-900">📚 Topics Covered:</span> {session.topics_covered}
                       </p>
                     )}
-                    {session.homework_given && (
+                    {(session.homework_assigned || session.homework_given) && (
                       <p className="text-xs text-neutral-600">
-                        <span className="font-semibold text-neutral-800">📝 Homework Assigned:</span> {session.homework_given}
+                        <span className="font-semibold text-neutral-800">📝 Homework Assigned:</span> {session.homework_assigned || session.homework_given}
                       </p>
                     )}
                   </div>
 
                   <div className="text-xs text-neutral-500 sm:text-right shrink-0 bg-neutral-50 px-3 py-2 rounded-xl border border-neutral-100">
-                    <p className="font-semibold text-neutral-700">{session.duration_mins} Minutes</p>
-                    {session.session_start && (
-                      <p className="text-[11px] text-neutral-400 mt-0.5">{session.session_start} – {session.session_end}</p>
+                    <p className="font-semibold text-neutral-700">{session.duration_mins || 60} Minutes</p>
+                    {(session.start_time || session.session_start) && (
+                      <p className="text-[11px] text-neutral-400 mt-0.5">
+                        {(session.start_time || session.session_start).slice(0, 5)}
+                        {session.session_end ? ` – ${session.session_end.slice(0, 5)}` : ""}
+                      </p>
                     )}
                   </div>
                 </div>

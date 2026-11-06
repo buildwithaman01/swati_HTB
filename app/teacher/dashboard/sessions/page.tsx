@@ -17,26 +17,85 @@ export default async function SessionsPage() {
 
   const adminClient = await createAdminClient();
 
-  // Get assignments with student details
-  const { data: assignments } = await adminClient
+  // Get assignments with student details (with flat fallback)
+  let assignments: any[] = [];
+  const { data: asData, error: asErr } = await adminClient
     .from("assignments")
     .select(`
       id, student_id, subject,
-      students:student_id ( id, full_name, parent_name, parent_phone, whatsapp )
+      student:students ( id, full_name, parent_name, parent_phone, whatsapp )
     `)
     .eq("teacher_id", resolvedTeacherId)
     .eq("status", "active");
 
-  // Get recent sessions
-  const { data: recentSessions } = await adminClient
+  if (!asErr && asData && asData.length > 0) {
+    assignments = asData.map((a: any) => ({
+      ...a,
+      students: a.student || a.students,
+    }));
+  } else {
+    // Resilient fallback flat query
+    const { data: flatAs } = await adminClient
+      .from("assignments")
+      .select("id, student_id, subject, teacher_id, status")
+      .eq("teacher_id", resolvedTeacherId)
+      .eq("status", "active");
+
+    if (flatAs && flatAs.length > 0) {
+      const studentIds = flatAs.map((a: any) => a.student_id).filter(Boolean);
+      const { data: stList } = await adminClient
+        .from("students")
+        .select("id, full_name, parent_name, parent_phone, whatsapp")
+        .in("id", studentIds);
+
+      const stMap = new Map((stList || []).map((s: any) => [s.id, s]));
+      assignments = flatAs.map((a: any) => ({
+        ...a,
+        students: stMap.get(a.student_id) || null,
+      }));
+    }
+  }
+
+  // Get recent sessions (with flat fallback)
+  let recentSessions: any[] = [];
+  const { data: sessData, error: sessErr } = await adminClient
     .from("sessions")
     .select(`
       *,
-      students:student_id ( id, full_name, parent_name, parent_phone, whatsapp )
+      student:students ( id, full_name, parent_name, parent_phone, whatsapp )
     `)
     .eq("teacher_id", resolvedTeacherId)
     .order("session_date", { ascending: false })
-    .limit(20);
+    .limit(30);
+
+  if (!sessErr && sessData && sessData.length > 0) {
+    recentSessions = sessData.map((s: any) => ({
+      ...s,
+      students: s.student || s.students,
+    }));
+  } else {
+    // Resilient fallback flat query
+    const { data: flatSess } = await adminClient
+      .from("sessions")
+      .select("*")
+      .eq("teacher_id", resolvedTeacherId)
+      .order("session_date", { ascending: false })
+      .limit(30);
+
+    if (flatSess && flatSess.length > 0) {
+      const studentIds = flatSess.map((s: any) => s.student_id).filter(Boolean);
+      const { data: stList } = await adminClient
+        .from("students")
+        .select("id, full_name, parent_name, parent_phone, whatsapp")
+        .in("id", studentIds);
+
+      const stMap = new Map((stList || []).map((s: any) => [s.id, s]));
+      recentSessions = flatSess.map((s: any) => ({
+        ...s,
+        students: stMap.get(s.student_id) || null,
+      }));
+    }
+  }
 
   // Calculate monthly stats
   const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
@@ -48,45 +107,89 @@ export default async function SessionsPage() {
   // Server Action
   async function logSession(formData: FormData) {
     "use server";
-    const adminDb = await createAdminClient();
-    const assignmentStr = String(formData.get("assignment_id"));
-    const [assignment_id, student_id] = assignmentStr.split("|");
-
-    const session_date = String(formData.get("session_date"));
-    const session_start = String(formData.get("session_start"));
-    const session_end = String(formData.get("session_end"));
-    const topics_covered = String(formData.get("topics_covered"));
-    const homework_given = String(formData.get("homework_given"));
-    const teacher_notes = String(formData.get("teacher_notes"));
-
-    // Calculate duration
-    let duration_mins = 60;
     try {
-      const start = new Date(`1970-01-01T${session_start}:00`);
-      const end = new Date(`1970-01-01T${session_end}:00`);
-      const diff = (end.getTime() - start.getTime()) / 60000;
-      if (diff > 0) duration_mins = diff;
-    } catch {
-      duration_mins = 60;
+      const adminDb = await createAdminClient();
+      const assignmentStr = String(formData.get("assignment_id") || "");
+      const [assignment_id, form_student_id] = assignmentStr.split("|");
+
+      if (!assignment_id) {
+        return;
+      }
+
+      // Ensure student_id is verified from assignment if missing
+      let finalStudentId = form_student_id;
+      if (!finalStudentId) {
+        const { data: asg } = await adminDb
+          .from("assignments")
+          .select("student_id")
+          .eq("id", assignment_id)
+          .maybeSingle();
+        finalStudentId = asg?.student_id;
+      }
+
+      const session_date = String(formData.get("session_date") || new Date().toISOString().split("T")[0]);
+      const session_start = String(formData.get("session_start") || "16:00");
+      const session_end = String(formData.get("session_end") || "17:00");
+      const topics_covered = String(formData.get("topics_covered") || "").trim();
+      const homework_given = String(formData.get("homework_given") || "").trim();
+      const teacher_notes = String(formData.get("teacher_notes") || "").trim();
+
+      // Calculate duration
+      let duration_mins = 60;
+      try {
+        const start = new Date(`1970-01-01T${session_start}:00`);
+        const end = new Date(`1970-01-01T${session_end}:00`);
+        const diff = (end.getTime() - start.getTime()) / 60000;
+        if (diff > 0) duration_mins = Math.round(diff);
+      } catch {
+        duration_mins = 60;
+      }
+
+      // 1. Primary insert using canonical Supabase schema columns
+      const canonicalPayload: any = {
+        assignment_id,
+        student_id: finalStudentId,
+        teacher_id: resolvedTeacherId,
+        session_date,
+        start_time: session_start,
+        duration_mins,
+        topics_covered,
+        homework_assigned: homework_given || null,
+        notes: teacher_notes || null,
+        student_attendance: "present",
+        status: "completed",
+      };
+
+      const { error: insertErr } = await adminDb.from("sessions").insert(canonicalPayload);
+
+      // 2. If canonical columns fail (e.g. database has custom session_start/homework_given columns)
+      if (insertErr) {
+        console.error("[logSession] Primary canonical insert failed, trying compatibility insert:", insertErr);
+        const compatPayload: any = {
+          assignment_id,
+          student_id: finalStudentId,
+          teacher_id: resolvedTeacherId,
+          session_date,
+          session_start,
+          session_end,
+          duration_mins,
+          topics_covered,
+          homework_given: homework_given || null,
+          teacher_notes: teacher_notes || null,
+          status: "completed",
+        };
+        const { error: compatErr } = await adminDb.from("sessions").insert(compatPayload);
+        if (compatErr) {
+          console.error("[logSession] Compatibility insert also failed:", compatErr);
+        }
+      }
+
+      revalidatePath("/teacher/dashboard/sessions");
+      revalidatePath("/portal/sessions");
+      revalidatePath("/admin/sessions");
+    } catch (err) {
+      console.error("[logSession] Unexpected error during session recording:", err);
     }
-
-    await adminDb.from("sessions").insert({
-      assignment_id,
-      student_id,
-      teacher_id: resolvedTeacherId,
-      session_date,
-      session_start,
-      session_end,
-      duration_mins,
-      topics_covered,
-      homework_given,
-      teacher_notes,
-      status: "completed"
-    });
-
-    revalidatePath("/teacher/dashboard/sessions");
-    revalidatePath("/portal/sessions");
-    revalidatePath("/admin/sessions");
   }
 
   return (
@@ -146,7 +249,7 @@ export default async function SessionsPage() {
                   <option value="">Select Student...</option>
                   {assignments?.map((a: any) => (
                     <option key={a.id} value={`${a.id}|${a.student_id}`}>
-                      {a.students?.full_name} ({a.subject || 'All Subjects'})
+                      {a.students?.full_name || a.student?.full_name || 'Student'} ({a.subject || 'All Subjects'})
                     </option>
                   ))}
                 </select>
@@ -207,20 +310,26 @@ export default async function SessionsPage() {
             ) : (
               <div className="space-y-4">
                 {recentSessions.map((session: any) => {
-                  const student = session.students;
+                  const student = session.students || session.student;
+                  const startTime = session.start_time || session.session_start || "16:00";
+                  const endTime = session.session_end || "";
+                  const homework = session.homework_assigned || session.homework_given;
+                  const notes = session.notes || session.teacher_notes;
+                  const timeFormatted = startTime ? (endTime ? `${startTime.slice(0, 5)} - ${endTime.slice(0, 5)}` : startTime.slice(0, 5)) : "16:00";
+
                   const parentPhone = (student?.whatsapp || student?.parent_phone || "").replace(/[^\d]/g, "");
                   const rawWa = parentPhone.startsWith("91") ? parentPhone : `91${parentPhone}`;
-                  const waText = `*Swati Home Tuition Bureau — Class Update*\n\nDear Parent,\nClass completed for *${student?.full_name || 'Student'}*.\n\n📅 *Date:* ${new Date(session.session_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}\n⏱️ *Duration:* ${session.duration_mins} mins (${session.session_start || ''} - ${session.session_end || ''})\n📚 *Topics Covered:* ${session.topics_covered}${session.homework_given ? `\n📝 *Homework:* ${session.homework_given}` : ''}\n\n— *Swati Home Tuition Bureau*`;
+                  const waText = `*Swati Home Tuition Bureau — Class Update*\n\nDear Parent,\nClass completed for *${student?.full_name || 'Student'}*.\n\n📅 *Date:* ${new Date(session.session_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}\n⏱️ *Duration:* ${session.duration_mins || 60} mins (${timeFormatted})\n📚 *Topics Covered:* ${session.topics_covered}${homework ? `\n📝 *Homework:* ${homework}` : ''}\n\n— *Swati Home Tuition Bureau*`;
                   const waUrl = parentPhone ? `https://wa.me/${rawWa}?text=${encodeURIComponent(waText)}` : null;
 
                   return (
                     <div key={session.id} className="p-4 border border-[#E8E6DF] rounded-2xl bg-[#F9F8F5]/60 hover:bg-white transition-colors">
                       <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
                         <div>
-                          <h3 className="font-bold font-serif text-[#0B192C] text-base">{student?.full_name}</h3>
+                          <h3 className="font-bold font-serif text-[#0B192C] text-base">{student?.full_name || "Enrolled Student"}</h3>
                           <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-[#5A6578]">
                             <span className="flex items-center gap-1"><CalendarIcon className="w-3.5 h-3.5 text-[#E5A93C]" /> {new Date(session.session_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}</span>
-                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#5A6578]" /> {session.session_start?.slice(0, 5)} - {session.session_end?.slice(0, 5)} ({session.duration_mins}m)</span>
+                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#5A6578]" /> {timeFormatted} ({session.duration_mins || 60}m)</span>
                           </div>
                         </div>
 
@@ -244,11 +353,11 @@ export default async function SessionsPage() {
 
                       <div className="mt-3 text-xs space-y-1 bg-white p-3 rounded-xl border border-[#E8E6DF]">
                         <p><span className="font-bold text-[#0B192C]">Topics:</span> {session.topics_covered}</p>
-                        {session.homework_given && (
-                          <p className="text-[#5A6578]"><span className="font-semibold text-[#0B192C]">Homework:</span> {session.homework_given}</p>
+                        {homework && (
+                          <p className="text-[#5A6578]"><span className="font-semibold text-[#0B192C]">Homework:</span> {homework}</p>
                         )}
-                        {session.teacher_notes && (
-                          <p className="text-[#5A6578] italic">Notes: {session.teacher_notes}</p>
+                        {notes && (
+                          <p className="text-[#5A6578] italic">Notes: {notes}</p>
                         )}
                       </div>
                     </div>
