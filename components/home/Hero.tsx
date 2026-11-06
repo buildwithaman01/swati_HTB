@@ -202,14 +202,14 @@ export default function Hero() {
           `Please send matching teacher profiles for a free trial class at our home.`
         );
 
-        const targetUrl = `https://wa.me/919229738307?text=${waText}`;
+        const targetUrl = CANONICAL_LINKS.whatsappWithText(decodeURIComponent(waText));
 
         setTimeout(() => {
           window.open(targetUrl, "_blank");
         }, 1200);
       } else {
         toast.error("Could not register request", {
-          description: "Please WhatsApp our counselor directly at +91 92297 38307",
+          description: `Please WhatsApp our counselor directly at ${CANONICAL_LINKS.displayPhone}`,
         });
       }
     } catch (err) {
@@ -599,7 +599,7 @@ export default function Hero() {
                         </p>
                         <div className="pt-2">
                           <a
-                            href={`https://wa.me/919229738307?text=${encodeURIComponent(`Hello Swati HTB, I just submitted tuition requirements for ${effectiveLocality}. Please send available teacher profiles.`)}`}
+                            href={CANONICAL_LINKS.whatsappWithText(`Hello Swati HTB, I just submitted tuition requirements for ${effectiveLocality}. Please send available teacher profiles.`)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 bg-[#25D366] text-white text-xs font-bold px-4 py-2 rounded-xl shadow-sm hover:bg-[#20BD5A] transition-all"

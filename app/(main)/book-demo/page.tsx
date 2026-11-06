@@ -21,6 +21,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { SubmissionSuccessSocialCard } from "@/components/promotions/PromotionBanners";
+import { CANONICAL_LINKS, BUREAU_INFO } from "@/lib/constants";
 
 const PATNA_LOCALITY_OPTIONS = [
   "Boring Road",
@@ -354,8 +355,8 @@ function BookDemoContent() {
                     <Phone className="w-4 h-4 text-[#E5A93C] shrink-0 mt-1" />
                     <div>
                       <p className="text-xs text-white/50 uppercase font-semibold">Call or WhatsApp</p>
-                      <a href="tel:+919229738307" className="font-bold text-white hover:text-[#E5A93C] transition-colors">
-                        +91 92297 38307
+                      <a href={`tel:${CANONICAL_LINKS.phone}`} className="font-bold text-white hover:text-[#E5A93C] transition-colors">
+                        {CANONICAL_LINKS.displayPhone}
                       </a>
                     </div>
                   </div>
@@ -394,7 +395,7 @@ function BookDemoContent() {
                 {/* Instant WhatsApp Button */}
                 <div className="mt-6 pt-4 border-t border-white/10">
                   <a
-                    href="https://wa.me/919229738307?text=Hello%20Swati%20HTB,%20I%20would%20like%20to%20book%20a%20free%20demo%20class%20for%20my%20child."
+                    href={CANONICAL_LINKS.whatsappWithText("Hello Swati HTB, I would like to book a free demo class for my child.")}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center w-full gap-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold text-sm py-3.5 px-5 rounded-xl shadow-md transition-all active:scale-[0.99]"
@@ -452,7 +453,7 @@ function BookDemoContent() {
                       Connect directly with our counseling team on WhatsApp to review tutor profiles right away.
                     </p>
                     <a
-                      href={whatsappUrl || "https://wa.me/919229738307"}
+                      href={whatsappUrl || CANONICAL_LINKS.whatsappWithText("Hello Swati HTB, I would like to confirm my free demo slot.")}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center justify-center w-full gap-2.5 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold text-sm sm:text-base py-4 px-6 rounded-xl shadow-[0_4px_16px_rgba(37,211,102,0.25)] transition-all group"
