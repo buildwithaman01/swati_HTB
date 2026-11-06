@@ -76,7 +76,7 @@ export default async function TeacherStudentsPage() {
         <ShieldAlert className="w-5 h-5 text-blue-700 shrink-0 mt-0.5" />
         <div className="text-xs text-blue-900 leading-relaxed">
           <p className="font-bold text-sm text-blue-950 mb-0.5">Bureau Communication Policy</p>
-          To maintain transparency and safeguarding, all scheduling changes, fee queries, and parent introductions must be coordinated through the bureau support desk at <strong>+91 75490 97748</strong>.
+          To maintain transparency and safeguarding, all scheduling changes, fee queries, and parent introductions must be coordinated through the bureau support desk at <strong>+91 92297 38307</strong>.
         </div>
       </div>
 

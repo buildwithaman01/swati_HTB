@@ -759,7 +759,7 @@ export default function TeacherProfileEditor({ teacher }: Props) {
 
           {/* Bureau Helpline Quick Note */}
           <div className="p-3 bg-[#F9F8F5] rounded-xl border border-[#E8E6DF] text-[11px] text-[#5A6578] flex items-center justify-between gap-2">
-            <span>Official Bureau Desk: <strong className="text-[#0B192C]">+91 75490 97748</strong></span>
+            <span>Official Bureau Desk: <strong className="text-[#0B192C]">{CANONICAL_LINKS.displayPhone}</strong></span>
             <span className="text-emerald-700 font-semibold">support@swatihometuition.in</span>
           </div>
         </div>

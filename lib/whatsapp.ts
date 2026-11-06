@@ -13,8 +13,8 @@
  * 4. Tuition assignment notifications & review requests
  */
 
-export const CANONICAL_SUPPORT_PHONE = "917549097748";
-export const CANONICAL_SUPPORT_PHONE_DISPLAY = "+91 75490 97748";
+export const CANONICAL_SUPPORT_PHONE = "919229738307";
+export const CANONICAL_SUPPORT_PHONE_DISPLAY = "+91 92297 38307";
 export const BACKUP_SUPPORT_PHONE = "919229738307";
 export const BACKUP_SUPPORT_PHONE_DISPLAY = "+91 92297 38307";
 export const CANONICAL_SITE_URL = "https://swatihometuition.in";
