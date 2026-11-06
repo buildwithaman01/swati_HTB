@@ -14,7 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { GoogleGIcon, InstagramIcon, FacebookIcon } from "@/components/shared/SocialIcons";
-import { CANONICAL_LINKS } from "@/lib/constants";
+import { CANONICAL_LINKS, BUREAU_INFO } from "@/lib/constants";
 import Link from "next/link";
 import QRCode from "qrcode";
 import IDCardDownloader from "./IDCardDownloader";
@@ -303,7 +303,7 @@ export default async function TeacherIDCardPage() {
                     GBP Verified · 4.9★
                   </span>
                   <span className="inline-flex items-center gap-1 font-mono text-white/95">
-                    IG: @swati_home_tuition
+                    IG: {BUREAU_INFO.instagramHandle}
                   </span>
                 </div>
                 <p className="text-[7px] tracking-wide text-neutral-300 font-medium">
@@ -464,7 +464,7 @@ export default async function TeacherIDCardPage() {
                   <InstagramIcon className="w-3.5 h-3.5 text-pink-600" />
                   Instagram
                 </div>
-                <p className="font-bold text-[#0B192C] mt-1 font-mono group-hover:text-pink-700">@swati_home_tuition</p>
+                <p className="font-bold text-[#0B192C] mt-1 font-mono group-hover:text-pink-700">{BUREAU_INFO.instagramHandle}</p>
               </a>
 
               <a

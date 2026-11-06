@@ -30,6 +30,7 @@ import {
   PhoneCall,
 } from "lucide-react";
 import Link from "next/link";
+import { CANONICAL_LINKS } from "@/lib/constants";
 
 interface Props {
   teacher: any;
@@ -1124,7 +1125,7 @@ export default function TeacherProfileEditor({ teacher }: Props) {
               </div>
             </div>
             <a
-              href="https://share.google/tarSWReEvLi7cim5V"
+              href={CANONICAL_LINKS.googleReviews}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#0B192C] hover:bg-[#1E3E62] text-white px-4 py-2 rounded-xl transition-colors shrink-0 shadow-xs"

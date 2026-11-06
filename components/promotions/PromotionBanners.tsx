@@ -461,7 +461,7 @@ export function ParentPortalSidebarPromo() {
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#5A6578] hover:text-pink-600 transition-colors p-1"
-          title="Instagram @swati_home_tuition"
+          title={`Instagram ${BUREAU_INFO.instagramHandle}`}
           aria-label="Instagram"
         >
           <InstagramIcon className="w-4 h-4" />

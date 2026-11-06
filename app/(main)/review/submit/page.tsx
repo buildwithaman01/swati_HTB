@@ -41,7 +41,7 @@ interface StudentData {
   locality?: string | null;
 }
 
-const GOOGLE_REVIEW_URL = CANONICAL_LINKS.googleReviews || "https://share.google/tarSWReEvLi7cim5V";
+const GOOGLE_REVIEW_URL = CANONICAL_LINKS.googleReviews;
 const SUPPORT_WHATSAPP_URL = formatSupportWhatsAppUrl("Hello Swati HTB Team, I have a question regarding my tutor review.");
 
 export default function SubmitReviewPage() {

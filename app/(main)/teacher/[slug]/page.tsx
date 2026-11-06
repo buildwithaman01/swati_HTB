@@ -172,7 +172,7 @@ export default async function TeacherProfilePage({ params }: { params: Promise<{
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
             <a
-              href="https://share.google/tarSWReEvLi7cim5V"
+              href={CANONICAL_LINKS.googleReviews}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 p-3 rounded-2xl border border-[#E8E6DF] bg-[#F9F8F5] hover:bg-amber-50/50 hover:border-amber-300 transition-colors group"

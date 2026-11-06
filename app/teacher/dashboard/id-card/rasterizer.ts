@@ -456,7 +456,7 @@ export async function drawBadgeCanvasFallback(data: BadgeDrawData): Promise<stri
   ctx.textAlign = "right";
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "bold 13px monospace";
-  ctx.fillText("IG: @swati_home_tuition", width - 24, footerY + 28);
+  ctx.fillText("IG: @swati.htb", width - 24, footerY + 28);
 
   // Verification Prompt Text
   ctx.fillStyle = "#D1D5DB";
