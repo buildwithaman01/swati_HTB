@@ -197,6 +197,7 @@ export default async function AdminAssignments() {
                           teacherId={(a.teacher as any)?.id}
                           studentId={(a.student as any)?.id}
                           teacherName={(a.teacher as any)?.full_name}
+                          studentName={(a.student as any)?.full_name}
                           parentName={(a.student as any)?.parent_name}
                           teacherPhone={(a.teacher as any)?.whatsapp || (a.teacher as any)?.phone}
                           parentPhone={(a.student as any)?.whatsapp || (a.student as any)?.parent_phone}

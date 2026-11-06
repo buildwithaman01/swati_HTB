@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Phone, Mail, MapPin, MessageCircle, ShieldCheck, GraduationCap, Users, Clock, Lock } from "lucide-react";
 import Image from "next/image";
+import { CANONICAL_LINKS, BUREAU_INFO } from "@/lib/constants";
+import { GoogleGIcon, InstagramIcon, FacebookIcon } from "@/components/shared/SocialIcons";
 
 export default function Footer() {
   return (
@@ -37,9 +39,9 @@ export default function Footer() {
               Helping Patna parents connect with verified, qualified home tutors for over 6 years. We provide personalized teaching for CBSE, ICSE &amp; Bihar Board students, complete with monthly test tracking and a 48-hour replacement guarantee.
             </p>
 
-            <div className="flex flex-wrap gap-2.5 mb-6">
+            <div className="flex flex-wrap gap-2.5 mb-5">
               <a
-                href="https://wa.me/919229738307?text=Hi%2C%20I%20am%20looking%20for%20a%20home%20tutor%20in%20Patna"
+                href={CANONICAL_LINKS.whatsappWithText("Hi, I am looking for a home tutor in Patna")}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#25D366]/15 hover:bg-[#25D366] text-[#25D366] hover:text-white border border-[#25D366]/30 px-3.5 py-2 rounded-lg transition-all"
@@ -47,10 +49,44 @@ export default function Footer() {
                 <MessageCircle className="w-4 h-4" /> Message on WhatsApp
               </a>
               <a
-                href="tel:+919229738307"
+                href={`tel:${CANONICAL_LINKS.phone}`}
                 className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/15 px-3.5 py-2 rounded-lg transition-all"
               >
                 <Phone className="w-3.5 h-3.5 text-[#E5A93C]" /> Call 92297 38307
+              </a>
+            </div>
+
+            {/* Social & Google Reviews Badges */}
+            <div className="flex flex-wrap items-center gap-2 mb-6">
+              <a
+                href={CANONICAL_LINKS.googleReviews}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-[#E5A93C] border border-[#E5A93C]/40 px-3 py-1.5 rounded-lg transition-all"
+                title="Rate Swati HTB on Google"
+              >
+                <GoogleGIcon className="w-3.5 h-3.5" />
+                <span>4.9★ Google Reviews</span>
+              </a>
+              <a
+                href={CANONICAL_LINKS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-pink-600/30 text-white hover:text-pink-300 border border-white/15 px-3 py-1.5 rounded-lg transition-all"
+                title="Follow on Instagram @swati.htb"
+              >
+                <InstagramIcon className="w-3.5 h-3.5" />
+                <span>@swati.htb</span>
+              </a>
+              <a
+                href={CANONICAL_LINKS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-blue-600/30 text-white hover:text-blue-300 border border-white/15 px-3 py-1.5 rounded-lg transition-all"
+                title="Follow on Facebook"
+              >
+                <FacebookIcon className="w-3.5 h-3.5" />
+                <span>Facebook</span>
               </a>
             </div>
 
@@ -221,7 +257,37 @@ export default function Footer() {
             </p>
           </div>
           
-          <div className="flex flex-wrap items-center justify-center gap-5 text-white/60">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-white/60">
+            <a
+              href={CANONICAL_LINKS.googleReviews}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-[#E5A93C] transition-colors inline-flex items-center gap-1"
+            >
+              <GoogleGIcon className="w-3 h-3" />
+              <span>Google Reviews (4.9★)</span>
+            </a>
+            <span>•</span>
+            <a
+              href={CANONICAL_LINKS.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-pink-400 transition-colors inline-flex items-center gap-1"
+            >
+              <InstagramIcon className="w-3 h-3" />
+              <span>Instagram</span>
+            </a>
+            <span>•</span>
+            <a
+              href={CANONICAL_LINKS.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-blue-400 transition-colors inline-flex items-center gap-1"
+            >
+              <FacebookIcon className="w-3 h-3" />
+              <span>Facebook</span>
+            </a>
+            <span>•</span>
             <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
             <span>•</span>
             <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>

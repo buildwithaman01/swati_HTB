@@ -17,6 +17,7 @@ import {
   GraduationCap,
   Sparkles,
 } from "lucide-react";
+import { formatWhatsAppUrl, CANONICAL_SUPPORT_PHONE, CANONICAL_SUPPORT_PHONE_DISPLAY } from "@/lib/whatsapp";
 
 export interface StudentInfo {
   id: string;
@@ -191,7 +192,7 @@ export default function TeacherStudentsView({ assignments }: Props) {
           {activeTab === "active" && !searchQuery && (
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <a
-                href="https://wa.me/917549097748?text=Hello%20Swati%20Home%20Tuition,%20I%20am%20available%20for%20new%20home%20tuition%20assignments%20in%20Patna."
+                href={formatWhatsAppUrl(CANONICAL_SUPPORT_PHONE, "Hello Swati Home Tuition, I am available for new home tuition assignments in Patna.")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#0B192C] hover:bg-[#1E3E62] text-white px-4 py-2.5 rounded-xl transition-all shadow-xs"
@@ -334,13 +335,13 @@ export default function TeacherStudentsView({ assignments }: Props) {
                           {student?.parent_name || "Parent"}
                         </p>
                         <a
-                          href="https://wa.me/917549097748"
+                          href={formatWhatsAppUrl(CANONICAL_SUPPORT_PHONE, `Hello Swati Home Tuition Bureau, I would like to coordinate regarding student ${student?.full_name || "Parent"}.`)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 px-2.5 py-1 rounded-full mt-1.5 font-bold transition-colors"
                         >
                           <Phone className="w-3 h-3 text-emerald-700" />
-                          Coordinate via Bureau Desk (+91 75490 97748)
+                          Coordinate via Bureau Desk ({CANONICAL_SUPPORT_PHONE_DISPLAY})
                         </a>
                       </div>
                     </div>

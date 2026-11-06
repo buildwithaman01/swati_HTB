@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
       full_name,
       whatsapp,
       phone,
+      alt_phone,
+      email,
       gender,
       qualification,
       institution,
@@ -41,6 +43,9 @@ export async function POST(req: NextRequest) {
       graduation_year,
       linkedin_url,
       demo_video_url,
+      instagram_url,
+      portfolio_url,
+      facebook_url,
     } = body;
 
     const subjectsArr = Array.isArray(subjects)
@@ -63,6 +68,10 @@ export async function POST(req: NextRequest) {
       graduation_year: graduation_year || "",
       linkedin_url: linkedin_url || "",
       demo_video_url: demo_video_url || "",
+      instagram_url: instagram_url || "",
+      portfolio_url: portfolio_url || "",
+      facebook_url: facebook_url || "",
+      alt_phone: alt_phone || "",
     };
 
     const { data: existingT } = await adminDb.from("teachers").select("internal_notes").eq("id", teacherId).single();
@@ -76,6 +85,7 @@ export async function POST(req: NextRequest) {
     if (full_name) updatePayload.full_name = full_name;
     if (whatsapp !== undefined) updatePayload.whatsapp = whatsapp;
     if (phone !== undefined) updatePayload.phone = phone;
+    if (email !== undefined && email.trim() !== "") updatePayload.email = email.trim();
     if (gender !== undefined) updatePayload.gender = gender;
     if (qualification !== undefined) updatePayload.qualification = qualification;
     if (institution !== undefined) updatePayload.institution = institution;

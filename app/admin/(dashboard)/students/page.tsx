@@ -2,6 +2,7 @@ import { createAdminClient } from "@/utils/supabase/server";
 import { Search, Plus, Filter, AlertCircle, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import StudentRowActions from "./StudentRowActions";
+import { formatWhatsAppUrl } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -139,9 +140,12 @@ export default async function AdminStudents({
                         <p className="text-sm font-semibold text-[#0B192C]">{s.parent_name || s.full_name || "Parent"}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <span className="text-xs text-[#5A6578]">{s.parent_phone || "No phone"}</span>
-                          {phoneClean && (
+                          {(s.whatsapp || s.parent_phone) && (
                             <a
-                              href={`https://wa.me/${phoneClean.startsWith("91") ? phoneClean : `91${phoneClean}`}?text=${encodeURIComponent(`Hello ${s.parent_name || ""}, I am contacting you from Swati Home Tuition Bureau regarding your enquiry for ${formattedClass}.`)}`}
+                              href={formatWhatsAppUrl(
+                                s.whatsapp || s.parent_phone,
+                                `Hello ${s.parent_name || ""}, I am contacting you from Swati Home Tuition Bureau regarding your enquiry for ${formattedClass}.`
+                              )}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-[#25D366] hover:text-[#1eb856] p-0.5 inline-flex items-center"

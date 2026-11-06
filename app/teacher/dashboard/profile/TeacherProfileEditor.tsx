@@ -24,6 +24,10 @@ import {
   Eye,
   Link as LinkIcon,
   HelpCircle,
+  Mail,
+  Star,
+  ExternalLink,
+  PhoneCall,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -150,6 +154,8 @@ export default function TeacherProfileEditor({ teacher }: Props) {
     gender: teacher.gender || "male",
     phone: teacher.phone || "",
     whatsapp: teacher.whatsapp || teacher.phone || "",
+    alt_phone: meta.alt_phone || "",
+    email: teacher.email || "",
     qualification: teacher.qualification || "",
     institution: teacher.institution || "",
     marks_percentage: meta.marks_percentage || "",
@@ -159,6 +165,9 @@ export default function TeacherProfileEditor({ teacher }: Props) {
     address: teacher.address || "",
     linkedin_url: meta.linkedin_url || "",
     demo_video_url: meta.demo_video_url || "",
+    instagram_url: meta.instagram_url || "",
+    portfolio_url: meta.portfolio_url || "",
+    facebook_url: meta.facebook_url || "",
   });
 
   function handleChange(
@@ -682,29 +691,75 @@ export default function TeacherProfileEditor({ teacher }: Props) {
           <div className="grid grid-cols-2 gap-3 pt-2">
             <div>
               <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide block mb-1">
-                Calling Phone *
+                Primary Phone (Calling) *
               </label>
-              <input
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-                className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none"
-              />
+              <div className="relative">
+                <Phone className="w-3.5 h-3.5 text-[#5A6578] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g. 9876543210"
+                  className="w-full text-sm border border-[#E8E6DF] rounded-xl pl-9 pr-3 py-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none"
+                />
+              </div>
             </div>
 
             <div>
               <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide block mb-1">
                 WhatsApp Number *
               </label>
+              <div className="relative">
+                <PhoneCall className="w-3.5 h-3.5 text-emerald-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  name="whatsapp"
+                  value={formData.whatsapp}
+                  onChange={handleChange}
+                  required
+                  placeholder="e.g. 9876543210"
+                  className="w-full text-sm border border-[#E8E6DF] rounded-xl pl-9 pr-3 py-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div>
+              <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide block mb-1">
+                Alternate / Emergency Phone
+              </label>
               <input
-                name="whatsapp"
-                value={formData.whatsapp}
+                name="alt_phone"
+                value={formData.alt_phone}
                 onChange={handleChange}
-                required
+                placeholder="Secondary contact number"
                 className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none"
               />
             </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide block mb-1">
+                Registered Email Address
+              </label>
+              <div className="relative">
+                <Mail className="w-3.5 h-3.5 text-[#5A6578] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="tutor@gmail.com"
+                  className="w-full text-sm border border-[#E8E6DF] rounded-xl pl-9 pr-3 py-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Bureau Helpline Quick Note */}
+          <div className="p-3 bg-[#F9F8F5] rounded-xl border border-[#E8E6DF] text-[11px] text-[#5A6578] flex items-center justify-between gap-2">
+            <span>Official Bureau Desk: <strong className="text-[#0B192C]">+91 75490 97748</strong></span>
+            <span className="text-emerald-700 font-semibold">support@swatihometuition.in</span>
           </div>
         </div>
 
@@ -972,11 +1027,14 @@ export default function TeacherProfileEditor({ teacher }: Props) {
           </div>
         </div>
 
-        {/* Section 7: External Links */}
-        <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#E8E6DF] space-y-4 md:col-span-2">
-          <h2 className="text-base font-bold text-[#0B192C] flex items-center gap-2 border-b border-[#E8E6DF] pb-3 font-serif">
-            <Globe className="w-5 h-5 text-[#E5A93C]" /> Social & Video Links (Optional)
-          </h2>
+        {/* Section 7: Social & Video Links */}
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#E8E6DF] space-y-5 md:col-span-2">
+          <div className="flex items-center justify-between border-b border-[#E8E6DF] pb-3">
+            <h2 className="text-base font-bold text-[#0B192C] flex items-center gap-2 font-serif">
+              <Globe className="w-5 h-5 text-[#E5A93C]" /> Social Presence, Video & External Profiles
+            </h2>
+            <span className="text-xs text-[#5A6578]">Optional portfolio links</span>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -995,17 +1053,84 @@ export default function TeacherProfileEditor({ teacher }: Props) {
 
             <div>
               <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide block mb-1">
-                Demo Lecture / Sample Video Link
+                Demo Lecture / Sample Video Link (YouTube or Drive)
               </label>
               <input
                 type="url"
                 name="demo_video_url"
                 value={formData.demo_video_url}
                 onChange={handleChange}
-                placeholder="YouTube or Google Drive video URL"
+                placeholder="https://youtube.com/watch?v=... or Drive link"
                 className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none"
               />
             </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide block mb-1">
+                Instagram Profile / Handle
+              </label>
+              <input
+                type="text"
+                name="instagram_url"
+                value={formData.instagram_url}
+                onChange={handleChange}
+                placeholder="https://instagram.com/yourhandle or @handle"
+                className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide block mb-1">
+                Facebook Profile / Page URL
+              </label>
+              <input
+                type="url"
+                name="facebook_url"
+                value={formData.facebook_url}
+                onChange={handleChange}
+                placeholder="https://facebook.com/yourprofile"
+                className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none"
+              />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label className="text-xs font-bold text-[#5A6578] uppercase tracking-wide block mb-1">
+                Educator Website / Research / Portfolio Link
+              </label>
+              <input
+                type="url"
+                name="portfolio_url"
+                value={formData.portfolio_url}
+                onChange={handleChange}
+                placeholder="https://yourwebsite.com or GitHub / ResearchGate"
+                className="w-full text-sm border border-[#E8E6DF] rounded-xl p-2.5 focus:ring-2 focus:ring-[#0B192C]/20 outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Teacher Google Review Callout */}
+          <div className="p-4 bg-gradient-to-r from-amber-50 to-[#F9F8F5] rounded-2xl border border-amber-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#0B192C] text-[#E5A93C] flex items-center justify-center shrink-0">
+                <Star className="w-5 h-5 fill-[#E5A93C]" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#0B192C]">
+                  Help other educators and students in Patna find Swati HTB!
+                </p>
+                <p className="text-[11px] text-[#5A6578] mt-0.5">
+                  Share your teaching experience and rate our bureau on Google Business Profile.
+                </p>
+              </div>
+            </div>
+            <a
+              href="https://share.google/tarSWReEvLi7cim5V"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#0B192C] hover:bg-[#1E3E62] text-white px-4 py-2 rounded-xl transition-colors shrink-0 shadow-xs"
+            >
+              Rate Swati HTB on Google <ExternalLink className="w-3.5 h-3.5 text-[#E5A93C]" />
+            </a>
           </div>
         </div>
       </div>

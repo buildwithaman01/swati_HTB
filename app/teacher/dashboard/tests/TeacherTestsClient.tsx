@@ -21,6 +21,7 @@ import {
   Tag,
   BookOpen,
 } from "lucide-react";
+import { formatWhatsAppUrl, PARENT_LOGIN_URL, CANONICAL_SUPPORT_PHONE_DISPLAY } from "@/lib/whatsapp";
 
 interface Assignment {
   id: string;
@@ -710,11 +711,9 @@ export default function TeacherTestsClient({
                 topics ? `📚 *Topics Covered:* ${topics}\n` : ""
               }${
                 cleanedRemarks ? `💬 *Teacher Feedback:* ${cleanedRemarks}\n` : ""
-              }\nYou can review all verified progress reports on your Parent Portal.\n\n— Swati Home Tuition Bureau, Patna`;
+              }\nYou can review all verified progress reports on your Parent Portal:\n🔗 ${PARENT_LOGIN_URL}\n\n📞 Support: ${CANONICAL_SUPPORT_PHONE_DISPLAY}\n— Swati Home Tuition Bureau, Patna`;
 
-              const waUrl = parentPhone
-                ? `https://wa.me/${parentPhone.replace(/\D/g, "")}?text=${encodeURIComponent(waMsg)}`
-                : "";
+              const waUrl = parentPhone ? formatWhatsAppUrl(parentPhone, waMsg) : "";
 
               return (
                 <div

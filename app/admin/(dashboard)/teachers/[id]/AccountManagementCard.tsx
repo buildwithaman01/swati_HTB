@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, MessageCircle, CheckCircle2, Eye, EyeOff, UserPlus, Send } from "lucide-react";
+import { formatWhatsAppUrl, TEACHER_LOGIN_URL, CANONICAL_SUPPORT_PHONE_DISPLAY } from "@/lib/whatsapp";
 
 interface Props {
   teacherId: string;
@@ -20,18 +21,17 @@ export default function AccountManagementCard({ teacherId, teacherName, teacherE
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  const loginUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/teacher/login`
-    : "https://swatihometuition.in/teacher/login";
+  const loginUrl = TEACHER_LOGIN_URL;
+  const teacherLoginId = teacherEmail || teacherPhone;
 
   // 1-click WhatsApp welcome message
-  const welcomeMessage = `🎉 *Welcome to Swati Home Tuition Bureau!*\n\nDear ${teacherName},\n\nYou have been approved as a verified teacher on our platform.\n\n*Your Login Details:*\n🔗 Portal: ${loginUrl}\n📧 Email / ID: ${teacherEmail}\n🔑 Password: ${password || "[Password you set above]"}\n\n*Your Teacher ID* will be visible on your dashboard after login.\n\nPlease login and complete your profile.\n\n📞 Any issues? Reply to this message.\n\n— Swati Home Tuition Bureau Team`;
+  const welcomeMessage = `🎉 *Welcome to Swati Home Tuition Bureau!*\n\nDear ${teacherName},\n\nYou have been approved as a verified teacher on our platform.\n\n*Your Login Details:*\n🔗 Portal: ${loginUrl}\n📧 Email / ID: ${teacherLoginId}\n🔑 Password: ${password || "[Password set by admin]"}\n\n*Your Teacher ID* will be visible on your dashboard after login.\n\n*Next Steps:*\n1. Log in to your portal: ${loginUrl}\n2. Complete your teacher profile\n3. Set your preferred localities and subjects\n\n📞 Support / Any Issues: ${CANONICAL_SUPPORT_PHONE_DISPLAY} (or reply directly to this message)\n\n— Swati Home Tuition Bureau Team`;
 
-  const whatsappUrl = `https://wa.me/${teacherPhone.replace(/\D/g, "")}?text=${encodeURIComponent(welcomeMessage)}`;
+  const whatsappUrl = formatWhatsAppUrl(teacherPhone, welcomeMessage);
 
   // 1-click WhatsApp approval notification (no password)
-  const approvalMessage = `✅ *Your application has been approved!*\n\nDear ${teacherName},\n\nWelcome to *Swati Home Tuition Bureau* — Patna's Most Trusted Tuition Service.\n\nYour profile is now active. Our team will contact you soon with student assignments.\n\n📞 Questions? Reply here.\n— Swati HTB Team`;
-  const approvalWhatsappUrl = `https://wa.me/${teacherPhone.replace(/\D/g, "")}?text=${encodeURIComponent(approvalMessage)}`;
+  const approvalMessage = `✅ *Your application has been approved!*\n\nDear ${teacherName},\n\nWelcome to *Swati Home Tuition Bureau* — Patna's Most Trusted Tuition Service.\n\nYour profile is now active. You can log in anytime:\n🔗 Portal: ${loginUrl}\n\nOur team will contact you soon with student assignments in your area.\n\n📞 Support: ${CANONICAL_SUPPORT_PHONE_DISPLAY} (or reply here)\n— Swati Home Tuition Bureau Team`;
+  const approvalWhatsappUrl = formatWhatsAppUrl(teacherPhone, approvalMessage);
 
   async function handleSetPassword() {
     if (!password || password.length < 6) {

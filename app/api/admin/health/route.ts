@@ -22,6 +22,8 @@ export async function GET() {
         students_count: 0,
         assignments_count: 0,
         assignments_query_error: null as string | null,
+        sessions_test: null as any,
+        old_students_student_id_syntax_error: null as string | null,
         students_sample_columns: [] as string[],
         teacher_lookup: null as any,
         auth_users_count: 0,

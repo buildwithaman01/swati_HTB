@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, XCircle, Shield, ExternalLink, Star } from "lucide-react";
+import { VerificationSocialTrustBadges } from "@/components/promotions/PromotionBanners";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -61,11 +62,11 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
     <main className="min-h-screen bg-[#FAF7F2] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-[#0F4C5C] text-white px-4 py-2 rounded-full text-sm font-semibold mb-3">
-            <Shield className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 bg-[#0B192C] text-white px-4 py-2 rounded-full text-sm font-semibold mb-3 border border-[#E5A93C]/40 shadow-xs">
+            <Shield className="w-4 h-4 text-[#E5A93C]" />
             Swati Safety Shield
           </div>
-          <p className="text-[#1F2937]/50 text-sm">Verifying ID: <code className="font-bold text-[#0F4C5C]">{displayId}</code></p>
+          <p className="text-[#1F2937]/50 text-sm">Verifying ID: <code className="font-bold text-[#0B192C]">{displayId}</code></p>
         </div>
 
         <div className={`rounded-3xl overflow-hidden shadow-lg border-2 ${isValid ? "border-emerald-400" : "border-red-400"}`}>
@@ -87,14 +88,14 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
           {isValid && teacher && (
             <div className="bg-white p-8 space-y-5">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-[#0F4C5C] flex items-center justify-center text-white text-2xl font-bold overflow-hidden flex-shrink-0">
+                <div className="w-16 h-16 rounded-full bg-[#0B192C] flex items-center justify-center text-white text-2xl font-bold overflow-hidden flex-shrink-0 border-2 border-[#E5A93C]">
                   {teacher.profile_photo_url
                     ? <img src={teacher.profile_photo_url} alt={teacher.full_name} className="w-full h-full object-cover" />
                     : (teacher.full_name || "T").charAt(0)}
                 </div>
                 <div>
                   <p className="font-bold text-[#1F2937] text-lg leading-tight">{teacher.full_name}</p>
-                  <p className="text-sm font-semibold text-[#0F4C5C]">{BADGE[teacher.badge_level] || "Verified"}</p>
+                  <p className="text-sm font-semibold text-[#0B192C]">{BADGE[teacher.badge_level] || "Verified"}</p>
                 </div>
               </div>
 
@@ -144,22 +145,30 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
                 )}
               </div>
 
+              {/* Official Social Trust Badges */}
+              <div className="pt-2">
+                <VerificationSocialTrustBadges />
+              </div>
+
               {teacher.profile_slug && (
                 <Link href={`/teacher/${teacher.profile_slug}`}
-                  className="flex items-center justify-center gap-2 w-full bg-[#0F4C5C] hover:bg-[#0a3844] text-white font-bold py-3 rounded-2xl transition-colors mt-6">
-                  View Full Profile <ExternalLink className="w-4 h-4" />
+                  className="flex items-center justify-center gap-2 w-full bg-[#0B192C] hover:bg-[#1E3E62] text-white font-bold py-3.5 rounded-2xl transition-colors mt-6 shadow-sm">
+                  View Full Profile <ExternalLink className="w-4 h-4 text-[#E5A93C]" />
                 </Link>
               )}
             </div>
           )}
 
           {!isValid && (
-            <div className="bg-white p-8 text-center">
-              <p className="text-sm text-[#1F2937]/60 mb-4">Contact us immediately to report an unverified person.</p>
+            <div className="bg-white p-8 text-center space-y-5">
+              <p className="text-sm text-[#1F2937]/60">Contact us immediately to report an unverified person.</p>
               <a href="https://wa.me/919229738307?text=I%20want%20to%20report%20an%20unverified%20tutor"
-                className="inline-flex items-center gap-2 bg-[#25D366] text-white font-bold px-6 py-3 rounded-2xl">
+                className="inline-flex items-center gap-2 bg-[#25D366] text-white font-bold px-6 py-3 rounded-2xl shadow-sm">
                 Report via WhatsApp
               </a>
+              <div className="pt-4 border-t border-neutral-100 text-left">
+                <VerificationSocialTrustBadges />
+              </div>
             </div>
           )}
         </div>
@@ -173,17 +182,6 @@ export default async function VerifyPage({ params }: { params: Promise<{ id: str
 }
 
 function Row({ label, value }: { label: string; value: string }) {
-  let displayBio = teacher?.bio || "";
-  if (!displayBio && teacher?.internal_notes) {
-    try {
-      const match = teacher.internal_notes.match(/<!--PROFILE_META:(.*?)-->/s);
-      if (match && match[1]) {
-        const meta = JSON.parse(match[1]);
-        displayBio = meta.bio || "";
-      }
-    } catch {}
-  }
-
   return (
     <div className="flex justify-between items-center gap-4">
       <span className="text-xs font-semibold text-[#1F2937]/40 uppercase tracking-wide">{label}</span>

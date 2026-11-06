@@ -2,6 +2,7 @@ import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supa
 import { Calendar as CalendarIcon, Clock, BookOpen, CheckCircle, Share2, Users } from "lucide-react";
 import SessionLoggerForm from "./SessionLoggerForm";
 import SessionDeleteButton from "./SessionDeleteButton";
+import { formatWhatsAppUrl, PARENT_LOGIN_URL, CANONICAL_SUPPORT_PHONE_DISPLAY } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -203,14 +204,11 @@ export default async function SessionsPage() {
               <div className="space-y-4">
                 {recentSessions.map((session: any) => {
                   const student = session.student || session.students;
-                  const parentPhone = (
+                  const parentPhone =
                     student?.parent_whatsapp ||
                     student?.whatsapp ||
                     student?.parent_phone ||
-                    ""
-                  ).replace(/[^\d]/g, "");
-
-                  const rawWa = parentPhone.startsWith("91") ? parentPhone : `91${parentPhone}`;
+                    "";
 
                   // Normalize start and end times across database column variants
                   const startTime = (session.start_time || session.session_start || "16:00").slice(0, 5);
@@ -219,9 +217,9 @@ export default async function SessionsPage() {
                   const homework = session.homework_assigned || session.homework_given || "";
                   const notes = session.notes || session.teacher_notes || "";
 
-                  const waText = `*Swati Home Tuition Bureau — Class Update*\n\nDear Parent,\nClass completed for *${student?.full_name || "Student"}*.\n\n📅 *Date:* ${new Date(session.session_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}\n⏱️ *Duration:* ${durationMins} mins (${startTime} - ${endTime})\n📚 *Topics Covered:* ${session.topics_covered}${homework ? `\n📝 *Homework:* ${homework}` : ""}\n\n— *Swati Home Tuition Bureau, Patna*`;
+                  const waText = `*Swati Home Tuition Bureau — Class Update*\n\nDear Parent,\nClass completed for *${student?.full_name || "Student"}*.\n\n📅 *Date:* ${new Date(session.session_date).toLocaleDateString("en-IN", { dateStyle: "medium" })}\n⏱️ *Duration:* ${durationMins} mins (${startTime} - ${endTime})\n📚 *Topics Covered:* ${session.topics_covered}${homework ? `\n📝 *Homework:* ${homework}` : ""}\n\nYou can review complete attendance and reports in your Parent Portal:\n🔗 ${PARENT_LOGIN_URL}\n\n📞 Support: ${CANONICAL_SUPPORT_PHONE_DISPLAY}\n— *Swati Home Tuition Bureau, Patna*`;
 
-                  const waUrl = parentPhone ? `https://wa.me/${rawWa}?text=${encodeURIComponent(waText)}` : null;
+                  const waUrl = parentPhone ? formatWhatsAppUrl(parentPhone, waText) : null;
 
                   return (
                     <div

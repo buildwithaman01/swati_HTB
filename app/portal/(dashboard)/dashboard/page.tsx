@@ -1,6 +1,8 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Calendar, IndianRupee, BookOpen, TrendingUp, CheckCircle2, AlertCircle } from "lucide-react";
+import { ParentGoogleReviewCard } from "@/components/promotions/PromotionBanners";
+import RateTutorButton from "../RateTutorButton";
 
 export default async function ParentDashboard() {
   const supabase = await createClient();
@@ -97,12 +99,23 @@ export default async function ParentDashboard() {
         </div>
       </div>
 
+      {/* Rate Us on Google & Social Promotion */}
+      <ParentGoogleReviewCard />
+
       {/* Current Teacher */}
       {assignment && teacher && (
         <div className="bg-white rounded-2xl border border-neutral-200/60 shadow-sm p-6">
-          <h2 className="text-sm font-bold text-neutral-500 uppercase tracking-wide mb-4 flex items-center gap-2">
-            <BookOpen className="w-4 h-4" /> Current Teacher
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold text-neutral-500 uppercase tracking-wide flex items-center gap-2">
+              <BookOpen className="w-4 h-4" /> Current Teacher
+            </h2>
+            <RateTutorButton
+              assignmentId={assignment.id}
+              teacherName={teacher.full_name}
+              subject={assignment.subject}
+              variant="button"
+            />
+          </div>
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-[#0F4C5C] rounded-2xl flex items-center justify-center text-white font-bold text-xl">
               {teacher.full_name?.charAt(0) || "T"}
@@ -124,6 +137,12 @@ export default async function ParentDashboard() {
               <p className="text-xs text-neutral-400">{assignment.session_time ? `at ${assignment.session_time}` : ""}</p>
             </div>
           </div>
+          <RateTutorButton
+            assignmentId={assignment.id}
+            teacherName={teacher.full_name}
+            subject={assignment.subject}
+            variant="card"
+          />
         </div>
       )}
 

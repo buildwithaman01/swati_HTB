@@ -1,6 +1,17 @@
 import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
-import { Users, IndianRupee, ShieldAlert, CheckCircle2, Clock, Calendar, GraduationCap, CreditCard, ArrowRight } from "lucide-react";
+import {
+  Users,
+  IndianRupee,
+  ShieldAlert,
+  CheckCircle2,
+  Clock,
+  Calendar,
+  GraduationCap,
+  CreditCard,
+  ArrowRight,
+} from "lucide-react";
 import Link from "next/link";
+import { TeacherGoogleReviewBanner } from "@/components/promotions/PromotionBanners";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -103,6 +114,9 @@ export default async function TeacherDashboard() {
           </Link>
         </div>
       )}
+
+      {/* Prominent Google Reviews & Social Tuition Promotion Banner */}
+      <TeacherGoogleReviewBanner />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -208,7 +222,11 @@ export default async function TeacherDashboard() {
                 {assignments?.map((asg) => (
                   <div key={asg.id} className="p-5 flex items-center justify-between hover:bg-[#F9F8F5] transition-colors">
                     <div>
-                      <h3 className="font-bold text-[#0B192C] text-sm">{asg.students?.full_name}</h3>
+                      <h3 className="font-bold text-[#0B192C] text-sm">
+                        {Array.isArray(asg.students)
+                          ? (asg.students as any)[0]?.full_name
+                          : (asg.students as any)?.full_name || "Enrolled Student"}
+                      </h3>
                       <p className="text-xs text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" /> Active Enrollment
                       </p>

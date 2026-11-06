@@ -6,6 +6,7 @@ import { ArrowLeft, User, Phone, MapPin, GraduationCap, FileText, Save, Home, Bo
 import StudentAccountManagementCard from "./StudentAccountManagementCard";
 import StudentStatusAction from "./StudentStatusAction";
 import StudentProfileForm from "./StudentProfileForm";
+import { formatWhatsAppUrl, CANONICAL_SUPPORT_PHONE_DISPLAY } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -133,7 +134,10 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
               </div>
               {(student.whatsapp || student.parent_phone) && (
                 <a
-                  href={`https://wa.me/${(student.whatsapp || student.parent_phone || "").replace(/\D/g, "")}?text=${encodeURIComponent(`Hello ${student.parent_name || ""}, I am contacting you from Swati Home Tuition Bureau regarding your enquiry for ${student.class_studying || "Home Tuition"}.`)}`}
+                  href={formatWhatsAppUrl(
+                    student.whatsapp || student.parent_phone,
+                    `Hello ${student.parent_name || ""}, I am contacting you from Swati Home Tuition Bureau regarding your enquiry for ${student.class_studying || "Home Tuition"}.`
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-2 rounded-xl bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 transition-colors shrink-0"
@@ -219,7 +223,10 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
               </h2>
               {student.parent_phone && (
                 <a
-                  href={`https://wa.me/${student.parent_phone?.replace(/\D/g, "")}?text=${encodeURIComponent(`🔔 *Fee Reminder*\n\nDear Parent/Guardian of ${student.full_name},\n\nThis is a gentle reminder regarding the pending tuition fee for the current month.\n\nPlease clear the dues at your earliest convenience to ensure uninterrupted classes.\n\nThank you,\nSwati Home Tuition Bureau`)}`}
+                  href={formatWhatsAppUrl(
+                    student.parent_phone,
+                    `🔔 *Fee Reminder*\n\nDear Parent/Guardian of ${student.full_name},\n\nThis is a gentle reminder regarding the pending tuition fee for the current month.\n\nPlease clear the dues at your earliest convenience to ensure uninterrupted classes.\n\n📞 Support: ${CANONICAL_SUPPORT_PHONE_DISPLAY}\nThank you,\nSwati Home Tuition Bureau`
+                  )}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5"

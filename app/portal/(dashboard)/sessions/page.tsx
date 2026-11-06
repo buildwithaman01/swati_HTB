@@ -1,6 +1,7 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { CheckCircle2, XCircle, Clock, Calendar, BookOpen, User, Ban } from "lucide-react";
+import RateTutorButton from "../RateTutorButton";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,14 +22,25 @@ export default async function ParentSessions() {
   if (!student) redirect("/portal/login");
 
   // Fetch all historical sessions for this student regardless of whether assignment is active or completed
-  const { data: sessions } = await adminClient
-    .from("sessions")
-    .select(`
-      *,
-      teacher:teachers(id, full_name, phone, whatsapp)
-    `)
-    .eq("student_id", student.id)
-    .order("session_date", { ascending: false });
+  const [{ data: sessions }, { data: assignments }] = await Promise.all([
+    adminClient
+      .from("sessions")
+      .select(`
+        *,
+        teacher:teachers(id, full_name, phone, whatsapp)
+      `)
+      .eq("student_id", student.id)
+      .order("session_date", { ascending: false }),
+    adminClient
+      .from("assignments")
+      .select("id, subject, status, teacher:teachers(id, full_name)")
+      .eq("student_id", student.id)
+      .order("created_at", { ascending: false })
+      .limit(1),
+  ]);
+
+  const activeAssignment = assignments?.[0];
+  const activeTeacher = (activeAssignment?.teacher as any)?.full_name || (sessions?.[0]?.teacher as any)?.full_name || "Your Home Tutor";
 
   const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
     completed: { label: "Completed", color: "bg-emerald-100 text-emerald-700", icon: <CheckCircle2 className="w-3.5 h-3.5" /> },
@@ -56,7 +68,21 @@ export default async function ParentSessions() {
             Verified study log and class topics for <span className="font-semibold text-[#0B192C]">{student.full_name}</span>.
           </p>
         </div>
+        <RateTutorButton
+          assignmentId={activeAssignment?.id}
+          teacherName={activeTeacher}
+          subject={activeAssignment?.subject}
+          variant="button"
+        />
       </div>
+
+      {/* Rate Your Tutor Banner */}
+      <RateTutorButton
+        assignmentId={activeAssignment?.id}
+        teacherName={activeTeacher}
+        subject={activeAssignment?.subject}
+        variant="banner"
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

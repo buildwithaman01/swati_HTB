@@ -2,6 +2,7 @@ import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LayoutDashboard, Calendar, FileText, IndianRupee, LogOut, GraduationCap, User } from "lucide-react";
+import { ParentPortalSidebarPromo } from "@/components/promotions/PromotionBanners";
 
 export default async function ParentPortalLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -95,6 +96,7 @@ export default async function ParentPortalLayout({ children }: { children: React
                 </Link>
               ))}
             </nav>
+            <ParentPortalSidebarPromo />
           </aside>
 
           {/* Main Content */}
