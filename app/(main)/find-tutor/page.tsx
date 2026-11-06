@@ -49,16 +49,68 @@ const POPULAR_LOCALITIES = [
 
 function FindTutorFormContent() {
   const searchParams = useSearchParams();
-  const initialLocality = searchParams.get("locality") || "";
-  const initialClass = searchParams.get("classGroup") || "";
+  const rawLocality = searchParams.get("locality") || "";
+  const rawClass = searchParams.get("classGroup") || searchParams.get("class") || "";
+  const rawSubjects = searchParams.get("subjects") || "";
+  const rawPreference = searchParams.get("preference") || "";
+
+  // Normalize initial class
+  const normalizeClass = (val: string) => {
+    if (!val) return "";
+    if (val.includes("9-10")) return "Class 9-10 (CBSE/ICSE/BSEB)";
+    if (val.includes("1-5") || val.includes("1-8")) return "Class 1-5 (Primary Foundation)";
+    if (val.includes("6-8")) return "Class 6-8 (Middle School)";
+    if (val.includes("11-12") && val.toLowerCase().includes("commerce")) return "Class 11-12 Commerce";
+    if (val.includes("11-12")) return "Class 11-12 Science (PCM/PCB)";
+    if (val.toLowerCase().includes("jee")) return "JEE Main & Advanced";
+    if (val.toLowerCase().includes("neet")) return "NEET Medical Entrance";
+    return val;
+  };
+
+  const initialClass = normalizeClass(rawClass);
+  const initialLocality = rawLocality;
 
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState("https://wa.me/919229738307");
-  const [selectedLocality, setSelectedLocality] = useState(initialLocality);
+
+  const [selectedLocality, setSelectedLocality] = useState(
+    initialLocality && !POPULAR_LOCALITIES.includes(initialLocality) ? "Other" : initialLocality
+  );
   const [customLocality, setCustomLocality] = useState(
     initialLocality && !POPULAR_LOCALITIES.includes(initialLocality) ? initialLocality : ""
   );
+
+  const [selectedClass, setSelectedClass] = useState(initialClass);
+  const [customClass, setCustomClass] = useState("");
+  const [isOtherClass, setIsOtherClass] = useState(false);
+
+  const [subjectsText, setSubjectsText] = useState(rawSubjects || "");
+  const [requirementsText, setRequirementsText] = useState(
+    rawPreference ? `Preference: ${rawPreference}` : ""
+  );
+
+  const hasPreFill = Boolean(initialLocality || initialClass || rawSubjects || rawPreference);
+
+  const handleClassSelect = (val: string) => {
+    setSelectedClass(val);
+    if (val === "Other") {
+      setIsOtherClass(true);
+    } else {
+      setIsOtherClass(false);
+      setCustomClass("");
+    }
+  };
+
+  const handleSubjectChipClick = (chip: string) => {
+    if (chip === "+ Other Subjects...") {
+      setSubjectsText((prev) => (prev ? `${prev}, ` : ""));
+    } else if (!subjectsText) {
+      setSubjectsText(chip);
+    } else if (!subjectsText.includes(chip)) {
+      setSubjectsText(`${subjectsText}, ${chip}`);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -73,7 +125,15 @@ function FindTutorFormContent() {
         ? customLocality || (formData.get("locality_custom") as string) || "Patna"
         : selectedLocality;
 
+    const effectiveClass =
+      selectedClass === "Other"
+        ? customClass || (formData.get("class_custom") as string) || "Specialized Course"
+        : selectedClass;
+
     formData.set("locality", effectiveLocality);
+    formData.set("class", effectiveClass);
+    formData.set("subjects", subjectsText || (formData.get("subjects") as string) || "All Subjects");
+    formData.set("requirements", requirementsText);
 
     try {
       const result = await submitLeadToCRM(formData);
@@ -291,6 +351,18 @@ function FindTutorFormContent() {
                 </p>
               </div>
 
+              {hasPreFill && (
+                <div className="mb-6 p-4 rounded-xl bg-[#005F56]/10 border border-[#005F56]/20 flex items-center gap-3 text-xs text-[#005F56] font-semibold">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-[#005F56]" />
+                  <span>
+                    Pre-filled from your search:{" "}
+                    <strong className="text-[#0B192C]">
+                      {[initialLocality, initialClass, rawSubjects, rawPreference].filter(Boolean).join(" • ")}
+                    </strong>
+                  </span>
+                </div>
+              )}
+
               <form id="find-tutor-form" className="space-y-6" onSubmit={handleSubmit}>
                 {/* Row 1: Name and WhatsApp Number */}
                 <div className="grid sm:grid-cols-2 gap-5">
@@ -332,7 +404,8 @@ function FindTutorFormContent() {
                     <select
                       required
                       name="class"
-                      defaultValue={initialClass || ""}
+                      value={selectedClass}
+                      onChange={(e) => handleClassSelect(e.target.value)}
                       className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all cursor-pointer"
                     >
                       <option value="">Select student class...</option>
@@ -344,6 +417,7 @@ function FindTutorFormContent() {
                       <option value="Class 11-12 Humanities/Arts">Class 11–12 Humanities/Arts</option>
                       <option value="JEE Main & Advanced">JEE Main & Advanced Focus</option>
                       <option value="NEET Medical Entrance">NEET Medical Focus</option>
+                      <option value="Other">+ Other Class or Target Exam...</option>
                     </select>
                   </div>
 
@@ -364,10 +438,28 @@ function FindTutorFormContent() {
                           {loc}
                         </option>
                       ))}
-                      <option value="Other">Other Area in Patna...</option>
+                      <option value="Other">+ Other Area in Patna...</option>
                     </select>
                   </div>
                 </div>
+
+                {/* Conditional Custom Class Input if "Other" is chosen */}
+                {isOtherClass && (
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                      Specify Target Grade or Course <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      required
+                      name="class_custom"
+                      type="text"
+                      value={customClass}
+                      onChange={(e) => setCustomClass(e.target.value)}
+                      placeholder="e.g. CUET, BCA, Spoken English, Olympiad"
+                      className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50"
+                    />
+                  </div>
+                )}
 
                 {/* Conditional Custom Locality Input if "Other" is chosen */}
                 {(selectedLocality === "Other" || (!POPULAR_LOCALITIES.includes(selectedLocality) && selectedLocality !== "")) && (
@@ -387,21 +479,48 @@ function FindTutorFormContent() {
                   </div>
                 )}
 
-                {/* Row 3: Subjects Needed */}
+                {/* Row 3: Subjects Needed with Quick Multi-Select Chips */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
-                    Subjects Needed <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                      Subjects Needed <span className="text-red-500">*</span>
+                    </label>
+                    <span className="text-[11px] text-[#5A6578]">click chips or type below</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 pb-1">
+                    {[
+                      "All Subjects",
+                      "Mathematics",
+                      "Science (PCM/PCB)",
+                      "Physics",
+                      "Chemistry",
+                      "Biology",
+                      "English",
+                      "Commerce & Accounts",
+                      "Computer / Coding",
+                      "+ Other Subjects..."
+                    ].map((chip) => (
+                      <button
+                        key={chip}
+                        type="button"
+                        onClick={() => handleSubjectChipClick(chip)}
+                        className="px-2.5 py-1 rounded-md text-xs font-medium bg-[#F3F1EC] text-neutral-700 hover:bg-neutral-200 border border-neutral-300 transition-colors cursor-pointer"
+                      >
+                        {chip}
+                      </button>
+                    ))}
+                  </div>
+
                   <input
                     required
                     name="subjects"
                     type="text"
+                    value={subjectsText}
+                    onChange={(e) => setSubjectsText(e.target.value)}
                     className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50"
-                    placeholder="e.g. Mathematics, Physics, Chemistry or All Subjects"
+                    placeholder="e.g. Mathematics, Physics, Sanskrit, Computer Science"
                   />
-                  <p className="text-[11px] text-[#5A6578]">
-                    Tip: For Class 1–8 you can simply type &ldquo;All Subjects&rdquo;.
-                  </p>
                 </div>
 
                 {/* Row 4: Preferences / Requirements */}
@@ -412,6 +531,8 @@ function FindTutorFormContent() {
                   <textarea
                     name="requirements"
                     rows={3}
+                    value={requirementsText}
+                    onChange={(e) => setRequirementsText(e.target.value)}
                     className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50 resize-none"
                     placeholder="e.g. Prefer female tutor, 5 days a week, evening timings around 5 PM, preparing for St. Michael's school exams"
                   />

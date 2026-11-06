@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   Phone,
@@ -43,12 +44,68 @@ const PATNA_LOCALITY_OPTIONS = [
   "Other Area in Patna"
 ];
 
-export default function BookDemoPage() {
+function BookDemoContent() {
+  const searchParams = useSearchParams();
+  const rawLocality = searchParams.get("locality") || "";
+  const rawClass = searchParams.get("classGroup") || searchParams.get("class") || searchParams.get("studentClass") || "";
+  const rawSubjects = searchParams.get("subjects") || "";
+  const rawPreference = searchParams.get("preference") || "";
+
+  const normalizeClass = (val: string) => {
+    if (!val) return "";
+    if (val.includes("9-10")) return "Class 9-10 (CBSE/ICSE/BSEB)";
+    if (val.includes("1-5") || val.includes("1-8")) return "Class 1-5 (Primary Foundation)";
+    if (val.includes("6-8")) return "Class 6-8 (Middle School)";
+    if (val.includes("11-12") && val.toLowerCase().includes("commerce")) return "Class 11-12 Commerce";
+    if (val.includes("11-12")) return "Class 11-12 Science (PCM/PCB)";
+    if (val.toLowerCase().includes("jee")) return "JEE Main & Advanced";
+    if (val.toLowerCase().includes("neet")) return "NEET Medical Entrance";
+    return val;
+  };
+
+  const initialClass = normalizeClass(rawClass);
+  const initialLocality = rawLocality;
+
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState("");
-  const [selectedLocality, setSelectedLocality] = useState("");
+
+  const [selectedLocality, setSelectedLocality] = useState(
+    initialLocality && !PATNA_LOCALITY_OPTIONS.includes(initialLocality) ? "Other Area in Patna" : initialLocality
+  );
+  const [customLocality, setCustomLocality] = useState(
+    initialLocality && !PATNA_LOCALITY_OPTIONS.includes(initialLocality) ? initialLocality : ""
+  );
+
+  const [selectedClass, setSelectedClass] = useState(initialClass);
+  const [customClass, setCustomClass] = useState("");
+  const [isOtherClass, setIsOtherClass] = useState(false);
+
+  const [subjectsText, setSubjectsText] = useState(rawSubjects || "");
+
+  const hasPreFill = Boolean(initialLocality || initialClass || rawSubjects || rawPreference);
+
   const formRef = useRef<HTMLFormElement>(null);
+
+  const handleClassSelect = (val: string) => {
+    setSelectedClass(val);
+    if (val === "Other") {
+      setIsOtherClass(true);
+    } else {
+      setIsOtherClass(false);
+      setCustomClass("");
+    }
+  };
+
+  const handleSubjectChipClick = (chip: string) => {
+    if (chip === "+ Other Subjects...") {
+      setSubjectsText((prev) => (prev ? `${prev}, ` : ""));
+    } else if (!subjectsText) {
+      setSubjectsText(chip);
+    } else if (!subjectsText.includes(chip)) {
+      setSubjectsText(`${subjectsText}, ${chip}`);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -59,17 +116,21 @@ export default function BookDemoPage() {
 
     const formData = new FormData(form);
     const localityVal = selectedLocality === "Other Area in Patna" 
-      ? (formData.get("customLocality") as string) || "Patna"
+      ? customLocality || (formData.get("customLocality") as string) || "Patna"
       : selectedLocality || (formData.get("locality") as string);
+
+    const classVal = selectedClass === "Other"
+      ? customClass || (formData.get("customClass") as string) || "Specialized Course"
+      : selectedClass || (formData.get("studentClass") as string);
 
     try {
       const data = {
         formType: "book-demo",
         name: formData.get("name"),
         phone: formData.get("phone"),
-        studentClass: formData.get("studentClass"),
+        studentClass: classVal,
         locality: localityVal,
-        subjects: formData.get("subjects"),
+        subjects: subjectsText || formData.get("subjects"),
         address: formData.get("address"),
       };
 
@@ -435,6 +496,19 @@ export default function BookDemoPage() {
                     </p>
                   </div>
 
+                  {/* Pre-fill Banner */}
+                  {hasPreFill && (
+                    <div className="mb-6 p-4 rounded-xl bg-[#005F56]/10 border border-[#005F56]/20 flex items-center gap-3 text-xs text-[#005F56] font-semibold">
+                      <CheckCircle2 className="w-5 h-5 shrink-0 text-[#005F56]" />
+                      <span>
+                        Pre-filled from your search:{" "}
+                        <strong className="text-[#0B192C]">
+                          {[initialLocality, initialClass, rawSubjects, rawPreference].filter(Boolean).join(" • ")}
+                        </strong>
+                      </span>
+                    </div>
+                  )}
+
                   <form ref={formRef} className="space-y-6" onSubmit={handleSubmit}>
                     {/* Row 1: Name and WhatsApp Number */}
                     <div className="grid sm:grid-cols-2 gap-5">
@@ -476,6 +550,8 @@ export default function BookDemoPage() {
                         <select
                           required
                           name="studentClass"
+                          value={selectedClass}
+                          onChange={(e) => handleClassSelect(e.target.value)}
                           className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all cursor-pointer"
                         >
                           <option value="">Select class...</option>
@@ -487,6 +563,7 @@ export default function BookDemoPage() {
                           <option value="Class 11-12 Humanities/Arts">Class 11–12 Humanities/Arts</option>
                           <option value="JEE Main & Advanced">JEE Main & Advanced</option>
                           <option value="NEET Medical Entrance">NEET Medical Preparation</option>
+                          <option value="Other">+ Other Class or Target Exam...</option>
                         </select>
                       </div>
 
@@ -511,6 +588,24 @@ export default function BookDemoPage() {
                       </div>
                     </div>
 
+                    {/* Conditional custom class */}
+                    {isOtherClass && (
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                          Specify Grade or Target Exam <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          required
+                          name="customClass"
+                          type="text"
+                          value={customClass}
+                          onChange={(e) => setCustomClass(e.target.value)}
+                          placeholder="e.g. CUET, BCA, Spoken English, Olympiad"
+                          className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50"
+                        />
+                      </div>
+                    )}
+
                     {/* Conditional other locality */}
                     {selectedLocality === "Other Area in Patna" && (
                       <div className="space-y-2">
@@ -521,23 +616,54 @@ export default function BookDemoPage() {
                           required
                           name="customLocality"
                           type="text"
+                          value={customLocality}
+                          onChange={(e) => setCustomLocality(e.target.value)}
                           className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50"
                           placeholder="e.g. Near Mithapur Bus Stand, Anisabad More"
                         />
                       </div>
                     )}
 
-                    {/* Row 3: Specific Subjects */}
+                    {/* Row 3: Specific Subjects with Quick Chips */}
                     <div className="space-y-2">
-                      <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
-                        Specific Subjects for Demo Class <span className="text-red-500">*</span>
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[#1E3E62] block">
+                          Specific Subjects for Demo Class <span className="text-red-500">*</span>
+                        </label>
+                        <span className="text-[11px] text-[#5A6578]">click chips or type below</span>
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5 pb-1">
+                        {[
+                          "All Subjects",
+                          "Mathematics",
+                          "Science (PCM/PCB)",
+                          "Physics",
+                          "Chemistry",
+                          "Biology",
+                          "English",
+                          "Commerce & Accounts",
+                          "+ Other Subjects..."
+                        ].map((chip) => (
+                          <button
+                            key={chip}
+                            type="button"
+                            onClick={() => handleSubjectChipClick(chip)}
+                            className="px-2.5 py-1 rounded-md text-xs font-medium bg-[#F3F1EC] text-neutral-700 hover:bg-neutral-200 border border-neutral-300 transition-colors cursor-pointer"
+                          >
+                            {chip}
+                          </button>
+                        ))}
+                      </div>
+
                       <input
                         required
                         name="subjects"
                         type="text"
+                        value={subjectsText}
+                        onChange={(e) => setSubjectsText(e.target.value)}
                         className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-xl px-4 py-3.5 text-[#0B192C] font-medium text-sm focus:outline-none focus:border-[#0B192C] focus:ring-2 focus:ring-[#0B192C]/10 transition-all placeholder:text-[#5A6578]/50"
-                        placeholder="e.g. Physics & Mathematics or All Subjects"
+                        placeholder="e.g. Physics & Mathematics or Sanskrit or All Subjects"
                       />
                     </div>
 
@@ -602,5 +728,17 @@ export default function BookDemoPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function BookDemoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#F9F8F5] flex items-center justify-center">
+        <div className="w-8 h-8 border-3 border-[#0B192C]/20 border-t-[#0B192C] rounded-full animate-spin" />
+      </div>
+    }>
+      <BookDemoContent />
+    </Suspense>
   );
 }
