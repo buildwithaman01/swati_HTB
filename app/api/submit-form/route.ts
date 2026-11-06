@@ -320,15 +320,20 @@ export async function POST(req: NextRequest) {
 
     // 4. ── Google Sheets (if configured)
     if (GOOGLE_SHEET_WEBHOOK) {
-      fetch(GOOGLE_SHEET_WEBHOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          formType,
-          timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-          ...fields,
-        }),
-      }).catch((err) => console.error("[Sheets] Failed:", err));
+      try {
+        await fetch(GOOGLE_SHEET_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            formType,
+            timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+            ...fields,
+          }),
+          signal: AbortSignal.timeout(8000),
+        });
+      } catch (err) {
+        console.error("[Sheets Webhook Push Error]:", err);
+      }
     }
 
     // 5. ── Return data to frontend

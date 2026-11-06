@@ -88,20 +88,25 @@ export async function submitLeadToCRM(formData: FormData) {
   // 3. ── Push to Google Sheet webhook (if configured)
   const GOOGLE_SHEET_WEBHOOK = process.env.GOOGLE_SHEET_WEBHOOK_URL;
   if (GOOGLE_SHEET_WEBHOOK) {
-    fetch(GOOGLE_SHEET_WEBHOOK, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        formType: "find-tutor",
-        timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
-        name,
-        phone,
-        studentClass,
-        locality,
-        subjects,
-        requirements,
-      }),
-    }).catch((err) => console.error("[Sheets Push Error]:", err));
+    try {
+      await fetch(GOOGLE_SHEET_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          formType: "find-tutor",
+          timestamp: new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" }),
+          name,
+          phone,
+          studentClass,
+          locality,
+          subjects,
+          requirements,
+        }),
+        signal: AbortSignal.timeout(8000),
+      });
+    } catch (err) {
+      console.error("[Sheets Push Error]:", err);
+    }
   }
 
   // 4. ── Generate WhatsApp deep link
