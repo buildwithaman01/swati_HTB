@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { randomBytes } from "crypto";
+import { CANONICAL_LINKS } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
       // Body is optional
     }
 
-    // 2. Fetch the assignment (active or specified)
+    // 2. Fetch the assignment (prioritizing active assignments)
     let query = adminClient
       .from("assignments")
       .select("id, teacher_id, student_id, status, subject, teacher:teachers(id, full_name)")
@@ -42,7 +43,8 @@ export async function POST(req: NextRequest) {
     if (assignmentId) {
       query = query.eq("id", assignmentId);
     } else {
-      query = query.order("created_at", { ascending: false });
+      // Prioritize active assignments
+      query = query.order("status", { ascending: true }).order("created_at", { ascending: false });
     }
 
     const { data: assignments } = await query.limit(1);
@@ -51,6 +53,22 @@ export async function POST(req: NextRequest) {
     if (!assignment) {
       return NextResponse.json({ error: "No active tuition assignment found to review." }, { status: 404 });
     }
+
+    // Foreign key safety check: Ensure teacher exists in teachers table
+    const { data: validTeacher } = await adminClient
+      .from("teachers")
+      .select("id, full_name")
+      .eq("id", assignment.teacher_id)
+      .maybeSingle();
+
+    if (!validTeacher) {
+      return NextResponse.json(
+        { error: "Assigned educator record not found. Please contact support." },
+        { status: 404 }
+      );
+    }
+
+    const teacherDisplayName = validTeacher.full_name || (assignment.teacher as any)?.full_name || "Your Teacher";
 
     // 3. Check if a review already exists for this assignment
     const { data: existingReviews } = await adminClient
@@ -68,18 +86,18 @@ export async function POST(req: NextRequest) {
         alreadyReviewed: true,
         rating: existing.rating,
         reviewText: existing.review_text,
-        teacherName: (assignment.teacher as any)?.full_name || "Your Teacher",
-        googleReviewUrl: "https://share.google/tarSWReEvLi7cim5V",
+        teacherName: teacherDisplayName,
+        googleReviewUrl: CANONICAL_LINKS.googleReviews,
       });
     }
 
-    // If an unrated review token already exists, reuse it
+    // If an unrated review token already exists, reuse it (guaranteeing zero token mismatch)
     if (existing?.token) {
       return NextResponse.json({
         alreadyReviewed: false,
         token: existing.token,
         reviewUrl: `/review/submit?token=${existing.token}`,
-        teacherName: (assignment.teacher as any)?.full_name || "Your Teacher",
+        teacherName: teacherDisplayName,
       });
     }
 
@@ -88,7 +106,7 @@ export async function POST(req: NextRequest) {
 
     const payload: Record<string, any> = {
       assignment_id: assignment.id,
-      teacher_id: assignment.teacher_id,
+      teacher_id: validTeacher.id,
       student_id: student.id,
       token: token,
       review_token: token,
@@ -102,7 +120,7 @@ export async function POST(req: NextRequest) {
       console.warn("[portal/review-token] Retrying with minimal token column:", insertErr.message);
       await adminClient.from("reviews").insert({
         assignment_id: assignment.id,
-        teacher_id: assignment.teacher_id,
+        teacher_id: validTeacher.id,
         student_id: student.id,
         token: token,
         parent_name: student.parent_name,
@@ -113,7 +131,7 @@ export async function POST(req: NextRequest) {
       alreadyReviewed: false,
       token,
       reviewUrl: `/review/submit?token=${token}`,
-      teacherName: (assignment.teacher as any)?.full_name || "Your Teacher",
+      teacherName: teacherDisplayName,
     });
   } catch (e: any) {
     console.error("[portal/review-token exception]:", e);

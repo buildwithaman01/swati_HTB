@@ -6,6 +6,7 @@ import { ArrowLeft, User, Phone, MapPin, GraduationCap, FileText, Save, Home, Bo
 import StudentAccountManagementCard from "./StudentAccountManagementCard";
 import StudentStatusAction from "./StudentStatusAction";
 import StudentProfileForm from "./StudentProfileForm";
+import AssignmentStatusSelect from "@/app/admin/(dashboard)/assignments/AssignmentStatusSelect";
 import { formatWhatsAppUrl, CANONICAL_SUPPORT_PHONE_DISPLAY } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
@@ -37,12 +38,14 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
     .select(`
       *,
       teachers:teacher_id (
+        id,
         full_name,
         phone,
         teacher_id
       )
     `)
-    .eq("student_id", student.id);
+    .eq("student_id", student.id)
+    .order("created_at", { ascending: false });
 
   // Fetch payments
   const { data: payments } = await supabase
@@ -194,21 +197,71 @@ export default async function StudentDetail({ params }: { params: Promise<{ id: 
                 <p className="text-sm">No assignments found for this student.</p>
               </div>
             ) : (
-              <div className="space-y-4">
-                {assignments.map((assignment) => (
-                  <div key={assignment.id} className="border border-neutral-100 rounded-xl p-4 flex justify-between items-center bg-neutral-50/50 hover:bg-white transition-colors">
-                    <div>
-                      <h4 className="font-bold text-sm text-[#1F2937]">{assignment.subject}</h4>
-                      <p className="text-xs text-neutral-500 mt-1">Teacher: <span className="font-semibold text-neutral-700">{assignment.teachers?.full_name}</span></p>
-                    </div>
-                    <div className="text-right">
-                      <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${assignment.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-                          assignment.status === 'paused' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                            'bg-red-50 text-red-700 border-red-100'
-                        }`}>
-                        {assignment.status}
-                      </span>
-                      <p className="text-xs font-semibold text-[#1F2937] mt-1">₹{assignment.monthly_fee}/mo</p>
+              <div className="space-y-3">
+                {assignments.map((assignment: any) => (
+                  <div
+                    key={assignment.id}
+                    className="border border-neutral-100 rounded-2xl p-4 bg-neutral-50/50 hover:bg-white transition-all shadow-2xs space-y-3"
+                  >
+                    <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-bold text-sm text-[#1F2937]">{assignment.subject}</h4>
+                          <span className="text-[11px] font-mono text-neutral-400">
+                            ({assignment.assignment_id || "ASN"})
+                          </span>
+                        </div>
+                        <p className="text-xs text-neutral-600 mt-1 flex items-center gap-1.5 flex-wrap">
+                          <span>Assigned Teacher:</span>
+                          {assignment.teachers?.id || assignment.teacher_id ? (
+                            <Link
+                              href={`/admin/teachers/${assignment.teachers?.id || assignment.teacher_id}`}
+                              className="font-bold text-[#0B192C] hover:text-[#1E3E62] hover:underline"
+                            >
+                              {assignment.teachers?.full_name || "Assigned Teacher"}
+                            </Link>
+                          ) : (
+                            <span className="font-semibold text-neutral-700">
+                              {assignment.teachers?.full_name || "Assigned Teacher"}
+                            </span>
+                          )}
+                          {assignment.teachers?.teacher_id && (
+                            <span className="text-[10px] text-neutral-400 font-mono">
+                              ({assignment.teachers.teacher_id})
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-[11px] text-neutral-400 mt-1">
+                          Schedule: {assignment.classes_per_week || 3}x/week · {assignment.session_duration_mins || 60} mins
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div className="sm:text-right">
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              assignment.status === "active"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : assignment.status === "paused"
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-neutral-100 text-neutral-700"
+                            }`}
+                          >
+                            {assignment.status}
+                          </span>
+                          <p className="text-xs font-bold text-[#1F2937] mt-0.5">
+                            ₹{Number(assignment.monthly_fee || 0).toLocaleString("en-IN")}/mo
+                          </p>
+                        </div>
+
+                        {/* Interactive Unassign / End / Delete Controls */}
+                        <div className="pt-1 sm:pt-0 border-t sm:border-t-0 border-neutral-100">
+                          <AssignmentStatusSelect
+                            assignmentId={assignment.id}
+                            currentStatus={assignment.status}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}

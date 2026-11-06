@@ -3,6 +3,9 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { CANONICAL_LINKS, BUREAU_INFO } from "@/lib/constants";
+import { formatSupportWhatsAppUrl } from "@/lib/whatsapp";
+import { GoogleGIcon, InstagramIcon, FacebookIcon } from "@/components/shared/SocialIcons";
 import {
   Star,
   CheckCircle2,
@@ -38,14 +41,14 @@ interface StudentData {
   locality?: string | null;
 }
 
-const GOOGLE_REVIEW_URL = "https://share.google/tarSWReEvLi7cim5V";
-const SUPPORT_WHATSAPP_URL = "https://wa.me/919229738307?text=Hello%20Swati%20HTB%20Team%2C%20I%20have%20a%20question%20regarding%20my%20tutor%20review.";
+const GOOGLE_REVIEW_URL = CANONICAL_LINKS.googleReviews || "https://share.google/tarSWReEvLi7cim5V";
+const SUPPORT_WHATSAPP_URL = formatSupportWhatsAppUrl("Hello Swati HTB Team, I have a question regarding my tutor review.");
 
 export default function SubmitReviewPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-[#0F4C5C]/5 p-4">
+        <div className="min-h-[60vh] flex items-center justify-center p-6">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="w-10 h-10 border-4 border-[#0F4C5C] border-t-transparent rounded-full animate-spin" />
             <p className="text-[#0F4C5C] font-semibold text-sm">Loading review form...</p>
@@ -110,7 +113,7 @@ function ReviewFormContent() {
           setInvalidReason(data.reason || "invalid");
           setInvalidMessage(data.message || "This review link is invalid or has expired.");
         }
-      } catch (err: any) {
+      } catch {
         if (!isMounted) return;
         setTokenValid(false);
         setInvalidReason("network_error");
@@ -182,8 +185,8 @@ function ReviewFormContent() {
   // 1. Loading State
   if (checking) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F4C5C] to-[#082830] flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl space-y-4">
+      <div className="py-20 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-xl border border-neutral-100 space-y-4">
           <div className="w-12 h-12 border-4 border-[#0F4C5C] border-t-transparent rounded-full animate-spin mx-auto" />
           <h2 className="text-lg font-bold text-[#1F2937] font-serif">Verifying Review Link</h2>
           <p className="text-neutral-500 text-xs">
@@ -199,8 +202,8 @@ function ReviewFormContent() {
     const isAlreadyUsed = invalidReason === "already_used";
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F4C5C] to-[#082830] flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-8 max-w-lg w-full text-center shadow-2xl space-y-6">
+      <div className="py-16 sm:py-20 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-8 max-w-lg w-full text-center shadow-2xl border border-neutral-100 space-y-6">
           <div
             className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto ${
               isAlreadyUsed ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
@@ -221,7 +224,7 @@ function ReviewFormContent() {
             </p>
           </div>
 
-          {/* Google Business Profile Prompt Card */}
+          {/* 1-Click Google Business Profile (GBP) Card */}
           <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-5 text-left space-y-3">
             <div className="flex items-center gap-2">
               <div className="flex text-amber-500">
@@ -230,12 +233,12 @@ function ReviewFormContent() {
                 ))}
               </div>
               <span className="text-xs font-bold text-amber-900 uppercase tracking-wide">
-                Google Business Profile
+                Google Business Profile (GBP)
               </span>
             </div>
             <p className="text-xs text-amber-950/80 leading-relaxed">
-              You can also share your valuable experience directly on our official Google Business page.
-              Your public rating helps verified home tutors connect with more students across Patna!
+              You can also share your valuable feedback directly on our official Google Business page.
+              Your public rating helps verified home tutors connect with more families across Patna!
             </p>
             <a
               href={GOOGLE_REVIEW_URL}
@@ -243,7 +246,7 @@ function ReviewFormContent() {
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 w-full bg-[#D4A017] hover:bg-[#b88912] text-white font-bold py-3 px-4 rounded-xl text-xs transition-colors shadow-sm"
             >
-              <Star className="w-4 h-4 fill-white" /> Rate Us on Google Reviews
+              <Star className="w-4 h-4 fill-white" /> Rate Us on Google Reviews (1-Click)
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
           </div>
@@ -270,23 +273,23 @@ function ReviewFormContent() {
     );
   }
 
-  // 3. Success / Submitted State with Google Review CTA
+  // 3. Success State with 1-Click Google Review CTA
   if (done) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0F4C5C] to-[#082830] flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-8 sm:p-10 max-w-lg w-full text-center shadow-2xl space-y-6">
+      <div className="py-16 sm:py-20 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl p-8 sm:p-10 max-w-lg w-full text-center shadow-2xl border border-neutral-100 space-y-6">
           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-10 h-10 text-emerald-600" />
           </div>
 
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold text-[#1F2937] font-serif">
-              Thank You{parentName ? `, ${parentName}` : ""}! 🙏
+              Thank You{parentName ? `, ${parentName} ji` : ""}! 🙏
             </h2>
             <p className="text-neutral-600 text-sm mt-2 leading-relaxed">
-              Your feedback for{" "}
+              Your valuable feedback for{" "}
               <strong className="text-[#0F4C5C]">{teacher?.name || "your home tutor"}</strong> has been
-              securely recorded. Our team will verify and feature it on the educator&apos;s verified profile.
+              recorded with gratitude. Genuine parent reviews like yours help maintain high educational standards and guide families across Patna.
             </p>
           </div>
 
@@ -304,10 +307,10 @@ function ReviewFormContent() {
             </div>
 
             <h3 className="font-bold text-[#1F2937] text-base font-serif">
-              Would you also take 10 seconds to share this on our Google Business Profile?
+              Would you also take 10 seconds to share this on our Google Profile?
             </h3>
             <p className="text-xs text-neutral-700 leading-relaxed">
-              It helps verified teachers reach more families in Patna and motivates them to deliver exceptional home tuition!
+              Your public rating helps verified home tutors connect with more caring families across Boring Road, Kankarbagh, and all of Patna!
             </p>
 
             <div className="space-y-2 pt-2">
@@ -315,17 +318,18 @@ function ReviewFormContent() {
                 href={GOOGLE_REVIEW_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 bg-[#D4A017] hover:bg-[#b88912] text-white font-bold py-3.5 px-4 rounded-2xl text-sm transition-all shadow-md hover:shadow-lg"
+                className="w-full flex items-center justify-center gap-2 bg-[#E5A93C] hover:bg-[#D49228] text-[#0B192C] font-extrabold py-3.5 px-4 rounded-2xl text-sm transition-all shadow-md hover:shadow-lg border-b-[2px] border-[#B87C1C]"
               >
-                <Star className="w-4 h-4 fill-white" /> Share on Google Business Profile
-                <ExternalLink className="w-4 h-4" />
+                <GoogleGIcon className="w-4 h-4 shrink-0" />
+                <span>Share on Google Business Profile (1-Click)</span>
+                <ExternalLink className="w-4 h-4 text-[#0B192C]/70" />
               </a>
 
               {text && (
                 <button
                   type="button"
                   onClick={handleCopyReview}
-                  className="w-full flex items-center justify-center gap-2 bg-white/80 hover:bg-white text-neutral-700 font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors border border-amber-300"
+                  className="w-full flex items-center justify-center gap-2 bg-white/90 hover:bg-white text-neutral-800 font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors border border-amber-300 shadow-2xs"
                 >
                   {copiedReview ? (
                     <>
@@ -339,12 +343,38 @@ function ReviewFormContent() {
                 </button>
               )}
             </div>
+
+            {/* Official Social Channels for Community */}
+            <div className="pt-3 border-t border-amber-300/60 flex items-center justify-between text-xs">
+              <span className="text-[11px] font-semibold text-neutral-700">Follow Swati HTB:</span>
+              <div className="flex items-center gap-2.5">
+                <a
+                  href={CANONICAL_LINKS.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-bold text-pink-700 hover:text-pink-900 transition-colors"
+                >
+                  <InstagramIcon className="w-3.5 h-3.5" />
+                  <span>Instagram</span>
+                </a>
+                <span className="text-neutral-400">·</span>
+                <a
+                  href={CANONICAL_LINKS.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-bold text-blue-700 hover:text-blue-900 transition-colors"
+                >
+                  <FacebookIcon className="w-3.5 h-3.5" />
+                  <span>Facebook</span>
+                </a>
+              </div>
+            </div>
           </div>
 
           <div className="pt-2 flex justify-center">
             <Link
               href="/"
-              className="text-xs font-semibold text-neutral-400 hover:text-[#0F4C5C] transition-colors"
+              className="text-xs font-semibold text-neutral-500 hover:text-[#0B192C] transition-colors"
             >
               ← Return to Swati Home Tuition Bureau
             </Link>
@@ -365,15 +395,33 @@ function ReviewFormContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0F4C5C] via-[#0B3B48] to-[#082830] flex items-center justify-center p-4 py-10">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-white/20">
+    <div className="py-12 sm:py-16 px-4">
+      <div className="bg-white rounded-3xl shadow-xl max-w-xl mx-auto overflow-hidden border border-neutral-200/80">
         {/* Header */}
         <div className="bg-[#0F4C5C] px-6 sm:px-8 py-6 text-white text-center relative">
           <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-2xl mb-3 border border-white/10 backdrop-blur-sm">
             <GraduationCap className="w-6 h-6 text-[#D4A017]" />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold font-serif">Share Your Experience</h1>
-          <p className="text-white/70 text-xs mt-1">Swati Home Tuition Bureau · Verified Parent Review</p>
+          <p className="text-white/70 text-xs mt-1">
+            {BUREAU_INFO.name} · Verified Parent Review
+          </p>
+        </div>
+
+        {/* 1-Click GBP Direct Banner at Top of Form */}
+        <div className="bg-amber-50/90 border-b border-amber-200/80 px-6 py-2.5 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-1.5 text-amber-900">
+            <Star className="w-3.5 h-3.5 fill-[#D4A017] text-[#D4A017] shrink-0" />
+            <span className="font-medium">Prefer to rate our bureau directly on Google?</span>
+          </div>
+          <a
+            href={GOOGLE_REVIEW_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[#0F4C5C] hover:text-[#0a3a47] font-bold shrink-0 underline decoration-[#D4A017] decoration-2"
+          >
+            Google Reviews (1-Click) <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
 
         {/* Tutor Identity Card - EXACTLY WHO THEY ARE REVIEWING */}
@@ -508,7 +556,7 @@ function ReviewFormContent() {
                 className="w-full text-sm border border-neutral-300 rounded-2xl px-4 py-3 focus:ring-2 focus:ring-[#0F4C5C]/20 focus:border-[#0F4C5C] outline-none transition-all"
               />
               <p className="text-[11px] text-neutral-400 mt-1">
-                Displayed publicly as: First Name / Parent of {student?.name || "Student"}. Phone & address are never shared.
+                Displayed publicly as: First Name / Parent of {student?.name || "Student"}. Phone &amp; address are never shared.
               </p>
             </div>
 
@@ -538,9 +586,21 @@ function ReviewFormContent() {
               )}
             </button>
 
-            <div className="text-center space-y-1">
+            <div className="text-center space-y-2 pt-1">
               <p className="text-[11px] text-neutral-400">
                 🛡️ All reviews are verified by Swati Home Tuition Bureau to ensure authentic academic feedback.
+              </p>
+              <p className="text-[11px] text-neutral-500">
+                You can also{" "}
+                <a
+                  href={GOOGLE_REVIEW_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-[#D4A017] underline hover:text-[#b88912]"
+                >
+                  leave a review on Google Business Profile (GBP)
+                </a>{" "}
+                at any time.
               </p>
             </div>
           </form>

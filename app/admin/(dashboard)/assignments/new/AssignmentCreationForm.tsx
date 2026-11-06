@@ -4,7 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Loader2, CheckCircle2, AlertCircle, IndianRupee, ArrowLeft, MessageCircle } from "lucide-react";
 import Link from "next/link";
-import { formatWhatsAppUrl, TEACHER_LOGIN_URL, PARENT_LOGIN_URL, CANONICAL_SUPPORT_PHONE_DISPLAY } from "@/lib/whatsapp";
+import {
+  formatWhatsAppUrl,
+  buildTeacherAssignmentMessage,
+  buildParentAssignmentMessage,
+} from "@/lib/whatsapp";
 
 interface Teacher {
   id: string;
@@ -144,10 +148,24 @@ export default function AssignmentCreationForm({
     const teacherPhone = selectedTeacher?.whatsapp || selectedTeacher?.phone || "";
     const parentPhone = selectedStudent?.whatsapp || selectedStudent?.parent_whatsapp || selectedStudent?.parent_phone || "";
 
-    const teacherMsg = `🔔 *New Tuition Assignment!*\n\nDear ${teacherName},\n\nYou have been assigned a new tuition for *${subject}*.\n\nStudent: ${studentName}\nParent/Guardian: ${parentName}\nMonthly Fee: ₹${feeNum.toLocaleString("en-IN")}\nSchedule: ${classesPerWeek} days/week (${sessionDays})\n\nPlease check your Swati HTB dashboard for full address and details.\n🔗 Teacher Portal: ${TEACHER_LOGIN_URL}\n\n📞 Support: ${CANONICAL_SUPPORT_PHONE_DISPLAY}\n— Swati Home Tuition Bureau`;
+    const teacherMsg = buildTeacherAssignmentMessage({
+      teacherName,
+      studentName,
+      parentName,
+      subject,
+      fee: feeNum,
+      schedule: `${classesPerWeek} days/week (${sessionDays})`,
+    });
     const teacherWaUrl = formatWhatsAppUrl(teacherPhone, teacherMsg);
 
-    const parentMsg = `🎓 *Teacher Assigned!*\n\nDear ${parentName},\n\nWe have assigned *${teacherName}* as your home tutor for *${subject}* (${studentName}).\n\nFee: ₹${feeNum.toLocaleString("en-IN")}/month\nSchedule: ${classesPerWeek} days/week\n\nYou can track all classes and progress reports in your parent portal.\n🔗 Parent Portal: ${PARENT_LOGIN_URL}\n\n📞 Support: ${CANONICAL_SUPPORT_PHONE_DISPLAY}\n— Swati Home Tuition Bureau`;
+    const parentMsg = buildParentAssignmentMessage({
+      parentName,
+      studentName,
+      teacherName,
+      subject,
+      fee: feeNum,
+      schedule: `${classesPerWeek} days/week`,
+    });
     const parentWaUrl = formatWhatsAppUrl(parentPhone, parentMsg);
 
     return (

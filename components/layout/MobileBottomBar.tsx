@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MessageCircle, Phone, Calendar } from "lucide-react";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { CANONICAL_LINKS } from "@/lib/constants";
 
 export default function MobileBottomBar() {
   const { scrollY } = useScroll();
@@ -38,14 +39,14 @@ export default function MobileBottomBar() {
               </button>
             </Link>
 
-            <a href="https://wa.me/919229738307" target="_blank" rel="noopener noreferrer" className="flex-1">
+            <a href={CANONICAL_LINKS.whatsappWithText("Hi Swati HTB, I am looking for a home tutor in Patna")} target="_blank" rel="noopener noreferrer" className="flex-1">
               <button className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm">
                 <MessageCircle className="w-4 h-4" />
                 WhatsApp
               </button>
             </a>
 
-            <a href="tel:+919229738307" className="w-[44px] h-[44px] bg-[#0B192C] text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm active:scale-95 transition-transform">
+            <a href={`tel:${CANONICAL_LINKS.phone}`} className="w-[44px] h-[44px] bg-[#0B192C] text-white rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm active:scale-95 transition-transform" title={`Call ${CANONICAL_LINKS.displayPhone}`}>
               <Phone className="w-4 h-4" />
             </a>
 

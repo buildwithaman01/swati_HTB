@@ -23,6 +23,7 @@ import {
 import Image from "next/image";
 import { toast } from "sonner";
 import { patnaAreas } from "@/lib/data/areas";
+import { CANONICAL_LINKS } from "@/lib/constants";
 
 const POPULAR_AREAS = [
   "Boring Road",

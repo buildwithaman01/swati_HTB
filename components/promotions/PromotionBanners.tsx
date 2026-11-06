@@ -491,3 +491,189 @@ export function ParentPortalSidebarPromo() {
   );
 }
 
+/**
+ * Universal Post-Submission Social & Google Review Card
+ * Used across: book-demo, find-tutor, join, and review-submission
+ */
+export function SubmissionSuccessSocialCard({
+  title = "Follow Patna's #1 Home Tuition Bureau",
+  subtitle = "While our team prepares your details, connect with our official channels & see why 500+ Patna families rate us 4.9★ on Google.",
+}: {
+  title?: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className="w-full bg-[#FAF7F2] rounded-2xl p-5 sm:p-6 border border-[#E8E6DF] text-left space-y-4 my-6 shadow-xs">
+      <div className="flex items-start sm:items-center justify-between gap-3 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0B192C] bg-white px-2 py-0.5 rounded-md border border-[#E8E6DF]">
+              Official Bureau Registry
+            </span>
+          </div>
+          <h4 className="font-display font-bold text-base sm:text-lg text-[#0B192C]">
+            {title}
+          </h4>
+        </div>
+
+        <a
+          href={CANONICAL_LINKS.googleReviews}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 bg-white border border-[#E8E6DF] px-3 py-1.5 rounded-xl shadow-2xs hover:border-[#E5A93C] transition-colors text-xs"
+        >
+          <GoogleGIcon className="w-4 h-4" />
+          <span className="font-extrabold text-[#0B192C]">4.9★</span>
+          <div className="flex text-[#E5A93C]">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Star key={i} className="w-2.5 h-2.5 fill-[#E5A93C]" />
+            ))}
+          </div>
+        </a>
+      </div>
+
+      <p className="text-xs sm:text-sm text-[#5A6578] leading-relaxed">
+        {subtitle}
+      </p>
+
+      {/* 3 Action Badges */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+        {/* Google Reviews */}
+        <a
+          href={CANONICAL_LINKS.googleReviews}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-white hover:bg-[#FAF7F2] border border-[#E8E6DF] hover:border-[#0B192C] p-3 rounded-xl transition-all duration-200 group flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <GoogleGIcon className="w-4 h-4 shrink-0" />
+            <ExternalLink className="w-3.5 h-3.5 text-neutral-400 group-hover:text-[#0B192C] transition-colors" />
+          </div>
+          <div>
+            <div className="font-bold text-xs text-[#0B192C]">Google Business</div>
+            <div className="text-[11px] text-[#5A6578]">Rate us &amp; read 500+ reviews</div>
+          </div>
+        </a>
+
+        {/* Instagram */}
+        <a
+          href={CANONICAL_LINKS.instagram}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-white hover:bg-pink-50/50 border border-[#E8E6DF] hover:border-pink-300 p-3 rounded-xl transition-all duration-200 group flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="w-5 h-5 rounded-md bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-600 flex items-center justify-center text-white">
+              <InstagramIcon className="w-3 h-3" />
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 text-neutral-400 group-hover:text-pink-600 transition-colors" />
+          </div>
+          <div>
+            <div className="font-bold text-xs text-[#0B192C]">{BUREAU_INFO.instagramHandle}</div>
+            <div className="text-[11px] text-[#5A6578]">Follow on Instagram</div>
+          </div>
+        </a>
+
+        {/* Facebook */}
+        <a
+          href={CANONICAL_LINKS.facebook}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-white hover:bg-blue-50/50 border border-[#E8E6DF] hover:border-blue-300 p-3 rounded-xl transition-all duration-200 group flex flex-col justify-between"
+        >
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="w-5 h-5 rounded-md bg-[#1877F2] flex items-center justify-center text-white">
+              <FacebookIcon className="w-3 h-3" />
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 text-neutral-400 group-hover:text-blue-600 transition-colors" />
+          </div>
+          <div>
+            <div className="font-bold text-xs text-[#0B192C]">Swati HTB Facebook</div>
+            <div className="text-[11px] text-[#5A6578]">Official Facebook Page</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Official Student ID & Bureau Accreditation Card
+ * For Student Profile and Student Portal view
+ */
+export function StudentPortalSocialCard({
+  studentName,
+  studentClass,
+  enrollmentStatus = "Enrolled Student",
+}: {
+  studentName?: string;
+  studentClass?: string;
+  enrollmentStatus?: string;
+}) {
+  return (
+    <div className="bg-gradient-to-br from-[#0B192C] via-[#0F2238] to-[#1E3E62] rounded-3xl p-6 sm:p-7 text-white shadow-md border border-[#E5A93C]/30 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-60 h-60 bg-[#E5A93C]/10 rounded-full blur-2xl pointer-events-none" />
+
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-2 max-w-xl">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 bg-[#E5A93C] text-[#0B192C] text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+              <ShieldCheck className="w-3 h-3" />
+              Verified Enrollment
+            </span>
+            <span className="text-xs text-[#E5A93C] font-semibold">
+              Swati Home Tuition Bureau
+            </span>
+          </div>
+
+          <h3 className="text-xl sm:text-2xl font-bold font-serif text-white">
+            {studentName ? `${studentName} — ${studentClass || "Student"}` : "Swati HTB Academic Protection"}
+          </h3>
+          <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed font-normal">
+            Your tuition is backed by Patna&apos;s highest-rated bureau with 48-hour tutor replacement and monthly performance tracking.
+          </p>
+        </div>
+
+        {/* Action badges with GBP, Instagram, Facebook */}
+        <div className="flex flex-col sm:flex-row md:flex-col gap-2 shrink-0">
+          <a
+            href={CANONICAL_LINKS.googleReviews}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-between gap-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition-all group"
+          >
+            <div className="flex items-center gap-2">
+              <GoogleGIcon className="w-4 h-4" />
+              <span>Rate on Google (4.9★)</span>
+            </div>
+            <ExternalLink className="w-3.5 h-3.5 text-white/50 group-hover:text-white" />
+          </a>
+
+          <div className="grid grid-cols-2 gap-2">
+            <a
+              href={CANONICAL_LINKS.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 bg-white/10 hover:bg-pink-600/30 border border-white/15 text-white text-xs font-semibold py-2 px-3 rounded-xl transition-all"
+            >
+              <InstagramIcon className="w-3.5 h-3.5 text-pink-300" />
+              <span>Instagram</span>
+            </a>
+            <a
+              href={CANONICAL_LINKS.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 bg-white/10 hover:bg-blue-600/30 border border-white/15 text-white text-xs font-semibold py-2 px-3 rounded-xl transition-all"
+            >
+              <FacebookIcon className="w-3.5 h-3.5 text-blue-300" />
+              <span>Facebook</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+

@@ -6,6 +6,7 @@ import { ArrowLeft, User, Phone, MapPin, GraduationCap, CheckCircle2, XCircle, C
 import AccountManagementCard from "./AccountManagementCard";
 import TeacherApprovalAction from "./TeacherApprovalAction";
 import TeacherProfileForm from "./TeacherProfileForm";
+import AssignmentStatusSelect from "@/app/admin/(dashboard)/assignments/AssignmentStatusSelect";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -221,24 +222,34 @@ export default async function TeacherDetail({ params }: { params: Promise<{ id: 
                       </p>
                     </div>
 
-                    <div className="text-left sm:text-right">
-                      <span
-                        className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          assignment.status === "active"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : assignment.status === "paused"
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-neutral-100 text-neutral-700"
-                        }`}
-                      >
-                        {assignment.status}
-                      </span>
-                      <p className="text-xs font-bold text-[#1F2937] mt-1">
-                        Fee: ₹{Number(assignment.monthly_fee).toLocaleString("en-IN")}/mo
-                      </p>
-                      <p className="text-[11px] font-semibold text-emerald-600">
-                        Teacher: ₹{Number(assignment.teacher_earning).toLocaleString("en-IN")}/mo
-                      </p>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="text-left sm:text-right">
+                        <span
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            assignment.status === "active"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : assignment.status === "paused"
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-neutral-100 text-neutral-700"
+                          }`}
+                        >
+                          {assignment.status}
+                        </span>
+                        <p className="text-xs font-bold text-[#1F2937] mt-0.5">
+                          Fee: ₹{Number(assignment.monthly_fee).toLocaleString("en-IN")}/mo
+                        </p>
+                        <p className="text-[11px] font-semibold text-emerald-600">
+                          Teacher: ₹{Number(assignment.teacher_earning).toLocaleString("en-IN")}/mo
+                        </p>
+                      </div>
+
+                      {/* Interactive Unassign / End / Delete Controls */}
+                      <div className="pt-1 sm:pt-0 border-t sm:border-t-0 border-neutral-100">
+                        <AssignmentStatusSelect
+                          assignmentId={assignment.id}
+                          currentStatus={assignment.status}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

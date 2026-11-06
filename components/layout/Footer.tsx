@@ -52,7 +52,7 @@ export default function Footer() {
                 href={`tel:${CANONICAL_LINKS.phone}`}
                 className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/15 px-3.5 py-2 rounded-lg transition-all"
               >
-                <Phone className="w-3.5 h-3.5 text-[#E5A93C]" /> Call 92297 38307
+                <Phone className="w-3.5 h-3.5 text-[#E5A93C]" /> Call {CANONICAL_LINKS.displayPhone}
               </a>
             </div>
 
@@ -73,10 +73,10 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs font-bold bg-white/10 hover:bg-pink-600/30 text-white hover:text-pink-300 border border-white/15 px-3 py-1.5 rounded-lg transition-all"
-                title="Follow on Instagram @swati.htb"
+                title={`Follow on Instagram ${BUREAU_INFO.instagramHandle}`}
               >
                 <InstagramIcon className="w-3.5 h-3.5" />
-                <span>@swati.htb</span>
+                <span>{BUREAU_INFO.instagramHandle}</span>
               </a>
               <a
                 href={CANONICAL_LINKS.facebook}
@@ -208,8 +208,8 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-[#E5A93C] shrink-0" />
-                <a href="tel:+919229738307" className="font-bold hover:text-[#E5A93C] transition-colors">
-                  +91 92297 38307
+                <a href={`tel:${CANONICAL_LINKS.phone}`} className="font-bold hover:text-[#E5A93C] transition-colors">
+                  {CANONICAL_LINKS.displayPhone}
                 </a>
               </li>
               <li className="flex items-center gap-2.5">

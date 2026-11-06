@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { PhoneCall, ArrowRight, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import { CANONICAL_LINKS } from "@/lib/constants";
 
 export default function CallbackCTA() {
   return (
@@ -38,13 +39,13 @@ export default function CallbackCTA() {
             </Link>
 
             <a
-              href="https://wa.me/919229738307?text=Hi%2C%20I%20am%20looking%20for%20a%20home%20tutor%20in%20Patna"
+              href={CANONICAL_LINKS.whatsappWithText("Hi, I am looking for a home tutor in Patna")}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 h-12 sm:h-13 px-8 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold text-sm sm:text-base rounded-xl transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
             >
               <MessageCircle className="w-5 h-5 text-[#25D366]" />
-              WhatsApp Us (+91 92297 38307)
+              WhatsApp Us ({CANONICAL_LINKS.displayPhone})
             </a>
           </div>
 

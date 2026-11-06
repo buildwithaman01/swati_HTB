@@ -23,6 +23,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { submitLeadToCRM } from "./actions";
 import { patnaAreas } from "@/lib/data/areas";
+import { SubmissionSuccessSocialCard } from "@/components/promotions/PromotionBanners";
 
 const POPULAR_LOCALITIES = [
   "Boring Road",
@@ -298,22 +299,22 @@ function FindTutorFormContent() {
               </span>
 
               <h3 className="font-display text-2xl sm:text-3xl font-bold text-[#0B192C] mb-3">
-                Matching Process Initiated
+                Thank You! We Have Received Your Request 🙏
               </h3>
 
               <p className="text-[#5A6578] text-base leading-relaxed max-w-lg mb-8">
-                Our academic matching team is now shortlisting verified teachers in your neighborhood. You will receive an update on WhatsApp within <strong className="text-[#0B192C]">2 to 4 hours</strong>.
+                Our academic coordinator in Patna is reviewing verified tutors near your locality. We will share matching teacher profiles with you on WhatsApp within <strong className="text-[#0B192C]">2 to 4 hours</strong>.
               </p>
 
               <div className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-2xl p-6 mb-8 text-left">
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-4 h-4 text-[#E5A93C]" />
                   <p className="text-xs font-bold uppercase tracking-wider text-[#0B192C]">
-                    Next Step: Teacher Passport
+                    Next Step: Verified Teacher Profile
                   </p>
                 </div>
                 <p className="text-sm text-[#5A6578] mb-4">
-                  For faster verification, send your preferred demo slot directly to our counselor on WhatsApp.
+                  Want an immediate update? Connect with our Patna coordinator on WhatsApp to discuss your child&apos;s timing right away.
                 </p>
                 <a
                   href={whatsappUrl}
@@ -326,6 +327,12 @@ function FindTutorFormContent() {
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </a>
               </div>
+
+              {/* Official Google Business Profile, Instagram, and Facebook Badges */}
+              <SubmissionSuccessSocialCard
+                title="Connect with Patna's #1 Tuition Bureau"
+                subtitle="While our counseling team matches your requirement, follow Swati HTB on Instagram & Facebook or check out 500+ verified parent reviews on Google Maps."
+              />
 
               <button
                 type="button"

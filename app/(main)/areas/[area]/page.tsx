@@ -16,8 +16,12 @@ import {
   Sparkles,
   CheckCircle2,
   TrendingUp,
-  Search
+  Search,
+  Star,
+  ExternalLink
 } from "lucide-react";
+import { CANONICAL_LINKS, BUREAU_INFO } from "@/lib/constants";
+import { GoogleGIcon, InstagramIcon, FacebookIcon } from "@/components/shared/SocialIcons";
 
 // 1. GENERATE STATIC PAGES AT BUILD TIME
 export async function generateStaticParams() {
@@ -83,7 +87,7 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
         "name": `Swati Home Tuition Bureau - ${areaName}`,
         "description": `Premier home tuition and verified tutoring service in ${areaName}, Patna (${details.zone}). Female-first safety protocols and expert educators for Class 1 to 12, IIT-JEE, and NEET.`,
         "url": `https://swatihometuition.in/areas/${area}`,
-        "telephone": "+919229738307",
+        "telephone": CANONICAL_LINKS.phone,
         "priceRange": details.feeRange,
         "address": {
           "@type": "PostalAddress",
@@ -198,23 +202,23 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
             </span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-bold font-serif text-[#1F2937] leading-[1.15] mb-6">
+          <h1 className="text-4xl md:text-6xl font-extrabold font-display text-[#0B192C] leading-[1.15] mb-6">
             Best Home Tutors in <br />
-            <span className="text-[#0F4C5C] italic underline decoration-[#E36414]/30">{areaName}, Patna</span>
+            <span className="text-[#E5A93C]">{areaName}, Patna</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-neutral-600 max-w-3xl mx-auto mb-8 font-sans leading-relaxed">
+          <p className="text-lg md:text-xl text-[#5A6578] max-w-3xl mx-auto mb-8 font-sans leading-relaxed">
             Get 100% Aadhaar-verified, experienced educators delivered directly to your home in <strong>{areaName}</strong>. Enforced with the <strong>Swati Safety Shield</strong> and backed by our free replacement guarantee.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/book-demo">
-              <button className="bg-[#0F4C5C] text-white px-8 py-4 rounded-full font-bold text-base hover:bg-[#0c3c49] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+              <button className="bg-[#E5A93C] hover:bg-[#D49228] text-[#0B192C] px-8 py-4 rounded-xl font-extrabold text-base transition-all shadow-md border-b-[3px] border-[#B87C1C]">
                 Book a Free Demo in {areaName}
               </button>
             </Link>
             <Link href="/find-tutor">
-              <button className="bg-white text-[#1F2937] border border-neutral-300 px-8 py-4 rounded-full font-bold text-base hover:bg-neutral-50 transition-all">
+              <button className="bg-white text-[#0B192C] border border-[#E8E6DF] px-8 py-4 rounded-xl font-bold text-base hover:bg-[#F3F1EC] transition-all shadow-2xs">
                 Search Tutors by Subject
               </button>
             </Link>
@@ -423,17 +427,79 @@ export default async function AreaPage({ params }: { params: Promise<{ area: str
           <div className="mt-10 text-center">
             <div className="inline-flex flex-col sm:flex-row items-center gap-4 bg-white px-8 py-5 rounded-2xl border border-neutral-200 shadow-sm">
               <div className="text-left">
-                <p className="text-xs text-neutral-400 font-bold uppercase">Need immediate help in {areaName}?</p>
-                <p className="text-sm font-bold text-[#1F2937]">Call / WhatsApp our Patna Bureau Desk</p>
+                <p className="text-xs text-[#5A6578] font-bold uppercase">Need immediate help in {areaName}?</p>
+                <p className="text-sm font-bold text-[#0B192C]">Call / WhatsApp our Patna Bureau Desk</p>
               </div>
               <a
-                href={`https://wa.me/919229738307?text=Hi%2C%20I%20need%20a%20home%20tutor%20in%20${encodeURIComponent(areaName)}`}
+                href={CANONICAL_LINKS.whatsappWithText(`Hi, I need a home tutor in ${areaName}`)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#0F4C5C] text-white px-5 py-2.5 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-[#0c3c49]"
+                className="bg-[#25D366] hover:bg-[#20BD5A] text-white px-5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition-all"
               >
-                <PhoneCall className="w-3.5 h-3.5" /> +91 92297 38307
+                <PhoneCall className="w-3.5 h-3.5" /> WhatsApp {CANONICAL_LINKS.displayPhone}
               </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Google Business Profile 4.9★ Reviews & Verified Channels Banner */}
+      <section className="py-12 bg-white border-b border-neutral-100">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <div className="bg-[#F9F8F5] rounded-3xl border border-[#E8E6DF] p-6 sm:p-10 shadow-sm">
+            <div className="grid lg:grid-cols-12 gap-8 items-center">
+              <div className="lg:col-span-7 space-y-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-[#E8E6DF] text-xs font-bold text-[#0B192C]">
+                  <GoogleGIcon className="w-4 h-4" />
+                  <span>Verified Google Business Profile • Patna</span>
+                  <span className="flex text-[#E5A93C] ml-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} className="w-3 h-3 fill-[#E5A93C]" />
+                    ))}
+                  </span>
+                  <span className="font-extrabold text-[#0B192C]">{BUREAU_INFO.rating}★</span>
+                </div>
+                <h3 className="font-display text-2xl font-bold text-[#0B192C]">
+                  Trusted by Over 500+ Patna Families
+                </h3>
+                <p className="text-sm text-[#5A6578] font-sans leading-relaxed">
+                  Parents across {areaName} and greater Patna rely on Swati HTB for vetted, punctual home educators. Read Google reviews or leave feedback for your teacher.
+                </p>
+              </div>
+
+              <div className="lg:col-span-5 flex flex-col gap-3">
+                <a
+                  href={CANONICAL_LINKS.googleReviews}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 bg-[#E5A93C] hover:bg-[#D49228] text-[#0B192C] font-extrabold text-xs sm:text-sm px-6 py-3 rounded-xl transition-all shadow-sm border-b-[2px] border-[#B87C1C] text-center"
+                >
+                  <Star className="w-4 h-4 fill-[#0B192C]" />
+                  <span>Rate Swati HTB 5 Stars on Google</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+
+                <div className="flex gap-2">
+                  <a
+                    href={CANONICAL_LINKS.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-white hover:bg-[#F3F1EC] text-[#0B192C] font-bold text-xs py-2.5 px-3 rounded-xl border border-[#E8E6DF] transition-all"
+                  >
+                    <InstagramIcon className="w-4 h-4 text-pink-600" />
+                    <span>{BUREAU_INFO.instagramHandle}</span>
+                  </a>
+                  <a
+                    href={CANONICAL_LINKS.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-2 bg-white hover:bg-[#F3F1EC] text-[#0B192C] font-bold text-xs py-2.5 px-3 rounded-xl border border-[#E8E6DF] transition-all"
+                  >
+                    <FacebookIcon className="w-4 h-4 text-blue-600" />
+                    <span>Facebook</span>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>

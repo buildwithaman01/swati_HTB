@@ -5,9 +5,9 @@ import { MessageCircle, Star, Link as LinkIcon, CheckCircle2, Loader2, Send } fr
 import {
   formatWhatsAppUrl,
   normalizeIndianPhone,
-  TEACHER_LOGIN_URL,
-  PARENT_LOGIN_URL,
-  CANONICAL_SUPPORT_PHONE_DISPLAY,
+  buildTeacherAssignmentMessage,
+  buildParentAssignmentMessage,
+  buildParentReviewRequestMessage,
 } from "@/lib/whatsapp";
 
 interface Props {
@@ -48,11 +48,21 @@ export default function AssignmentActions({
   const cleanParentPhone = normalizeIndianPhone(parentPhone);
 
   // 1-click WhatsApp notification to Teacher
-  const teacherMsg = `🔔 *New Tuition Assignment!*\n\nDear ${teacherName || "Teacher"},\n\nYou have been assigned a new tuition for *${subject || "tuition"}*.\n\nStudent: ${studentName || "Student"}\nParent: ${parentName || "Parent"}\n\nPlease check your Swati HTB dashboard for full details, address, and schedule.\n🔗 Teacher Portal: ${TEACHER_LOGIN_URL}\n\n📞 Support: ${CANONICAL_SUPPORT_PHONE_DISPLAY}\n— Swati Home Tuition Bureau`;
+  const teacherMsg = buildTeacherAssignmentMessage({
+    teacherName,
+    studentName,
+    parentName,
+    subject,
+  });
   const teacherWaUrl = cleanTeacherPhone ? formatWhatsAppUrl(cleanTeacherPhone, teacherMsg) : "#";
 
   // 1-click WhatsApp notification to Parent
-  const parentMsg = `🎓 *Teacher Assigned!*\n\nDear ${parentName || "Parent"},\n\nWe have assigned *${teacherName || "our verified teacher"}* as the educator for *${subject || "tuition"}*.\n\nYou can track sessions, reports, and payments anytime in your Parent Portal.\n🔗 Parent Portal: ${PARENT_LOGIN_URL}\n\n📞 Support: ${CANONICAL_SUPPORT_PHONE_DISPLAY}\n— Swati Home Tuition Bureau`;
+  const parentMsg = buildParentAssignmentMessage({
+    parentName,
+    studentName: studentName || "Student",
+    teacherName,
+    subject,
+  });
   const parentWaUrl = cleanParentPhone ? formatWhatsAppUrl(cleanParentPhone, parentMsg) : "#";
 
   // Helper to fetch or generate token
@@ -107,19 +117,13 @@ export default function AssignmentActions({
       }
 
       const reviewUrl = `${window.location.origin}/review/submit?token=${token}`;
-      const parentGreeting = parentName ? `Dear ${parentName} ji` : "Dear Parent";
-      const studentRef = studentName ? `*${studentName}*` : "your child";
-      const teacherRef = teacherName ? `*${teacherName}*` : "our tutor";
-      const subjectRef = subject ? `*${subject}*` : "home tuition";
-
-      const reviewRequestMsg =
-        `Namaste ${parentGreeting}! 🙏\n\n` +
-        `We hope ${studentRef} is having productive and enjoyable classes with ${teacherRef} for ${subjectRef}.\n\n` +
-        `Your feedback is very valuable to us at Swati Home Tuition Bureau to ensure the highest teaching quality.\n\n` +
-        `Could you please take 1 minute to share a quick rating and review of ${teacherRef}?\n\n` +
-        `👉 Tap here to submit your review:\n` +
-        `${reviewUrl}\n\n` +
-        `Thank you for placing your trust in Swati Home Tuition Bureau! 🌟`;
+      const reviewRequestMsg = buildParentReviewRequestMessage({
+        parentName,
+        studentName,
+        teacherName,
+        subject,
+        reviewUrl,
+      });
 
       if (cleanParentPhone) {
         const waUrl = formatWhatsAppUrl(cleanParentPhone, reviewRequestMsg);

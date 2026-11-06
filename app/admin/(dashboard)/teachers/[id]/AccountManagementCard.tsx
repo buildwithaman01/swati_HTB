@@ -1,8 +1,13 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, MessageCircle, CheckCircle2, Eye, EyeOff, UserPlus, Send } from "lucide-react";
-import { formatWhatsAppUrl, TEACHER_LOGIN_URL, CANONICAL_SUPPORT_PHONE_DISPLAY } from "@/lib/whatsapp";
+import { KeyRound, MessageCircle, CheckCircle2, Eye, EyeOff, UserPlus, Send, FileText } from "lucide-react";
+import {
+  formatWhatsAppUrl,
+  buildTeacherCredentialsMessage,
+  buildTeacherApprovalMessage,
+  buildTutor4StepOnboardingMessage,
+} from "@/lib/whatsapp";
 
 interface Props {
   teacherId: string;
@@ -21,16 +26,22 @@ export default function AccountManagementCard({ teacherId, teacherName, teacherE
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  const loginUrl = TEACHER_LOGIN_URL;
   const teacherLoginId = teacherEmail || teacherPhone;
 
-  // 1-click WhatsApp welcome message
-  const welcomeMessage = `🎉 *Welcome to Swati Home Tuition Bureau!*\n\nDear ${teacherName},\n\nYou have been approved as a verified teacher on our platform.\n\n*Your Login Details:*\n🔗 Portal: ${loginUrl}\n📧 Email / ID: ${teacherLoginId}\n🔑 Password: ${password || "[Password set by admin]"}\n\n*Your Teacher ID* will be visible on your dashboard after login.\n\n*Next Steps:*\n1. Log in to your portal: ${loginUrl}\n2. Complete your teacher profile\n3. Set your preferred localities and subjects\n\n📞 Support / Any Issues: ${CANONICAL_SUPPORT_PHONE_DISPLAY} (or reply directly to this message)\n\n— Swati Home Tuition Bureau Team`;
-
+  // 1-click WhatsApp welcome message with credentials & instructions
+  const welcomeMessage = buildTeacherCredentialsMessage({
+    teacherName,
+    loginId: teacherLoginId,
+    password,
+  });
   const whatsappUrl = formatWhatsAppUrl(teacherPhone, welcomeMessage);
 
+  // 1-click WhatsApp 4-step onboarding explanation (for applicants / pending review)
+  const onboardingMessage = buildTutor4StepOnboardingMessage(teacherName);
+  const onboardingWhatsappUrl = formatWhatsAppUrl(teacherPhone, onboardingMessage);
+
   // 1-click WhatsApp approval notification (no password)
-  const approvalMessage = `✅ *Your application has been approved!*\n\nDear ${teacherName},\n\nWelcome to *Swati Home Tuition Bureau* — Patna's Most Trusted Tuition Service.\n\nYour profile is now active. You can log in anytime:\n🔗 Portal: ${loginUrl}\n\nOur team will contact you soon with student assignments in your area.\n\n📞 Support: ${CANONICAL_SUPPORT_PHONE_DISPLAY} (or reply here)\n— Swati Home Tuition Bureau Team`;
+  const approvalMessage = buildTeacherApprovalMessage(teacherName);
   const approvalWhatsappUrl = formatWhatsAppUrl(teacherPhone, approvalMessage);
 
   async function handleSetPassword() {
@@ -134,17 +145,30 @@ export default function AccountManagementCard({ teacherId, teacherName, teacherE
         </label>
         <p className="text-xs text-neutral-400">Opens WhatsApp with pre-filled message. Just press send!</p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Welcome with password */}
           <a
             href={password ? whatsappUrl : "#"}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => { if (!password) { e.preventDefault(); alert("Set a password above first, then send the welcome message!"); } }}
-            className="flex items-center gap-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold px-4 py-3 rounded-xl text-sm transition-colors group"
+            className="flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold px-3 py-3 rounded-xl text-xs transition-colors group text-center"
           >
             <MessageCircle className="w-4 h-4 shrink-0" />
             <span>Send Welcome + Password</span>
+          </a>
+
+          {/* 4-Step Onboarding Guide */}
+          <a
+            href={teacherPhone ? onboardingWhatsappUrl : "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => { if (!teacherPhone) { e.preventDefault(); alert("Teacher phone number missing!"); } }}
+            className="flex items-center justify-center gap-2 bg-[#0B192C] hover:bg-[#1E3E62] text-white font-bold px-3 py-3 rounded-xl text-xs transition-colors text-center"
+            title="Explain Document Verification -> Subject Interview -> ID Card -> Tuition Matching"
+          >
+            <FileText className="w-4 h-4 shrink-0" />
+            <span>Send 4-Step Onboarding</span>
           </a>
 
           {/* Just approval — no password */}
@@ -153,7 +177,7 @@ export default function AccountManagementCard({ teacherId, teacherName, teacherE
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => { if (verificationStatus !== "approved") { e.preventDefault(); alert("Approve the teacher first!"); } }}
-            className="flex items-center gap-2.5 bg-[#0F4C5C] hover:bg-[#0a3a47] text-white font-bold px-4 py-3 rounded-xl text-sm transition-colors"
+            className="flex items-center justify-center gap-2 bg-[#0F4C5C] hover:bg-[#0a3a47] text-white font-bold px-3 py-3 rounded-xl text-xs transition-colors text-center"
           >
             <Send className="w-4 h-4 shrink-0" />
             <span>Send Approval Notice</span>

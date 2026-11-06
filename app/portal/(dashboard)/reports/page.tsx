@@ -1,7 +1,12 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { FileText, TrendingUp, TrendingDown, Award, ExternalLink, Calendar } from "lucide-react";
+import { FileText, TrendingUp, TrendingDown, Award, ExternalLink, Calendar, MessageCircle, Phone, Sparkles } from "lucide-react";
 import PrintReportButton from "./PrintReportButton";
+import { CANONICAL_LINKS } from "@/lib/constants";
+import { formatSupportWhatsAppUrl } from "@/lib/whatsapp";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ParentReports() {
   const supabase = await createClient();
@@ -12,7 +17,7 @@ export default async function ParentReports() {
 
   const { data: student } = await adminClient
     .from("students")
-    .select("id, full_name")
+    .select("id, full_name, class_studying, parent_name")
     .or(`parent_email.ilike.${user.email},email.ilike.${user.email},parent_auth_user_id.eq.${user.id}`)
     .maybeSingle();
 
@@ -39,6 +44,10 @@ export default async function ParentReports() {
 
   const { data: reports } = await query.order("created_at", { ascending: false });
 
+  const counselorWhatsAppUrl = formatSupportWhatsAppUrl(
+    `Hello Swati HTB Counselor, I am ${student.parent_name} (Parent of ${student.full_name}, Class ${student.class_studying || ""}). I would like to discuss my child's test reports and syllabus progress.`
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -48,7 +57,7 @@ export default async function ParentReports() {
             Verified performance reports and test marks for <span className="font-semibold text-neutral-800">{student.full_name}</span>.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <PrintReportButton studentName={student.full_name} />
           <div className="text-xs bg-[#0F4C5C]/10 text-[#0F4C5C] font-semibold px-3 py-2 rounded-xl w-fit">
             {reports?.length || 0} Records Published
@@ -150,9 +159,9 @@ export default async function ParentReports() {
 
                   {(cleanedRemarks || report.tutor_message) && (
                     <div className="bg-[#0F4C5C]/5 border border-[#0F4C5C]/10 rounded-xl p-3.5">
-                      <p className="text-xs font-bold text-[#0F4C5C] mb-1">💬 Teacher's Feedback</p>
+                      <p className="text-xs font-bold text-[#0F4C5C] mb-1">💬 Teacher&apos;s Feedback</p>
                       <p className="text-sm text-neutral-700 italic">
-                        "{cleanedRemarks || report.tutor_message}"
+                        &ldquo;{cleanedRemarks || report.tutor_message}&rdquo;
                       </p>
                     </div>
                   )}
@@ -176,6 +185,41 @@ export default async function ParentReports() {
           })}
         </div>
       )}
+
+      {/* Academic Consultation Card */}
+      <div className="bg-gradient-to-r from-emerald-900 to-[#0F4C5C] text-white rounded-3xl p-6 sm:p-7 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+        <div className="space-y-2 max-w-xl">
+          <div className="inline-flex items-center gap-1.5 bg-white/10 px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#E5A93C]" />
+            <span>Academic Counseling Desk</span>
+          </div>
+          <h3 className="text-xl font-bold font-serif">
+            Want to discuss {student.full_name}&apos;s marks or board exam readiness?
+          </h3>
+          <p className="text-xs text-white/80 leading-relaxed">
+            Our senior academic advisors can review the test scores with you, suggest topic reinforcements, or coordinate with your home tutor.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full md:w-auto">
+          <a
+            href={counselorWhatsAppUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white font-bold px-5 py-3 rounded-xl text-xs transition-colors shadow-sm"
+          >
+            <MessageCircle className="w-4 h-4" />
+            <span>Chat Counselor</span>
+          </a>
+          <a
+            href={`tel:${CANONICAL_LINKS.phone}`}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 font-bold px-5 py-3 rounded-xl text-xs transition-colors"
+          >
+            <Phone className="w-4 h-4" />
+            <span>{CANONICAL_LINKS.displayPhone}</span>
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

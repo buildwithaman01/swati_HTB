@@ -201,7 +201,7 @@ export default function TeacherRowActions({
               </button>
             </div>
             <p className="text-xs text-[#5A6578] mb-3">
-              Hides public profile and deactivates educator while preserving past payouts, session logs, and reviews for tax records.
+              Safely deactivates educator while preserving past payouts, session logs, student reviews, and audit records.
             </p>
             <select
               value={endReason}
@@ -241,9 +241,12 @@ export default function TeacherRowActions({
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 text-left">
           <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-red-200">
             <h4 className="font-display font-bold text-base text-red-950 mb-2">Permanently Delete Educator?</h4>
-            <p className="text-xs text-neutral-600 mb-4 leading-relaxed font-sans">
-              Are you sure you want to permanently delete <strong>{teacherName}</strong>? If association has ended, use <strong>End Association</strong> instead to keep historical payout records.
-            </p>
+            <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-900 mb-3 space-y-1">
+              <p className="font-bold">⚠️ Irreversible Deletion Warning:</p>
+              <p>
+                Are you sure you want to permanently delete <strong>{teacherName}</strong>? If their association has simply concluded, click <strong>Cancel</strong> and choose <strong>End Association</strong> to preserve historical payout and session records.
+              </p>
+            </div>
             <div className="flex justify-end gap-2">
               <button 
                 type="button" 

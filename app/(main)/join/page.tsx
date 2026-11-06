@@ -17,6 +17,7 @@ import {
   Video
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { SubmissionSuccessSocialCard } from "@/components/promotions/PromotionBanners";
 
 const steps = [
   { id: 1, title: "Personal Details", icon: UserPlus },
@@ -214,10 +215,47 @@ export default function JoinPage() {
                 Application Submitted! 🎉
               </h3>
               <p className="text-[#1F2937]/60 text-lg leading-relaxed max-w-sm relative z-10">
-                Thank you! Our team will verify your KYC documents and run background checks. We will contact you within <strong>24-48 hours</strong>.
+                Thank you! Our academic vetting team will review your application within <strong>24–48 hours</strong>.
               </p>
 
-              <div className="w-full border-t border-neutral-100 my-8 relative z-10" />
+              {/* 4-Step Onboarding Process */}
+              <div className="w-full text-left my-6 relative z-10 bg-[#FAF7F2] p-5 rounded-2xl border border-neutral-200/80 space-y-3">
+                <p className="text-xs font-bold text-[#0F4C5C] uppercase tracking-wider">
+                  Your 4-Step Onboarding Journey
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                  <div className="flex items-start gap-2.5 p-2.5 bg-white rounded-xl border border-neutral-200/60">
+                    <span className="w-5 h-5 rounded-full bg-[#0F4C5C] text-white flex items-center justify-center font-bold text-[10px] shrink-0">1</span>
+                    <div>
+                      <p className="font-bold text-[#1F2937]">Document Verification</p>
+                      <p className="text-neutral-500 text-[11px]">Aadhaar & qualification review</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2.5 bg-white rounded-xl border border-neutral-200/60">
+                    <span className="w-5 h-5 rounded-full bg-[#0F4C5C] text-white flex items-center justify-center font-bold text-[10px] shrink-0">2</span>
+                    <div>
+                      <p className="font-bold text-[#1F2937]">Subject Interview</p>
+                      <p className="text-neutral-500 text-[11px]">10-min pedagogy interaction</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2.5 bg-white rounded-xl border border-neutral-200/60">
+                    <span className="w-5 h-5 rounded-full bg-[#0F4C5C] text-white flex items-center justify-center font-bold text-[10px] shrink-0">3</span>
+                    <div>
+                      <p className="font-bold text-[#1F2937]">ID Card Generation</p>
+                      <p className="text-neutral-500 text-[11px]">Official QR Faculty ID issued</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5 p-2.5 bg-white rounded-xl border border-neutral-200/60">
+                    <span className="w-5 h-5 rounded-full bg-[#0F4C5C] text-white flex items-center justify-center font-bold text-[10px] shrink-0">4</span>
+                    <div>
+                      <p className="font-bold text-[#1F2937]">Tuition Matching</p>
+                      <p className="text-neutral-500 text-[11px]">Demo confirmation in your area</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full border-t border-neutral-100 my-4 relative z-10" />
 
               <div className="relative z-10 w-full bg-[#f0fdf4] border border-emerald-200 rounded-2xl p-6">
                 <p className="text-sm font-semibold text-emerald-800 mb-1">Want to connect faster?</p>
@@ -234,6 +272,14 @@ export default function JoinPage() {
                   Message us on WhatsApp
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </a>
+              </div>
+
+              {/* Official Google Business Profile, Instagram, and Facebook Badges */}
+              <div className="w-full relative z-10">
+                <SubmissionSuccessSocialCard
+                  title="Connect with Patna's Premier Faculty Network"
+                  subtitle="Follow Swati HTB on Instagram & Facebook to get instant alerts on urgent tuition requirements across all Patna zones, or read 500+ verified parent reviews on Google."
+                />
               </div>
             </motion.div>
           ) : (

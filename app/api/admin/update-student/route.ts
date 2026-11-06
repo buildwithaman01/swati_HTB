@@ -30,10 +30,64 @@ export async function POST(req: NextRequest) {
     const resolvedId = studentRecord.id;
 
     // -------------------------------------------------------------
-    // ACTION 1: DELETE STUDENT
+    // ACTION 1: DELETE STUDENT (SAFE CASCADE CLEANUP)
     // -------------------------------------------------------------
     if (type === "delete") {
-      // 1. Delete student row (cascades or sets null per DB constraints)
+      try {
+        // 1. Identify all assignments for this student
+        const { data: studentAssignments } = await adminDb
+          .from("assignments")
+          .select("id")
+          .eq("student_id", resolvedId);
+
+        const assignmentIds = (studentAssignments || []).map((a: any) => a.id);
+
+        // 2. Cascade delete dependent child records pointing to student / student's assignments
+        // A) Sessions
+        await adminDb.from("sessions").delete().eq("student_id", resolvedId);
+        if (assignmentIds.length > 0) {
+          await adminDb.from("sessions").delete().in("assignment_id", assignmentIds);
+        }
+
+        // B) Progress Reports
+        await adminDb.from("progress_reports").delete().eq("student_id", resolvedId);
+        if (assignmentIds.length > 0) {
+          await adminDb.from("progress_reports").delete().in("assignment_id", assignmentIds);
+        }
+
+        // C) Reviews
+        await adminDb.from("reviews").delete().eq("student_id", resolvedId);
+        if (assignmentIds.length > 0) {
+          await adminDb.from("reviews").delete().in("assignment_id", assignmentIds);
+        }
+
+        // D) Commissions
+        try {
+          await adminDb.from("commissions").delete().eq("student_id", resolvedId);
+        } catch (commErr) {
+          // commissions.student_id column may be absent in legacy instances
+        }
+        if (assignmentIds.length > 0) {
+          await adminDb.from("commissions").delete().in("assignment_id", assignmentIds);
+        }
+
+        // E) Payments: Clean up or disassociate payments BEFORE deleting assignments to prevent FK conflicts
+        try {
+          await adminDb.from("payments").delete().eq("student_id", resolvedId);
+          if (assignmentIds.length > 0) {
+            await adminDb.from("payments").update({ assignment_id: null }).in("assignment_id", assignmentIds);
+          }
+        } catch (payErr: any) {
+          console.warn("[delete-student payments cleanup warning]:", payErr?.message);
+        }
+
+        // F) Assignments
+        await adminDb.from("assignments").delete().eq("student_id", resolvedId);
+      } catch (cascadeErr: any) {
+        console.warn("[delete-student cascade cleanup warning]:", cascadeErr?.message);
+      }
+
+      // 3. Delete student row from DB
       const { error: delError } = await adminDb
         .from("students")
         .delete()
@@ -44,7 +98,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: delError.message }, { status: 400 });
       }
 
-      // 2. If student had an authenticated parent user, clean it up safely
+      // 4. If student had an authenticated parent user, clean it up safely
       if (studentRecord.parent_auth_user_id) {
         try {
           await adminDb.auth.admin.deleteUser(studentRecord.parent_auth_user_id);
@@ -56,6 +110,7 @@ export async function POST(req: NextRequest) {
       revalidatePath("/admin/students");
       revalidatePath("/admin/dashboard");
       revalidatePath("/admin/assignments");
+      revalidatePath("/admin/teachers");
 
       return NextResponse.json({
         success: true,

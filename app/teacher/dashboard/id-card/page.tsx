@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   Star,
 } from "lucide-react";
-import { InstagramIcon } from "@/components/shared/SocialIcons";
+import { GoogleGIcon, InstagramIcon, FacebookIcon } from "@/components/shared/SocialIcons";
+import { CANONICAL_LINKS } from "@/lib/constants";
 import Link from "next/link";
 import QRCode from "qrcode";
 import IDCardDownloader from "./IDCardDownloader";
@@ -432,37 +433,63 @@ export default async function TeacherIDCardPage() {
               Swati Home Tuition Bureau is Patna&apos;s highest-rated home tutoring bureau on Google. Your ID badge reflects our authorized registry accreditation.
             </p>
 
-            <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs">
               <a
-                href="https://instagram.com/swati.htb"
+                href={CANONICAL_LINKS.googleReviews}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3 bg-[#F9F8F5] hover:bg-amber-50/50 rounded-xl border border-[#E8E6DF] transition-colors group block"
+              >
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#5A6578] uppercase group-hover:text-[#0B192C]">
+                  <GoogleGIcon className="w-3.5 h-3.5" />
+                  Google Reviews
+                </div>
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="font-bold text-[#0B192C] font-mono">4.9 ★</span>
+                  <div className="flex text-[#E5A93C]">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Star key={i} className="w-2.5 h-2.5 fill-[#E5A93C]" />
+                    ))}
+                  </div>
+                </div>
+              </a>
+
+              <a
+                href={CANONICAL_LINKS.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-3 bg-[#F9F8F5] hover:bg-pink-50/50 rounded-xl border border-[#E8E6DF] transition-colors group block"
               >
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#5A6578] uppercase group-hover:text-pink-600">
                   <InstagramIcon className="w-3.5 h-3.5 text-pink-600" />
-                  Official Instagram
+                  Instagram
                 </div>
-                <p className="font-bold text-[#0B192C] mt-0.5 font-mono group-hover:text-pink-700">@swati.htb</p>
+                <p className="font-bold text-[#0B192C] mt-1 font-mono group-hover:text-pink-700">@swati.htb</p>
               </a>
-              <div className="p-3 bg-[#F9F8F5] rounded-xl border border-[#E8E6DF]">
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#5A6578] uppercase">
-                  <Star className="w-3.5 h-3.5 fill-[#E5A93C] text-[#E5A93C]" />
-                  Google Verified
+
+              <a
+                href={CANONICAL_LINKS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-3 bg-[#F9F8F5] hover:bg-blue-50/50 rounded-xl border border-[#E8E6DF] transition-colors group block"
+              >
+                <div className="flex items-center gap-1.5 text-[10px] font-bold text-[#5A6578] uppercase group-hover:text-blue-600">
+                  <FacebookIcon className="w-3.5 h-3.5 text-blue-600" />
+                  Facebook
                 </div>
-                <p className="font-bold text-[#0B192C] mt-0.5 font-mono">4.9 ★ Rating</p>
-              </div>
+                <p className="font-bold text-[#0B192C] mt-1 font-mono group-hover:text-blue-700">Swati HTB</p>
+              </a>
             </div>
 
             <div className="pt-2 border-t border-[#E8E6DF] flex items-center justify-between">
-              <span className="text-[11px] text-[#5A6578]">Help us strengthen bureau rating:</span>
+              <span className="text-[11px] text-[#5A6578]">Official Bureau Business Profile:</span>
               <a
-                href="https://share.google/tarSWReEvLi7cim5V"
+                href={CANONICAL_LINKS.googleReviews}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0B192C] hover:text-[#1E3E62] underline"
               >
-                Rate Swati HTB on Google ★ <ExternalLink className="w-3 h-3 text-[#E5A93C]" />
+                Rate on Google (5-Stars) ★ <ExternalLink className="w-3 h-3 text-[#E5A93C]" />
               </a>
             </div>
           </div>

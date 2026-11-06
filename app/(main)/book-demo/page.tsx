@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { SubmissionSuccessSocialCard } from "@/components/promotions/PromotionBanners";
 
 const PATNA_LOCALITY_OPTIONS = [
   "Boring Road",
@@ -204,12 +205,9 @@ function BookDemoContent() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
           >
-            {/* Live Trust Eyebrow */}
-            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md mb-6">
-              <span className="w-2 h-2 rounded-full bg-[#E5A93C] animate-pulse" />
-              <span className="text-[#E5A93C] text-xs font-bold uppercase tracking-wider">
-                100% Free Trial Class · Zero Financial Commitment
-              </span>
+            {/* Eyebrow */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-[#E5A93C] text-xs font-semibold tracking-wide mb-6">
+              100% Free Trial Class at Your Home
             </div>
 
             {/* Sans Display Headline */}
@@ -260,7 +258,7 @@ function BookDemoContent() {
                     Swati Trial Policy
                   </span>
                   <h2 className="font-display text-xl font-bold text-[#0B192C]">
-                    The In-Home Demo Protocol
+                    How the Free Trial Class Works
                   </h2>
                 </div>
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#005F56]/10 text-[#005F56] text-xs font-bold">
@@ -289,7 +287,7 @@ function BookDemoContent() {
                   </div>
                   <div>
                     <h4 className="font-display font-bold text-[#0B192C] text-sm">
-                      Full Teacher Passport Shared First
+                      Verified Teacher Profile Sent First
                     </h4>
                     <p className="text-xs text-[#5A6578] leading-relaxed mt-0.5">
                       Before any tutor knocks on your door, you receive their verified ID proof, qualifications, and college background via WhatsApp.
@@ -432,15 +430,15 @@ function BookDemoContent() {
                   </div>
 
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#005F56]/10 text-[#005F56] text-xs font-bold uppercase tracking-wider mb-3">
-                    Demo Slot Request Confirmed
+                    Trial Class Request Received
                   </span>
 
                   <h3 className="font-display text-2xl sm:text-3xl font-extrabold text-[#0B192C] mb-3">
-                    Thank You! We are on it.
+                    Thank You! We Have Received Your Request 🙏
                   </h3>
 
                   <p className="text-[#5A6578] text-base leading-relaxed max-w-md mb-8">
-                    Our academic counselor will call you on your WhatsApp number within <strong className="text-[#0B192C]">2 hours</strong> to confirm tutor availability and demo timing.
+                    Our academic coordinator in Patna will call or message you on WhatsApp within <strong className="text-[#0B192C]">2 hours</strong> to share verified teacher options and schedule your child&apos;s free 1-hour trial class.
                   </p>
 
                   <div className="w-full bg-[#F9F8F5] border border-[#E8E6DF] rounded-2xl p-6 mb-6 text-left">
@@ -464,6 +462,12 @@ function BookDemoContent() {
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </a>
                   </div>
+
+                  {/* Official Google Business Profile, Instagram, and Facebook Badges */}
+                  <SubmissionSuccessSocialCard
+                    title="Connect with Patna's #1 Tuition Bureau"
+                    subtitle="While our academic coordinator confirms your demo slot, check out verified student stories on Instagram or read 500+ genuine reviews on Google."
+                  />
 
                   <button
                     onClick={() => setSubmitted(false)}

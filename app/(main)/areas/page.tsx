@@ -12,10 +12,14 @@ import {
   Users,
   Compass,
   CheckCircle2,
-  Phone
+  Phone,
+  Star,
+  ExternalLink
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { patnaAreas, slugify, getAreaDetails } from "@/lib/data/areas";
+import { CANONICAL_LINKS, BUREAU_INFO } from "@/lib/constants";
+import { GoogleGIcon, InstagramIcon, FacebookIcon } from "@/components/shared/SocialIcons";
 
 // Featured Patna educational hubs with rich card details
 const FEATURED_LOCALITIES = [
@@ -313,12 +317,12 @@ export default function AreasIndexPage() {
 
             <div className="flex items-center gap-3 shrink-0 w-full md:w-auto">
               <a
-                href="https://wa.me/919229738307?text=Hello%20Swati%20HTB,%20do%20you%20have%20tutors%20available%20in%20my%20area?"
+                href={CANONICAL_LINKS.whatsappWithText("Hello Swati HTB, do you have tutors available in my area in Patna?")}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full md:w-auto inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white text-xs font-bold px-5 py-3 rounded-xl shadow-sm transition-all"
               >
-                <span>Check on WhatsApp</span>
+                <span>WhatsApp ({CANONICAL_LINKS.displayPhone})</span>
               </a>
               <Link
                 href="/book-demo"
@@ -329,6 +333,63 @@ export default function AreasIndexPage() {
             </div>
           </div>
         </motion.div>
+
+        {/* ── GOOGLE BUSINESS PROFILE 4.9★ & SOCIAL TRUST BAR ── */}
+        <div className="mt-12 bg-white rounded-2xl border border-[#E8E6DF] p-6 sm:p-8 shadow-sm">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            <div className="space-y-1.5 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F3F1EC] text-xs font-bold text-[#0B192C]">
+                <GoogleGIcon className="w-4 h-4" />
+                <span>Google Business Profile • Patna</span>
+                <span className="flex text-[#E5A93C] ml-1">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} className="w-3 h-3 fill-[#E5A93C]" />
+                  ))}
+                </span>
+                <span className="font-extrabold">{BUREAU_INFO.rating}★ Rated</span>
+              </div>
+              <h3 className="font-display text-xl sm:text-2xl font-bold text-[#0B192C]">
+                Over 500+ Verified Parents Across Patna
+              </h3>
+              <p className="text-xs sm:text-sm text-[#5A6578]">
+                Read genuine reviews from families in Boring Road, Kankarbagh, Bailey Road, and more.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 w-full lg:w-auto">
+              <a
+                href={CANONICAL_LINKS.googleReviews}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#E5A93C] hover:bg-[#D49228] text-[#0B192C] font-extrabold text-xs py-3 px-5 rounded-xl transition-all shadow-sm border-b-[2px] border-[#B87C1C]"
+              >
+                <Star className="w-3.5 h-3.5 fill-[#0B192C]" />
+                <span>Rate 5 Stars on Google</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+
+              <a
+                href={CANONICAL_LINKS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#F9F8F5] hover:bg-[#F3F1EC] text-[#0B192C] font-bold text-xs py-3 px-4 rounded-xl border border-[#E8E6DF] transition-all"
+              >
+                <InstagramIcon className="w-4 h-4 text-pink-600" />
+                <span>{BUREAU_INFO.instagramHandle}</span>
+              </a>
+
+              <a
+                href={CANONICAL_LINKS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#F9F8F5] hover:bg-[#F3F1EC] text-[#0B192C] font-bold text-xs py-3 px-4 rounded-xl border border-[#E8E6DF] transition-all"
+              >
+                <FacebookIcon className="w-4 h-4 text-blue-600" />
+                <span>Facebook</span>
+              </a>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>

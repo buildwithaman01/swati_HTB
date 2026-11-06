@@ -64,8 +64,9 @@ export default function IDCardDownloader({
    * Triggers download of an image data URL with a clean sanitized filename
    */
   function triggerDownload(dataUrl: string, suffix: string = "") {
-    const cleanName = teacherName.replace(/[^a-zA-Z0-9]/g, "_");
-    const filename = `SwatiHTB_ID_${cleanName}_${teacherId}${suffix}.png`;
+    const cleanTeacherId = (teacherId || "FACULTY").replace(/[^a-zA-Z0-9_-]/g, "_");
+    const cleanName = (teacherName || "Tutor").trim().replace(/[^a-zA-Z0-9]/g, "_");
+    const filename = `Swati_HTB_Teacher_ID_${cleanTeacherId}_${cleanName}${suffix}.png`;
     const a = document.createElement("a");
     a.href = dataUrl;
     a.download = filename;

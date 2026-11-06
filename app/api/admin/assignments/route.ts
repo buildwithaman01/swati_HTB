@@ -206,6 +206,20 @@ export async function DELETE(req: NextRequest) {
     }
 
     const adminDb = await createAdminClient();
+
+    // 1. Cascade cleanup and nullify child records pointing to this assignment
+    try {
+      await adminDb.from("sessions").delete().eq("assignment_id", id);
+      await adminDb.from("progress_reports").delete().eq("assignment_id", id);
+      await adminDb.from("reviews").delete().eq("assignment_id", id);
+      await adminDb.from("commissions").delete().eq("assignment_id", id);
+      // Nullify assignment_id on payments to preserve payment history while breaking FK dependency
+      await adminDb.from("payments").update({ assignment_id: null }).eq("assignment_id", id);
+    } catch (cleanErr: any) {
+      console.warn("[assignment delete cleanup warning]:", cleanErr?.message);
+    }
+
+    // 2. Delete the assignment row
     const { error } = await adminDb.from("assignments").delete().eq("id", id);
 
     if (error) {
@@ -216,6 +230,8 @@ export async function DELETE(req: NextRequest) {
     revalidatePath("/admin/assignments");
     revalidatePath("/admin/dashboard");
     revalidatePath("/admin/finance");
+    revalidatePath("/admin/students");
+    revalidatePath("/admin/teachers");
 
     return NextResponse.json({ success: true, message: "Assignment deleted." });
   } catch (err: any) {

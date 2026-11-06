@@ -30,10 +30,61 @@ export async function POST(req: NextRequest) {
     const resolvedId = teacherRecord.id;
 
     // -------------------------------------------------------------
-    // ACTION 1: DELETE TEACHER
+    // ACTION 1: DELETE TEACHER (SAFE CASCADE CLEANUP)
     // -------------------------------------------------------------
     if (type === "delete") {
-      // 1. Delete teacher from DB
+      try {
+        // 1. Identify all assignments for this teacher
+        const { data: teacherAssignments } = await adminDb
+          .from("assignments")
+          .select("id")
+          .eq("teacher_id", resolvedId);
+
+        const assignmentIds = (teacherAssignments || []).map((a: any) => a.id);
+
+        // 2. Cascade delete dependent child records pointing to teacher / teacher's assignments
+        // A) Sessions
+        await adminDb.from("sessions").delete().eq("teacher_id", resolvedId);
+        if (assignmentIds.length > 0) {
+          await adminDb.from("sessions").delete().in("assignment_id", assignmentIds);
+        }
+
+        // B) Progress Reports
+        await adminDb.from("progress_reports").delete().eq("teacher_id", resolvedId);
+        if (assignmentIds.length > 0) {
+          await adminDb.from("progress_reports").delete().in("assignment_id", assignmentIds);
+        }
+
+        // C) Reviews
+        await adminDb.from("reviews").delete().eq("teacher_id", resolvedId);
+        if (assignmentIds.length > 0) {
+          await adminDb.from("reviews").delete().in("assignment_id", assignmentIds);
+        }
+
+        // D) Commissions
+        await adminDb.from("commissions").delete().eq("teacher_id", resolvedId);
+        if (assignmentIds.length > 0) {
+          await adminDb.from("commissions").delete().in("assignment_id", assignmentIds);
+        }
+
+        // E) Payments: Disassociate teacher and teacher's assignments to preserve parent payment receipts
+        try {
+          if (assignmentIds.length > 0) {
+            await adminDb.from("payments").update({ assignment_id: null }).in("assignment_id", assignmentIds);
+          }
+          await adminDb.from("payments").update({ teacher_id: null }).eq("teacher_id", resolvedId);
+        } catch (payErr: any) {
+          // Safe fallback if column is absent in older migrations
+          console.warn("[delete-teacher payment unlinking warning]:", payErr?.message);
+        }
+
+        // F) Assignments
+        await adminDb.from("assignments").delete().eq("teacher_id", resolvedId);
+      } catch (cascadeErr: any) {
+        console.warn("[delete-teacher cascade cleanup warning]:", cascadeErr?.message);
+      }
+
+      // 3. Delete teacher record from DB
       const { error: delError } = await adminDb
         .from("teachers")
         .delete()
@@ -44,7 +95,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: delError.message }, { status: 400 });
       }
 
-      // 2. If teacher had an auth account, safely remove
+      // 4. If teacher had an auth account, safely remove
       if (teacherRecord.auth_user_id) {
         try {
           await adminDb.auth.admin.deleteUser(teacherRecord.auth_user_id);
@@ -56,6 +107,7 @@ export async function POST(req: NextRequest) {
       revalidatePath("/admin/teachers");
       revalidatePath("/admin/dashboard");
       revalidatePath("/admin/assignments");
+      revalidatePath("/admin/students");
 
       return NextResponse.json({
         success: true,

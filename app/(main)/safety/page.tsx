@@ -12,9 +12,13 @@ import {
   HelpCircle,
   Eye,
   MapPin,
-  ArrowRight
+  ArrowRight,
+  Star,
+  ExternalLink
 } from "lucide-react";
 import { Metadata } from "next";
+import { CANONICAL_LINKS, BUREAU_INFO } from "@/lib/constants";
+import { GoogleGIcon, InstagramIcon, FacebookIcon } from "@/components/shared/SocialIcons";
 
 export const metadata: Metadata = {
   title: "Parent Safety & Teacher Verification in Patna | Swati HTB",
@@ -268,7 +272,7 @@ export default function SafetyPage() {
         </div>
 
         {/* Bureau Office Direct Line Card */}
-        <div className="p-8 sm:p-12 rounded-3xl bg-[#0B192C] text-white border-2 border-[#E5A93C] relative overflow-hidden shadow-lg">
+        <div className="p-8 sm:p-12 rounded-3xl bg-[#0B192C] text-white border-2 border-[#E5A93C] relative overflow-hidden shadow-lg mb-16">
           <div className="absolute inset-0 bg-grid-dots-light opacity-15 pointer-events-none" />
 
           <div className="relative z-10 grid lg:grid-cols-12 gap-8 items-center">
@@ -293,13 +297,71 @@ export default function SafetyPage() {
                 Book Free Trial Class
               </Link>
               <a
-                href="https://wa.me/919229738307?text=Hi%2C%20I%20have%20questions%20regarding%20teacher%20verification%20and%20safety"
+                href={CANONICAL_LINKS.whatsappWithText("Hi, I have questions regarding teacher verification and safety at Swati HTB")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center h-12 px-6 bg-white/10 hover:bg-white/20 text-white font-bold text-sm rounded-xl border border-white/20 transition-all text-center gap-2"
+                className="inline-flex items-center justify-center h-12 px-6 bg-[#25D366] hover:bg-[#20BD5A] text-white font-bold text-sm rounded-xl transition-all text-center gap-2 shadow-sm"
               >
-                <PhoneCall className="w-4 h-4" /> Call/WhatsApp Bureau
+                <PhoneCall className="w-4 h-4" /> WhatsApp {CANONICAL_LINKS.displayPhone}
               </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Google Business Profile 4.9★ Reviews & Verified Channels Banner */}
+        <div className="bg-white rounded-3xl border border-[#E8E6DF] p-6 sm:p-10 shadow-sm">
+          <div className="grid lg:grid-cols-12 gap-8 items-center">
+            <div className="lg:col-span-7 space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F3F1EC] border border-[#E8E6DF] text-xs font-bold text-[#0B192C]">
+                <GoogleGIcon className="w-4 h-4" />
+                <span>Verified Google Business Profile • Patna</span>
+                <span className="flex text-[#E5A93C] ml-1">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} className="w-3 h-3 fill-[#E5A93C]" />
+                  ))}
+                </span>
+                <span className="font-extrabold text-[#0B192C]">{BUREAU_INFO.rating}★</span>
+              </div>
+              <h3 className="font-display text-2xl font-bold text-[#0B192C]">
+                Read Honest Reviews from Real Patna Families
+              </h3>
+              <p className="text-sm text-[#5A6578] font-sans leading-relaxed">
+                Over 500 parents across Boring Road, Kankarbagh, and Bailey Road trust Swati HTB for vetted home tuition. Check our live rating or leave your own review on Google.
+              </p>
+            </div>
+
+            <div className="lg:col-span-5 flex flex-col sm:flex-row lg:flex-col gap-3">
+              <a
+                href={CANONICAL_LINKS.googleReviews}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-[#E5A93C] hover:bg-[#D49228] text-[#0B192C] font-extrabold text-xs sm:text-sm px-6 py-3 rounded-xl transition-all shadow-sm border-b-[2px] border-[#B87C1C] text-center"
+              >
+                <Star className="w-4 h-4 fill-[#0B192C]" />
+                <span>Rate Swati HTB 5 Stars on Google</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+
+              <div className="flex gap-2">
+                <a
+                  href={CANONICAL_LINKS.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-2 bg-[#F9F8F5] hover:bg-[#F3F1EC] text-[#0B192C] font-bold text-xs py-2.5 px-3 rounded-xl border border-[#E8E6DF] transition-all"
+                >
+                  <InstagramIcon className="w-4 h-4 text-pink-600" />
+                  <span>{BUREAU_INFO.instagramHandle}</span>
+                </a>
+                <a
+                  href={CANONICAL_LINKS.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 inline-flex items-center justify-center gap-2 bg-[#F9F8F5] hover:bg-[#F3F1EC] text-[#0B192C] font-bold text-xs py-2.5 px-3 rounded-xl border border-[#E8E6DF] transition-all"
+                >
+                  <FacebookIcon className="w-4 h-4 text-blue-600" />
+                  <span>Facebook</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>

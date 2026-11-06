@@ -1,6 +1,7 @@
 import { createClient, createAdminClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import StudentProfileEditor from "./StudentProfileEditor";
+import { StudentPortalSocialCard } from "@/components/promotions/PromotionBanners";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,6 +30,13 @@ export default async function StudentProfilePage() {
           Keep your student's photo, school details, target scores, and weak subjects up-to-date.
         </p>
       </div>
+
+      {/* Official Student Enrollment Verification & Social Bureau Card */}
+      <StudentPortalSocialCard
+        studentName={student.full_name}
+        studentClass={`Class ${student.class_studying || ""}`}
+        enrollmentStatus={student.enrollment_status || "Active Student"}
+      />
 
       <StudentProfileEditor student={student} />
     </div>

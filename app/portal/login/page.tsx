@@ -1,6 +1,9 @@
 "use client";
 import { useState } from "react";
-import { ArrowRight, Mail, Lock, Eye, EyeOff, Users } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Mail, Lock, Eye, EyeOff, Users, MessageCircle, Phone, HelpCircle } from "lucide-react";
+import { CANONICAL_LINKS } from "@/lib/constants";
+import { formatSupportWhatsAppUrl } from "@/lib/whatsapp";
 
 export default function ParentLogin() {
   const [mode, setMode] = useState<"magic" | "password">("magic");
@@ -8,6 +11,10 @@ export default function ParentLogin() {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+
+  const supportWhatsApp = formatSupportWhatsAppUrl(
+    "Hello Swati HTB Team, I need help signing in to the Parent Portal."
+  );
 
   async function handleMagicLink(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -41,28 +48,28 @@ export default function ParentLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-[#0F4C5C] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-[#0F4C5C] p-4 py-12">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[60%] bg-indigo-500/10 blur-[120px] rounded-full" />
       </div>
 
       <div className="relative w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl mb-4 border border-white/20">
+          <Link href="/" className="inline-flex items-center justify-center w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl mb-4 border border-white/20 hover:scale-105 transition-transform">
             <Users className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-white font-serif">Parent Portal</h1>
-          <p className="text-white/60 mt-2 text-sm">Track your child's progress & sessions</p>
+          </Link>
+          <h1 className="text-3xl font-bold text-white font-serif">Parent & Student Portal</h1>
+          <p className="text-white/70 mt-2 text-sm">Track your child&apos;s progress, sessions, and verified tutors</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.3)] overflow-hidden">
           <div className="flex border-b border-neutral-100">
             <button onClick={() => { setMode("magic"); setError(""); setSent(false); }}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${mode === "magic" ? "bg-[#0F4C5C] text-white" : "text-neutral-500 hover:text-[#0F4C5C]"}`}>
+              className={`flex-1 py-4 text-sm font-bold transition-colors cursor-pointer ${mode === "magic" ? "bg-[#0F4C5C] text-white" : "text-neutral-500 hover:text-[#0F4C5C]"}`}>
               📧 Magic Link
             </button>
             <button onClick={() => { setMode("password"); setError(""); setSent(false); }}
-              className={`flex-1 py-4 text-sm font-bold transition-colors ${mode === "password" ? "bg-[#0F4C5C] text-white" : "text-neutral-500 hover:text-[#0F4C5C]"}`}>
+              className={`flex-1 py-4 text-sm font-bold transition-colors cursor-pointer ${mode === "password" ? "bg-[#0F4C5C] text-white" : "text-neutral-500 hover:text-[#0F4C5C]"}`}>
               🔐 Password
             </button>
           </div>
@@ -76,7 +83,7 @@ export default function ParentLogin() {
                   </div>
                   <h2 className="text-xl font-bold text-[#1F2937] mb-2">Check your email!</h2>
                   <p className="text-sm text-neutral-500">We sent a login link to your registered email address.</p>
-                  <button onClick={() => setSent(false)} className="mt-4 text-sm text-[#0F4C5C] font-bold hover:underline">Try again</button>
+                  <button onClick={() => setSent(false)} className="mt-4 text-sm text-[#0F4C5C] font-bold hover:underline cursor-pointer">Try again</button>
                 </div>
               ) : (
                 <form onSubmit={handleMagicLink} className="space-y-4">
@@ -91,7 +98,7 @@ export default function ParentLogin() {
                   </div>
                   {error && <p className="text-red-600 text-sm bg-red-50 p-3 rounded-xl">{error}</p>}
                   <button type="submit" disabled={loading}
-                    className="w-full bg-[#0F4C5C] disabled:opacity-60 hover:bg-[#0a3a47] text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+                    className="w-full bg-[#0F4C5C] disabled:opacity-60 hover:bg-[#0a3a47] text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                     {loading ? "Sending..." : <>Send Magic Link <ArrowRight className="w-4 h-4" /></>}
                   </button>
                 </form>
@@ -113,22 +120,49 @@ export default function ParentLogin() {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                     <input type={showPassword ? "text" : "password"} name="password" required placeholder="Enter password"
                       className="w-full pl-10 pr-10 py-3 border border-neutral-200 rounded-xl text-sm focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none" />
-                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 cursor-pointer">
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
                 {error && <p className="text-red-600 text-sm bg-red-50 p-3 rounded-xl">{error}</p>}
                 <button type="submit" disabled={loading}
-                  className="w-full bg-[#0F4C5C] disabled:opacity-60 hover:bg-[#0a3a47] text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2">
+                  className="w-full bg-[#0F4C5C] disabled:opacity-60 hover:bg-[#0a3a47] text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm">
                   {loading ? "Signing in..." : <>Sign In <ArrowRight className="w-4 h-4" /></>}
                 </button>
               </form>
             )}
           </div>
 
-          <div className="px-8 pb-6 border-t border-neutral-100 pt-4 text-center">
-            <p className="text-xs text-neutral-400">Don't have an account? Our team will set it up for you when your child enrolls.</p>
+          {/* Helpdesk & Support Section */}
+          <div className="px-8 pb-6 border-t border-neutral-100 pt-5 space-y-3 bg-neutral-50/70">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-neutral-600 flex items-center gap-1">
+                <HelpCircle className="w-3.5 h-3.5 text-[#0F4C5C]" /> Need login help?
+              </span>
+              <a
+                href={supportWhatsApp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-[#1e8a45] hover:underline flex items-center gap-1"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" /> WhatsApp Support
+              </a>
+            </div>
+
+            <div className="flex items-center justify-between text-xs text-neutral-500 pt-1 border-t border-neutral-200/60">
+              <span>Helpline: <a href={`tel:${CANONICAL_LINKS.phone}`} className="font-bold text-[#1F2937] hover:underline">{CANONICAL_LINKS.displayPhone}</a></span>
+              <Link href="/" className="text-[#0F4C5C] font-semibold hover:underline">
+                Home
+              </Link>
+            </div>
+
+            <p className="text-[11px] text-neutral-400 text-center pt-1">
+              Don&apos;t have an account yet?{" "}
+              <Link href="/find-tutor" className="text-[#0F4C5C] font-bold hover:underline">
+                Request a Home Tutor
+              </Link>
+            </p>
           </div>
         </div>
       </div>

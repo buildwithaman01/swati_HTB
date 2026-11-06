@@ -2,6 +2,7 @@ import { createAdminClient } from "@/utils/supabase/server";
 import { CheckCircle2, XCircle, Search, Plus, Filter, ShieldAlert, Clock, PauseCircle, UserMinus } from "lucide-react";
 import Link from "next/link";
 import TeacherRowActions from "./TeacherRowActions";
+import TutorAnnouncementButton from "./TutorAnnouncementButton";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -77,12 +78,15 @@ export default async function AdminTeachers({
           <h1 className="font-display text-3xl font-bold text-[#0B192C]">Teachers &amp; Educators</h1>
           <p className="text-sm text-neutral-500 mt-1 font-sans">Manage educator vetting, active associations, leave breaks, and payouts</p>
         </div>
-        <Link 
-          href="/admin/teachers/new" 
-          className="bg-[#0B192C] hover:bg-[#1E3E62] text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm border-b-[2px] border-[#E5A93C]"
-        >
-          <Plus size={18} className="text-[#E5A93C]" /> Add Educator Profile
-        </Link>
+        <div className="flex items-center gap-3">
+          <TutorAnnouncementButton />
+          <Link 
+            href="/admin/teachers/new" 
+            className="bg-[#0B192C] hover:bg-[#1E3E62] text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors shadow-sm border-b-[2px] border-[#E5A93C]"
+          >
+            <Plus size={18} className="text-[#E5A93C]" /> Add Educator Profile
+          </Link>
+        </div>
       </div>
 
       {/* Filters and Search */}

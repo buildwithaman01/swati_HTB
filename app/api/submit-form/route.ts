@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/utils/supabase/server";
+import { formatWhatsAppUrl, CANONICAL_SUPPORT_PHONE } from "@/lib/whatsapp";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONFIG
@@ -272,7 +273,7 @@ export async function POST(req: NextRequest) {
 
     // 2. ── Build WhatsApp message URL
     const waMessage = buildWhatsAppMessage(formType, fields);
-    const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessage)}`;
+    const waUrl = formatWhatsAppUrl(CANONICAL_SUPPORT_PHONE, waMessage);
 
     // 3. ── Build Web3Forms Payload (Clean Key-Value Table, NO raw HTML codes)
     let web3formsPayload: Record<string, any> | null = null;
@@ -433,15 +434,15 @@ function buildWhatsAppMessage(formType: string, fields: Record<string, string>):
       `_Reply within 2 hours._`
     );
   }
-  if (formType === "join-tutor-wizard") {
+  if (formType === "join-tutor-wizard" || formType === "join-teacher") {
     return (
-      `🔔 *NEW TEACHER APPLICATION (WIZARD)*\n\n` +
-      `👤 *Name:* ${fields.name || "N/A"}\n` +
-      `📞 *WhatsApp:* ${fields.whatsapp || "N/A"}\n` +
-      `🎓 *Qual:* ${fields.qualification || "N/A"}\n` +
+      `Hello Swati Home Tuition Bureau, I have submitted my Teacher Application on your portal.\n\n` +
+      `👤 *Name:* ${fields.name || "Teacher"}\n` +
+      `📞 *WhatsApp:* ${fields.whatsapp || fields.phone || "N/A"}\n` +
+      `🎓 *Qualification:* ${fields.qualification || "N/A"}\n` +
       `📚 *Subjects:* ${fields.subjects || "N/A"}\n` +
-      `📍 *Areas:* ${fields.areas || "N/A"}\n\n` +
-      `_Check Admin Panel for full details._`
+      `📍 *Preferred Areas:* ${fields.areas || fields.location || "Patna"}\n\n` +
+      `Please initiate my 4-Step Verification (Document Verification ➔ Subject Interview ➔ Faculty ID Card ➔ Student Tuition Matching). Thank you!`
     );
   }
 
@@ -453,6 +454,6 @@ function buildWhatsAppMessage(formType: string, fields: Record<string, string>):
     `🎓 *Qualification:* ${fields.qualification || "N/A"}\n` +
     `📚 *Subjects:* ${fields.subjects || "N/A"}\n` +
     `📍 *Location:* ${fields.location || "N/A"}\n\n` +
-    `_Review and call to verify._`
+    `_Review and initiate 4-Step Onboarding._`
   );
 }

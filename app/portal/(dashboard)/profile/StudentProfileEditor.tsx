@@ -464,9 +464,12 @@ export default function StudentProfileEditor({ student }: Props) {
                 name="whatsapp"
                 value={formData.whatsapp}
                 onChange={handleChange}
-                placeholder="Same as phone if blank"
+                placeholder="10-digit number (e.g. 9835012345)"
                 className="w-full text-sm border border-neutral-200 rounded-xl p-2.5 focus:ring-2 focus:ring-[#0F4C5C]/20 outline-none"
               />
+              <p className="text-[11px] text-neutral-400 mt-1">
+                Used for attendance alerts, test reports, and WhatsApp coordinator messages.
+              </p>
             </div>
 
             <div>

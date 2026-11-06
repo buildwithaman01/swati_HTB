@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, MessageCircle, CheckCircle2, Eye, EyeOff, UserPlus, Send } from "lucide-react";
-import { formatWhatsAppUrl, PARENT_LOGIN_URL, CANONICAL_SUPPORT_PHONE_DISPLAY } from "@/lib/whatsapp";
+import { formatWhatsAppUrl, buildStudentCredentialsMessage } from "@/lib/whatsapp";
 
 interface Props {
   studentId: string;
@@ -20,11 +20,14 @@ export default function StudentAccountManagementCard({ studentId, studentName, p
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  const loginUrl = PARENT_LOGIN_URL;
   const parentIdentifier = parentEmail || parentPhone;
 
-  // 1-click WhatsApp welcome message
-  const welcomeMessage = `🎉 *Welcome to Swati Home Tuition Bureau!*\n\nDear Parent/Guardian of *${studentName}*,\n\nYour Parent Portal account is now ready.\n\n*Your Login Details:*\n🔗 Parent Portal: ${loginUrl}\n📧 Login ID / Phone: ${parentIdentifier}\n🔑 Password: ${password || "[Password set by admin]"}\n\n*How to Access Your Portal:*\n1. Open link: ${loginUrl}\n2. Enter your Phone/Email: ${parentIdentifier}\n3. Enter your Password: ${password || "[Password set by admin]"}\n\n*Portal Features:*\n✅ Track tutor attendance & completed sessions\n✅ Review test scores & monthly progress reports\n✅ View fee receipts & invoice records\n\n📞 Need Assistance? Call/WhatsApp: ${CANONICAL_SUPPORT_PHONE_DISPLAY} (or reply to this message)\n\n— Swati Home Tuition Bureau Team`;
+  // 1-click WhatsApp welcome message with credentials & instructions
+  const welcomeMessage = buildStudentCredentialsMessage({
+    studentName,
+    loginId: parentIdentifier,
+    password,
+  });
 
   const whatsappUrl = formatWhatsAppUrl(parentPhone, welcomeMessage);
 

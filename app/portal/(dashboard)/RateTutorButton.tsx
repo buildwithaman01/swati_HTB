@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Star, Loader2, CheckCircle2, ExternalLink, Sparkles, X } from "lucide-react";
+import { CANONICAL_LINKS } from "@/lib/constants";
 
 interface Props {
   assignmentId?: string;
@@ -43,7 +44,7 @@ export default function RateTutorButton({
         setReviewedData({
           rating: data.rating,
           reviewText: data.reviewText,
-          googleReviewUrl: data.googleReviewUrl || "https://share.google/tarSWReEvLi7cim5V",
+          googleReviewUrl: data.googleReviewUrl || CANONICAL_LINKS.googleReviews,
         });
         setModalOpen(true);
       } else if (data.reviewUrl) {
@@ -62,23 +63,23 @@ export default function RateTutorButton({
     return (
       <>
         <div
-          className={`bg-gradient-to-r from-[#0F4C5C]/10 via-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${className}`}
+          className={`bg-gradient-to-r from-[#0B192C]/10 via-[#F9F8F5] to-[#E5A93C]/10 border border-[#E8E6DF] rounded-2xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${className}`}
         >
           <div className="space-y-1">
             <div className="flex items-center gap-1.5">
-              <span className="flex text-amber-500">
+              <span className="flex text-[#E5A93C]">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  <Star key={i} className="w-4 h-4 fill-[#E5A93C] text-[#E5A93C]" />
                 ))}
               </span>
-              <span className="text-xs font-bold text-[#0F4C5C] uppercase tracking-wide">
+              <span className="text-xs font-bold text-[#0B192C] uppercase tracking-wide">
                 Parent Feedback
               </span>
             </div>
-            <h3 className="font-bold text-[#1F2937] text-base">
+            <h3 className="font-bold text-[#0B192C] text-base">
               Rate Your Home Tutor ({teacherName})
             </h3>
-            <p className="text-xs text-neutral-600 leading-relaxed">
+            <p className="text-xs text-[#5A6578] leading-relaxed">
               How are classes going for {subject ? `*${subject}*` : "your child"}? Your 1-minute verified review ensures top academic standards!
             </p>
           </div>
@@ -87,7 +88,7 @@ export default function RateTutorButton({
             type="button"
             onClick={handleClick}
             disabled={loading}
-            className="shrink-0 inline-flex items-center justify-center gap-2 bg-[#0F4C5C] hover:bg-[#0a3a47] text-white text-xs font-bold py-3 px-5 rounded-xl transition-all shadow-sm hover:shadow-md cursor-pointer disabled:opacity-60"
+            className="shrink-0 inline-flex items-center justify-center gap-2 bg-[#0B192C] hover:bg-[#1E3E62] text-white text-xs font-bold py-3 px-5 rounded-xl transition-all shadow-xs hover:shadow-md cursor-pointer disabled:opacity-60 active:scale-[0.98]"
           >
             {loading ? (
               <>
@@ -96,7 +97,7 @@ export default function RateTutorButton({
               </>
             ) : (
               <>
-                <Star className="w-4 h-4 fill-[#D4A017] text-[#D4A017]" />
+                <Star className="w-4 h-4 fill-[#E5A93C] text-[#E5A93C]" />
                 <span>Submit Review</span>
               </>
             )}
@@ -213,39 +214,39 @@ function AlreadyReviewedModal({
         </div>
 
         <div>
-          <h3 className="text-xl font-bold text-[#1F2937] font-serif">Review Already Submitted!</h3>
-          <p className="text-xs text-neutral-500 mt-1">
-            You gave <strong className="text-[#0F4C5C]">{teacherName}</strong> a rating of {rating}/5 stars.
+          <h3 className="text-xl font-bold text-[#0B192C] font-display">Review Already Submitted!</h3>
+          <p className="text-xs text-[#5A6578] mt-1">
+            You gave <strong className="text-[#0B192C]">{teacherName}</strong> a rating of {rating}/5 stars.
           </p>
         </div>
 
-        <div className="flex justify-center text-amber-400 gap-1">
+        <div className="flex justify-center text-[#E5A93C] gap-1">
           {[1, 2, 3, 4, 5].map((s) => (
             <Star
               key={s}
-              className={`w-5 h-5 ${s <= rating ? "fill-amber-400" : "text-neutral-200 fill-neutral-200"}`}
+              className={`w-5 h-5 ${s <= rating ? "fill-[#E5A93C]" : "text-neutral-200 fill-neutral-200"}`}
             />
           ))}
         </div>
 
         {/* Google Business Profile Prompt */}
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-4 text-left space-y-2.5">
+        <div className="bg-gradient-to-br from-[#0B192C]/5 to-[#E5A93C]/10 border border-[#E8E6DF] rounded-2xl p-4 text-left space-y-2.5">
           <div className="flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-amber-600" />
-            <span className="text-xs font-bold text-amber-900 uppercase tracking-wide">
+            <Sparkles className="w-4 h-4 text-[#E5A93C]" />
+            <span className="text-xs font-bold text-[#0B192C] uppercase tracking-wide">
               Share on Google Reviews
             </span>
           </div>
-          <p className="text-xs text-neutral-600 leading-relaxed">
+          <p className="text-xs text-[#5A6578] leading-relaxed">
             Would you take 10 seconds to also share your rating on our Google Business Profile? It helps verified teachers reach more families!
           </p>
           <a
             href={googleUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full bg-[#D4A017] hover:bg-[#b88912] text-white font-bold py-2.5 px-3 rounded-xl text-xs transition-colors shadow-sm"
+            className="flex items-center justify-center gap-2 w-full bg-[#E5A93C] hover:bg-[#D49228] text-[#0B192C] font-bold py-2.5 px-3 rounded-xl text-xs transition-colors shadow-xs"
           >
-            <Star className="w-3.5 h-3.5 fill-white" /> Post on Google Reviews
+            <Star className="w-3.5 h-3.5 fill-[#0B192C]" /> Post on Google Reviews
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>

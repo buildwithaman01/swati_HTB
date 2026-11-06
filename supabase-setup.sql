@@ -278,6 +278,7 @@ CREATE TABLE IF NOT EXISTS public.payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_id UUID NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
     assignment_id UUID REFERENCES public.assignments(id) ON DELETE SET NULL,
+    teacher_id UUID REFERENCES public.teachers(id) ON DELETE SET NULL,
     amount NUMERIC(10,2) NOT NULL,
     payment_month TEXT NOT NULL, -- e.g. '2026-08'
     payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -288,13 +289,18 @@ CREATE TABLE IF NOT EXISTS public.payments (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Ensure columns exist if table was previously created
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS assignment_id UUID REFERENCES public.assignments(id) ON DELETE SET NULL;
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS teacher_id UUID REFERENCES public.teachers(id) ON DELETE SET NULL;
+
 -- =============================================================================
 -- 9. CREATE & MIGRATE COMMISSIONS TABLE (Teacher Payouts)
 -- =============================================================================
 CREATE TABLE IF NOT EXISTS public.commissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     teacher_id UUID NOT NULL REFERENCES public.teachers(id) ON DELETE CASCADE,
-    assignment_id UUID REFERENCES public.assignments(id) ON DELETE SET NULL,
+    student_id UUID REFERENCES public.students(id) ON DELETE CASCADE,
+    assignment_id UUID REFERENCES public.assignments(id) ON DELETE CASCADE,
     month TEXT NOT NULL, -- e.g. '2026-08'
     gross_amount NUMERIC(10,2) NOT NULL,
     commission_pct NUMERIC(5,2) NOT NULL DEFAULT 25.00,
@@ -306,6 +312,10 @@ CREATE TABLE IF NOT EXISTS public.commissions (
     payout_ref TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Ensure columns exist if table was previously created
+ALTER TABLE public.commissions ADD COLUMN IF NOT EXISTS student_id UUID REFERENCES public.students(id) ON DELETE CASCADE;
+ALTER TABLE public.commissions ADD COLUMN IF NOT EXISTS assignment_id UUID REFERENCES public.assignments(id) ON DELETE CASCADE;
 
 -- =============================================================================
 -- 10. CREATE & MIGRATE REVIEWS TABLE (Teacher Ratings & Feedback)
@@ -547,3 +557,81 @@ SELECT setval(
     GREATEST(COALESCE((SELECT MAX(SUBSTRING(assignment_id FROM '[0-9]+$')::BIGINT) FROM public.assignments WHERE assignment_id ~ 'ASN-[0-9]{4}-[0-9]+$'), 0) + 1, 1), 
     false
 );
+
+-- =============================================================================
+-- 16. FOREIGN KEY CASCADE HARDENING (Fix Constraint Violations on Delete/Update)
+-- =============================================================================
+
+-- Assignments constraints (Cascade when teacher or student is deleted)
+ALTER TABLE public.assignments DROP CONSTRAINT IF EXISTS assignments_teacher_id_fkey;
+ALTER TABLE public.assignments ADD CONSTRAINT assignments_teacher_id_fkey 
+    FOREIGN KEY (teacher_id) REFERENCES public.teachers(id) ON DELETE CASCADE;
+
+ALTER TABLE public.assignments DROP CONSTRAINT IF EXISTS assignments_student_id_fkey;
+ALTER TABLE public.assignments ADD CONSTRAINT assignments_student_id_fkey 
+    FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+
+-- Sessions constraints (Cascade when assignment, teacher or student is deleted)
+ALTER TABLE public.sessions DROP CONSTRAINT IF EXISTS sessions_assignment_id_fkey;
+ALTER TABLE public.sessions ADD CONSTRAINT sessions_assignment_id_fkey 
+    FOREIGN KEY (assignment_id) REFERENCES public.assignments(id) ON DELETE CASCADE;
+
+ALTER TABLE public.sessions DROP CONSTRAINT IF EXISTS sessions_teacher_id_fkey;
+ALTER TABLE public.sessions ADD CONSTRAINT sessions_teacher_id_fkey 
+    FOREIGN KEY (teacher_id) REFERENCES public.teachers(id) ON DELETE CASCADE;
+
+ALTER TABLE public.sessions DROP CONSTRAINT IF EXISTS sessions_student_id_fkey;
+ALTER TABLE public.sessions ADD CONSTRAINT sessions_student_id_fkey 
+    FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+
+-- Progress reports constraints
+ALTER TABLE public.progress_reports DROP CONSTRAINT IF EXISTS progress_reports_assignment_id_fkey;
+ALTER TABLE public.progress_reports ADD CONSTRAINT progress_reports_assignment_id_fkey 
+    FOREIGN KEY (assignment_id) REFERENCES public.assignments(id) ON DELETE CASCADE;
+
+ALTER TABLE public.progress_reports DROP CONSTRAINT IF EXISTS progress_reports_teacher_id_fkey;
+ALTER TABLE public.progress_reports ADD CONSTRAINT progress_reports_teacher_id_fkey 
+    FOREIGN KEY (teacher_id) REFERENCES public.teachers(id) ON DELETE CASCADE;
+
+ALTER TABLE public.progress_reports DROP CONSTRAINT IF EXISTS progress_reports_student_id_fkey;
+ALTER TABLE public.progress_reports ADD CONSTRAINT progress_reports_student_id_fkey 
+    FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+
+-- Reviews constraints
+ALTER TABLE public.reviews DROP CONSTRAINT IF EXISTS reviews_assignment_id_fkey;
+ALTER TABLE public.reviews ADD CONSTRAINT reviews_assignment_id_fkey 
+    FOREIGN KEY (assignment_id) REFERENCES public.assignments(id) ON DELETE SET NULL;
+
+ALTER TABLE public.reviews DROP CONSTRAINT IF EXISTS reviews_teacher_id_fkey;
+ALTER TABLE public.reviews ADD CONSTRAINT reviews_teacher_id_fkey 
+    FOREIGN KEY (teacher_id) REFERENCES public.teachers(id) ON DELETE CASCADE;
+
+ALTER TABLE public.reviews DROP CONSTRAINT IF EXISTS reviews_student_id_fkey;
+ALTER TABLE public.reviews ADD CONSTRAINT reviews_student_id_fkey 
+    FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE SET NULL;
+
+-- Commissions constraints
+ALTER TABLE public.commissions DROP CONSTRAINT IF EXISTS commissions_assignment_id_fkey;
+ALTER TABLE public.commissions ADD CONSTRAINT commissions_assignment_id_fkey 
+    FOREIGN KEY (assignment_id) REFERENCES public.assignments(id) ON DELETE CASCADE;
+
+ALTER TABLE public.commissions DROP CONSTRAINT IF EXISTS commissions_teacher_id_fkey;
+ALTER TABLE public.commissions ADD CONSTRAINT commissions_teacher_id_fkey 
+    FOREIGN KEY (teacher_id) REFERENCES public.teachers(id) ON DELETE CASCADE;
+
+ALTER TABLE public.commissions DROP CONSTRAINT IF EXISTS commissions_student_id_fkey;
+ALTER TABLE public.commissions ADD CONSTRAINT commissions_student_id_fkey 
+    FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+
+-- Payments constraints (Cascade on student delete, Set Null on assignment/teacher delete to preserve audit history)
+ALTER TABLE public.payments DROP CONSTRAINT IF EXISTS payments_student_id_fkey;
+ALTER TABLE public.payments ADD CONSTRAINT payments_student_id_fkey 
+    FOREIGN KEY (student_id) REFERENCES public.students(id) ON DELETE CASCADE;
+
+ALTER TABLE public.payments DROP CONSTRAINT IF EXISTS payments_assignment_id_fkey;
+ALTER TABLE public.payments ADD CONSTRAINT payments_assignment_id_fkey 
+    FOREIGN KEY (assignment_id) REFERENCES public.assignments(id) ON DELETE SET NULL;
+
+ALTER TABLE public.payments DROP CONSTRAINT IF EXISTS payments_teacher_id_fkey;
+ALTER TABLE public.payments ADD CONSTRAINT payments_teacher_id_fkey 
+    FOREIGN KEY (teacher_id) REFERENCES public.teachers(id) ON DELETE SET NULL;

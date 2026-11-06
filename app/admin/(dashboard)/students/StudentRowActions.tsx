@@ -201,7 +201,7 @@ export default function StudentRowActions({
               </button>
             </div>
             <p className="text-xs text-[#5A6578] mb-3">
-              Marks status as Completed and archives active assignments while preserving all past session and payment records.
+              Safely marks status as <strong>Completed</strong> and archives active tuitions. All historical attendance logs, session reports, and payment records remain permanently preserved.
             </p>
             <select
               value={endReason}
@@ -241,9 +241,12 @@ export default function StudentRowActions({
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 text-left">
           <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-red-200">
             <h4 className="font-display font-bold text-base text-red-950 mb-2">Permanently Delete Student?</h4>
-            <p className="text-xs text-neutral-600 mb-4 leading-relaxed font-sans">
-              Are you sure you want to permanently delete <strong>{studentName}</strong>? If tuition has finished, use <strong>End Tuition</strong> instead to keep history.
-            </p>
+            <div className="p-3 bg-red-50 rounded-xl border border-red-200 text-xs text-red-900 mb-3 space-y-1">
+              <p className="font-bold">⚠️ Irreversible Deletion Warning:</p>
+              <p>
+                This will permanently delete <strong>{studentName}</strong> and their records. If tuition has merely ended or exams are over, click <strong>Cancel</strong> and choose <strong>End Tuition</strong> to preserve session logs and payment history.
+              </p>
+            </div>
             <div className="flex justify-end gap-2">
               <button 
                 type="button" 

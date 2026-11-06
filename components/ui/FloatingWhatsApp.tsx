@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
+import { CANONICAL_LINKS } from "@/lib/constants";
 
 export default function FloatingWhatsApp() {
   const [isVisible, setIsVisible] = useState(false);
@@ -25,7 +26,7 @@ export default function FloatingWhatsApp() {
       className="fixed bottom-6 right-6 z-50 md:bottom-8 md:right-8"
     >
       <a
-        href="https://wa.me/919229738307"
+        href={CANONICAL_LINKS.whatsappWithText("Hi Swati HTB, I am looking for a home tutor in Patna")}
         target="_blank"
         rel="noopener noreferrer"
         className="relative group flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-[#25D366] hover:bg-[#20bd5a] text-white rounded-full shadow-[0_4px_14px_rgba(37,211,102,0.4)] hover:shadow-[0_6px_20px_rgba(37,211,102,0.6)] transition-all duration-300"
