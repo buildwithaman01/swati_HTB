@@ -7,26 +7,26 @@ import { FileText, UserCheck, Sparkles, TrendingUp } from "lucide-react";
 const steps = [
   {
     num: "01",
-    title: "Share Your Requirements",
-    desc: "Tell us your child's class, board, subject needs, and exact locality in Patna via our quick 30-second form or direct WhatsApp.",
+    title: "Tell Us What Your Child Needs",
+    desc: "Share your child's class, board (CBSE, ICSE, or BSEB), subjects, and your area in Patna. Fill our simple form or message us directly on WhatsApp.",
     icon: FileText,
   },
   {
     num: "02",
-    title: "Receive Verified Teacher Passport",
-    desc: "Within 24 hours, our academic counselors review tutor ratings and send you a complete verified profile with Aadhaar & qualification proofs.",
+    title: "We Share Teacher Details on WhatsApp",
+    desc: "Within 24 hours, we connect you with a verified tutor nearby and send their photo, qualifications, and teaching experience directly to your phone.",
     icon: UserCheck,
   },
   {
     num: "03",
-    title: "Free In-Home Demo Class",
-    desc: "The educator conducts a 100% free trial class at your home. Observe their communication, patience, and subject command before deciding.",
+    title: "Take a Free Trial Class at Home",
+    desc: "The teacher visits your home for a 1-hour free trial lesson. Observe how they teach and ensure your child feels completely comfortable.",
     icon: Sparkles,
   },
   {
     num: "04",
-    title: "Regular Structured Learning",
-    desc: "Begin regular classes with monthly syllabus tracking. Enjoy our 48-hour free tutor replacement guarantee if anytime unsatisfied.",
+    title: "Start Classes & Track Progress on the Portal",
+    desc: "Begin regular classes with complete peace of mind. Parents can check attendance and test marks on our Student & Parent Portal, while teachers manage lesson schedules on the Teacher Portal.",
     icon: TrendingUp,
   },
 ];
@@ -84,14 +84,11 @@ export default function ProcessTimeline() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
 
         <div className="text-center mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#005F56] mb-3">
-            Frictionless Process
-          </p>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0B192C] mb-4">
-            How Swati Works
+            How It Works
           </h2>
           <p className="text-[#5A6578] text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            From your first inquiry to your child's free trial class in four transparent steps.
+            Finding the right home tutor in Patna is simple, clear, and completely free until you are satisfied with the demo.
           </p>
         </div>
 

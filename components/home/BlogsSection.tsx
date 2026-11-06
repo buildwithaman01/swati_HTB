@@ -8,23 +8,23 @@ const blogs = [
   {
     title: "How to Choose the Right Home Tutor in Patna (Parent's Checklist)",
     category: "Parenting Guide",
-    date: "August 12, 2026",
-    excerpt: "Finding a home tutor is simple, but finding the right mentor is critical. Here are 5 verification steps every Patna parent must follow.",
-    link: "/blogs/how-to-choose-right-tutor",
+    date: "August 10, 2026",
+    excerpt: "Finding a home tutor is simple, but finding the right mentor is critical. Here are 5 practical verification steps every Patna parent should follow.",
+    link: "/blogs/how-to-find-best-home-tutor-in-patna",
   },
   {
     title: "Why Female Tutors are Preferred for High School Girl Students",
     category: "Safety & Comfort",
     date: "August 05, 2026",
-    excerpt: "Understanding student psychology and why Swati HTB's Female-First Policy provides unmatched security and academic confidence.",
-    link: "/blogs/female-tutors-preference",
+    excerpt: "Why having a patient female home tutor helps girl students ask questions freely, build strong fundamentals, and study with complete confidence.",
+    link: "/blogs/importance-of-female-tutors-for-girls",
   },
   {
     title: "IIT JEE & NEET Preparation from Class 9: Strategy & Reality",
     category: "Entrance Strategy",
     date: "July 28, 2026",
-    excerpt: "Should your child begin foundation prep in 9th grade? Our engineering alumni mentors break down the realistic timeline for success.",
-    link: "/blogs/iit-jee-prep-class-9",
+    excerpt: "Should your child begin competitive exam prep in Class 9? Experienced teachers share practical timelines without overburdening school coursework.",
+    link: "/blogs/jee-preparation-strategy-from-class-9",
   },
 ];
 
@@ -36,14 +36,11 @@ export default function BlogsSection() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-14 gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0B192C]/5 text-[#0B192C] text-xs font-bold uppercase tracking-wider mb-3">
-              <BookOpen className="w-3.5 h-3.5" /> Academic Insights
-            </div>
             <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0B192C] tracking-tight">
-              Educational Guides &amp; <span className="text-[#E5A93C]">Articles</span>
+              Parenting &amp; Study Guides
             </h2>
             <p className="text-[#5A6578] text-base sm:text-lg max-w-xl mt-3 leading-relaxed">
-              Actionable advice on board examinations, tutor selection, and student productivity in Patna.
+              Helpful advice on board exams, study routines, and choosing the right home tutor in Patna.
             </p>
           </div>
           <Link href="/blogs">
@@ -81,7 +78,7 @@ export default function BlogsSection() {
                 </p>
 
                 <div className="mt-5 pt-4 border-t border-[#E8E6DF] flex items-center gap-1.5 text-xs font-bold text-[#0B192C] group-hover:text-[#E5A93C] transition-colors uppercase tracking-wider">
-                  <span>Read Full Guide</span>
+                  <span>Read Article</span>
                   <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Link>

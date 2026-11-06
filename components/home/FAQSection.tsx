@@ -7,27 +7,31 @@ import { ChevronDown, HelpCircle } from "lucide-react";
 const faqs = [
   {
     question: "How do you verify your home tutors in Patna?",
-    answer: "Every educator completes our strict 4-Pillar Trust Standard: physical Aadhaar KYC verification, verified educational degree checks (IIT/NIT/B.Ed/post-graduate), past teaching track record review, and police clearance declaration before any home visit."
+    answer: "Every tutor must visit our Mithapur office in person with their original Aadhaar card, local residence proof, and university degree marksheets. We also check their past teaching background before sending them for any home demo."
   },
   {
-    question: "Do you provide dedicated female home tutors for girls?",
-    answer: "Yes, absolutely. We maintain a large roster of highly qualified, background-verified female tutors across Patna for female students and families who prefer female home mentors."
+    question: "Can we request a female home tutor for our daughter?",
+    answer: "Yes, absolutely. Many families in Patna prefer female educators for younger children and girl students. We have hundreds of experienced female tutors registered across Patna for CBSE, ICSE, and state boards."
   },
   {
-    question: "What happens if I'm not satisfied with the tutor?",
-    answer: "We provide an ironclad 48-Hour Free Replacement Guarantee. If the teaching chemistry is not an ideal match after the free demo or anytime during the first month, our academic counselors assign an alternate verified tutor with zero extra fees."
+    question: "What if my child is not comfortable with the tutor?",
+    answer: "We provide a 48-hour tutor replacement guarantee. If after the free trial or anytime during the first month you feel the teaching style is not the right fit, we will connect you with an alternate verified tutor at no additional fee."
   },
   {
-    question: "Which areas in Patna do you cover?",
-    answer: "We provide home tutors across 30+ major localities in Patna, including Boring Road, Kankarbagh, Patliputra Colony, Rajendra Nagar, Bailey Road, Danapur, Ashiana Nagar, Anisabad, and SK Puri."
+    question: "Which areas in Patna do you serve?",
+    answer: "We cover all major residential neighborhoods in Patna including Boring Road, Kankarbagh, Patliputra Colony, Rajendra Nagar, Bailey Road, Danapur, Ashiana Nagar, Anisabad, SK Puri, Raja Bazar, and Gola Road."
   },
   {
-    question: "Do you offer a free demo class before I commit?",
-    answer: "Yes. Every student is entitled to a 100% free 1-hour in-home demo class. You can observe the educator's communication, patience, and subject clarity firsthand before finalizing tuition."
+    question: "Is the trial class completely free?",
+    answer: "Yes, 100% free. The teacher visits your home for a 1-hour session. You can observe their communication, patience, and subject clarity firsthand before finalizing regular tuition."
   },
   {
-    question: "What are your tuition fees and payment terms?",
-    answer: "Our fees are completely transparent with zero bureau registration charges. Monthly fees are calculated based on grade level (Class 1-8, 9-10, 11-12, or JEE/NEET) and weekly session frequency. Use our interactive fee estimator above for instant estimates."
+    question: "How do tuition fee payments work?",
+    answer: "There are no bureau registration charges or upfront deposits. Tuition fees are paid monthly based on the student's grade and weekly class frequency, with transparent rates agreed upon before classes begin."
+  },
+  {
+    question: "How can parents track attendance and syllabus progress?",
+    answer: "Parents can log in to our Student & Parent Portal to view monthly attendance records, test scores, and syllabus completion. Tutors also log topics covered after each class."
   }
 ];
 
@@ -57,14 +61,11 @@ export default function FAQSection() {
 
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#005F56]/10 text-[#005F56] text-xs font-bold uppercase tracking-wider mb-3">
-            <HelpCircle className="w-3.5 h-3.5" /> Direct Parent Answers
-          </div>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0B192C] mb-4">
             Frequently Asked Questions
           </h2>
           <p className="text-[#5A6578] text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Everything you need to know about Patna's premier home tuition bureau.
+            Common questions from parents looking for home tutors in Patna.
           </p>
         </div>
 

@@ -26,14 +26,11 @@ export default function TuitionCalculator() {
 
         {/* Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#005F56]/10 text-[#005F56] font-bold text-xs uppercase tracking-wider mb-4">
-            <Calculator className="w-3.5 h-3.5" /> 100% Transparent Pricing
-          </div>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0B192C] tracking-tight mb-4">
-            Estimate Your Monthly Tuition Investment
+            Estimate Your Monthly Tuition Fee
           </h2>
           <p className="text-[#5A6578] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            Zero hidden bureau registration charges. Zero lock-in contracts. Calculate estimated monthly fees based on your class level and frequency.
+            Transparent pricing with zero bureau registration charges or hidden fees. Calculate approximate monthly tuition fees based on class level and weekly sessions.
           </p>
         </div>
 
@@ -46,13 +43,13 @@ export default function TuitionCalculator() {
             {/* 1. Class Group */}
             <div>
               <label className="text-xs font-bold text-[#0B192C] uppercase tracking-wider mb-3 block">
-                1. Select Academic Level
+                1. Select Student's Class
               </label>
               <div className="grid grid-cols-2 gap-2.5">
                 {[
                   { id: "1-8", label: "Class 1 to 8", desc: "All Subjects" },
-                  { id: "9-10", label: "Class 9 & 10", desc: "Foundation / Boards" },
-                  { id: "11-12", label: "Class 11 & 12", desc: "Boards (PCM/PCB/Comm)" },
+                  { id: "9-10", label: "Class 9 & 10", desc: "CBSE / ICSE / BSEB" },
+                  { id: "11-12", label: "Class 11 & 12", desc: "Science / Comm / Arts" },
                   { id: "jee-neet", label: "JEE / NEET", desc: "Entrance Mentorship" },
                 ].map((option) => (
                   <button
@@ -134,7 +131,7 @@ export default function TuitionCalculator() {
           <div className="w-full lg:w-80 bg-[#0B192C] rounded-2xl p-7 sm:p-8 text-white flex flex-col justify-between relative shadow-xl">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-[#E5A93C] block mb-2">
-                Estimated Fee
+                Estimated Monthly Fee
               </span>
               <div className="flex items-baseline gap-1">
                 <span className="font-display text-2xl font-bold text-white/80">₹</span>
@@ -155,15 +152,19 @@ export default function TuitionCalculator() {
               <div className="mt-6 space-y-2 pt-6 border-t border-white/10 text-xs text-white/75">
                 <div className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-[#005F56] shrink-0" />
-                  <span>Free 1-Hour in-home demo class</span>
+                  <span>Free 1-hour trial class at home</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-[#005F56] shrink-0" />
-                  <span>Zero bureau registration fee</span>
+                  <span>Zero registration or bureau charges</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-3.5 h-3.5 text-[#005F56] shrink-0" />
-                  <span>48h free tutor replacement guarantee</span>
+                  <span>48-hour tutor replacement guarantee</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Check className="w-3.5 h-3.5 text-[#005F56] shrink-0" />
+                  <span>Progress tracking on Parent Portal</span>
                 </div>
               </div>
             </div>
@@ -177,7 +178,7 @@ export default function TuitionCalculator() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <p className="text-[10px] text-white/40 text-center mt-3">
-                Final fee may vary slightly by tutor qualification &amp; exact locality.
+                Fees may vary slightly depending on tutor experience and exact locality.
               </p>
             </div>
 

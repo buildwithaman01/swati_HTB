@@ -18,14 +18,11 @@ export default function ServiceAreas() {
   return (
     <section className="py-20 sm:py-24 bg-[#0B192C] overflow-hidden relative border-b border-[#1E3E62]">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 mb-12 text-center relative z-10">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 text-[#E5A93C] text-xs font-semibold uppercase tracking-wider mb-3">
-          <MapPin className="w-3.5 h-3.5" /> Citywide Coverage
-        </div>
         <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-white mb-4">
-          Serving Every Neighborhood Across Patna
+          Home Tutors Available Across Patna
         </h2>
         <p className="text-white/75 text-base sm:text-lg max-w-2xl mx-auto font-sans leading-relaxed">
-          From Boring Road and Kankarbagh to Bailey Road and Danapur, our verified tutor network brings exceptional home education to your doorstep.
+          Whether you live in Boring Road, Kankarbagh, Bailey Road, or Danapur, we connect you with verified teachers who live nearby and can teach at your home.
         </p>
       </div>
 
@@ -88,9 +85,9 @@ export default function ServiceAreas() {
       <div className="text-center mt-10 relative z-10">
         <Link
           href="/areas"
-          className="inline-flex items-center gap-2 text-sm font-bold text-[#E5A93C] hover:text-[#D49228] transition-colors uppercase tracking-wider"
+          className="inline-flex items-center gap-2 text-sm font-bold text-[#E5A93C] hover:text-[#D49228] transition-colors tracking-wide"
         >
-          <span>View All 80+ Supported Patna Localities</span>
+          <span>View All Supported Localities in Patna</span>
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>

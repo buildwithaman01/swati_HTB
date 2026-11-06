@@ -108,3 +108,17 @@ body {
   scrollbar-width: none;
   /* Firefox */
 }
+
+/* Mobile App Safe-Area & Touch Optimization */
+.pb-safe-bottom {
+  padding-bottom: max(14px, env(safe-area-inset-bottom, 14px));
+}
+
+.pt-safe-top {
+  padding-top: max(14px, env(safe-area-inset-top, 14px));
+}
+
+/* Prevent double-tap delay and accidental zoom on interactive mobile elements */
+button, select, input, a {
+  touch-action: manipulation;
+}

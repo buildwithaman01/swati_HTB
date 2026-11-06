@@ -4,10 +4,10 @@ import { useEffect, useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
 
 const stats = [
-  { label: "Students Guided", sublabel: "CBSE, ICSE & BSEB", value: 500, suffix: "+" },
-  { label: "Patna Localities", sublabel: "Boring Rd to Danapur", value: 30, suffix: "+" },
-  { label: "Years in Patna", sublabel: "Continuous excellence", value: 6, suffix: "+" },
-  { label: "Verified Tutors", sublabel: "Strict Aadhaar & KYC", value: 100, suffix: "%" },
+  { label: "Students Guided", sublabel: "CBSE, ICSE & Bihar Board", value: 500, suffix: "+" },
+  { label: "Patna Localities", sublabel: "Boring Road to Danapur", value: 30, suffix: "+" },
+  { label: "Years in Patna", sublabel: "Serving local families", value: 6, suffix: "+" },
+  { label: "Verified Tutors", sublabel: "In-person Aadhaar check", value: 100, suffix: "%" },
 ];
 
 function Counter({ from = 0, to, suffix, inView }: { from?: number; to: number; suffix: string; inView: boolean }) {

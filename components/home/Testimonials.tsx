@@ -10,15 +10,15 @@ const testimonials = [
     name: "Rajesh Kumar",
     locality: "Boring Road",
     childGrade: "Class 10 CBSE",
-    review: "The ID verification protocol gave my wife and I total peace of mind. Our daughter's science tutor from NIT Patna is exceptional, patient, and punctual. Knowing she's police and Aadhaar verified makes all the difference.",
+    review: "Finding a good science and maths teacher in Boring Road was a headache until we contacted Swati Bureau. The teacher who visits is always on time, very patient, and helped my son score 92% in his Class 10 pre-boards.",
     rating: 5,
     avatar: "R",
   },
   {
     name: "Sneha Sinha",
     locality: "Kankarbagh",
-    childGrade: "Class 12 JEE Aspirant",
-    review: "We tried finding tutors through local contacts with very inconsistent results. The engineering mentor Swati HTB matched for my son's JEE physics completely changed his problem-solving speed. Within 3 months his mock test percentile jumped from 78 to 94.",
+    childGrade: "Class 12 Science",
+    review: "We struggled to find a reliable physics tutor for Class 12 boards and JEE. The coordinator shared the teacher's profile on WhatsApp and arranged a trial class the next day. My son's confidence in numericals improved tremendously.",
     rating: 5,
     avatar: "S",
   },
@@ -26,7 +26,7 @@ const testimonials = [
     name: "Vikash Singh",
     locality: "Patliputra Colony",
     childGrade: "Class 8 ICSE",
-    review: "I appreciate the transparency. We received a complete Teacher Passport on WhatsApp before the demo even took place. No surprises, no hidden charges. Highly recommended for busy working parents in Patna.",
+    review: "What impressed me was their honest approach. No advance registration fee, and they sent the teacher's Aadhaar and college marksheets before the trial class. Very dependable home tuition service in Patna.",
     rating: 5,
     avatar: "V",
   },
@@ -34,7 +34,7 @@ const testimonials = [
     name: "Neha Agarwal",
     locality: "Rajendra Nagar",
     childGrade: "Class 9 ICSE",
-    review: "We specifically requested an experienced female home tutor for my 9th-grade daughter. Swati HTB arranged a brilliant post-graduate tutor in Chemistry within 24 hours. The free trial demo gave us immediate confidence.",
+    review: "We specifically wanted an experienced female home tutor for our daughter. Swati Bureau connected us with an M.Sc teacher living nearby. She has been teaching for over six months now and our daughter's marks have visibly improved.",
     rating: 5,
     avatar: "N",
   },
@@ -42,7 +42,7 @@ const testimonials = [
     name: "Amit Mishra",
     locality: "Bailey Road (RPS More)",
     childGrade: "Class 6 All Subjects",
-    review: "The 48-hour replacement guarantee removed all the anxiety. Their academic counselor stays in touch regularly to check on syllabus coverage and attendance. Genuine, professional home tuition bureau.",
+    review: "Both my wife and I work full-time, so ensuring daily study discipline was challenging. The tutor helps with daily homework, clears concepts patiently, and we can check monthly attendance and test marks on the Parent Portal.",
     rating: 5,
     avatar: "A",
   },
@@ -70,14 +70,11 @@ export default function Testimonials() {
 
         {/* Header */}
         <div className="text-center mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#005F56] mb-3">
-            Real Patna Parent Experiences
-          </p>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0B192C] mb-4">
-            Trusted by <span className="text-[#E5A93C]">500+</span> Patna Families
+            What Patna Parents Say About Us
           </h2>
           <p className="text-[#5A6578] text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Authentic feedback from parents across Boring Road, Kankarbagh, Patliputra, and Bailey Road.
+            Honest feedback from families in Boring Road, Kankarbagh, Patliputra, and Bailey Road.
           </p>
         </div>
 

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronDown, BookOpen, Rocket, Activity, Library, Pencil, Info, Settings, MapPin } from "lucide-react";
+import { Menu, X, ChevronDown, BookOpen, Rocket, Activity, Library, Pencil, Info, Settings, MapPin, Users, GraduationCap, Shield } from "lucide-react";
 import { DropdownNavigation, NavItem } from "@/components/ui/dropdown-navigation";
 
 export default function Navbar() {
@@ -115,6 +115,35 @@ export default function Navbar() {
       id: 4,
       label: "Blogs",
       link: "/blogs",
+    },
+    {
+      id: 5,
+      label: "Portals",
+      subMenus: [
+        {
+          title: "Portal Access",
+          items: [
+            {
+              label: "Teacher Portal",
+              description: "ID card, student tests & profile",
+              icon: Users,
+              link: "/teacher/login"
+            },
+            {
+              label: "Student & Parent Portal",
+              description: "View marks, progress & attendance",
+              icon: GraduationCap,
+              link: "/portal/login"
+            },
+            {
+              label: "Join as a Teacher",
+              description: "Register with Swati Bureau",
+              icon: BookOpen,
+              link: "/join"
+            }
+          ]
+        }
+      ]
     }
   ];
 
@@ -273,6 +302,26 @@ export default function Navbar() {
                     className="text-base font-bold text-[#1A1D20] hover:text-[#E5A93C] transition-colors"
                   >
                     Service Areas in Patna
+                  </Link>
+                </div>
+
+                <div className="h-px bg-[#E8E6DF]"></div>
+
+                <div className="flex flex-col gap-3">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-[#5A6578]">Online Portals</h4>
+                  <Link
+                    href="/teacher/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 text-sm font-semibold text-[#0B192C] hover:text-[#E5A93C] transition-colors"
+                  >
+                    <Users className="w-4 h-4 text-[#E5A93C]" /> Teacher Portal Login
+                  </Link>
+                  <Link
+                    href="/portal/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 text-sm font-semibold text-[#0B192C] hover:text-[#E5A93C] transition-colors"
+                  >
+                    <GraduationCap className="w-4 h-4 text-[#E5A93C]" /> Student &amp; Parent Portal
                   </Link>
                 </div>
 

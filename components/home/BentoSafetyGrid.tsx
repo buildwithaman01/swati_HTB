@@ -7,51 +7,51 @@ import Link from "next/link";
 const PILLARS = [
   {
     icon: ShieldCheck,
-    tag: "Safety & Identity",
-    title: "100% Aadhaar & Background Vetted",
-    description: "No unverified strangers. Every educator undergoes in-person Aadhaar verification, physical address confirmation, and credential screening before visiting any Patna home.",
+    tag: "Identity Check",
+    title: "Verified Identity & Aadhaar Check",
+    description: "No unverified strangers. Every tutor undergoes in-person Aadhaar verification, physical address confirmation, and original degree checks at our Mithapur office.",
     features: [
-      "Physical ID & address check",
-      "Academic degree verification",
-      "Police clearance declaration",
+      "Original Aadhaar & address proof verified",
+      "College degrees & academic certificates checked",
+      "Signed conduct and background declaration",
     ],
-    highlight: "Zero Compromise on Family Safety",
+    highlight: "100% In-Person Verified",
   },
   {
     icon: UserCheck,
-    tag: "Parent Reassurance",
-    title: "Female-First Security Policy",
-    description: "We understand parent concerns in Patna. We maintain a large roster of qualified, background-vetted female home tutors specifically for young learners and female students.",
+    tag: "Female Tutors",
+    title: "Experienced Female Tutors for Girls",
+    description: "We understand that many parents in Patna prefer female home tutors for their daughters. We have hundreds of qualified female educators across CBSE, ICSE, and state boards.",
     features: [
-      "Dedicated female educators available",
-      "Specialized in ICSE/CBSE boards",
-      "Comfortable, safe home learning",
+      "Qualified female educators for all classes",
+      "Comfortable and secure environment at home",
+      "Available across all major Patna neighborhoods",
     ],
-    highlight: "Trusted by 200+ Girls' Families",
+    highlight: "Preferred by 250+ Patna Families",
   },
   {
     icon: FileCheck,
-    tag: "Complete Transparency",
-    title: "Teacher Passport Before First Demo",
-    description: "Before any teacher arrives at your home, you receive their complete Teacher Passport on WhatsApp: verified photo, college credentials, subject expertise, and past parent ratings.",
+    tag: "Advance Profile",
+    title: "Complete Teacher Details Sent on WhatsApp",
+    description: "Before any teacher visits for the demo, we send their complete profile on WhatsApp: photo, college qualifications, teaching experience, and subjects covered.",
     features: [
-      "Instant WhatsApp profile delivery",
-      "Verified educational qualifications",
-      "Past student score improvement record",
+      "Photo & verified qualifications on WhatsApp",
+      "Details of past teaching experience",
+      "Zero surprises — you know exactly who is coming",
     ],
-    highlight: "Know Who Enters Your Home",
+    highlight: "Full Transparency Before Demo",
   },
   {
     icon: RefreshCw,
-    tag: "Zero-Risk Guarantee",
-    title: "48-Hour Free Replacement Guarantee",
-    description: "Every child learns at their own frequency. If the teaching chemistry is not 100% satisfactory after the free demo or during the first month, we provide an alternate tutor within 48 hours.",
+    tag: "Tutor Replacement",
+    title: "48-Hour Tutor Replacement Guarantee",
+    description: "Every child learns at their own pace. If you or your child are not completely satisfied after the demo or during the first month, we provide an alternate tutor within 48 hours.",
     features: [
-      "No questions asked replacement",
-      "Zero registration or switching fees",
-      "Continuous academic counselor support",
+      "Hassle-free replacement at no extra charge",
+      "Zero registration or bureau switching fees",
+      "Direct phone support from our Patna coordinators",
     ],
-    highlight: "Zero Lock-In, Complete Peace of Mind",
+    highlight: "Complete Peace of Mind",
   },
 ];
 
@@ -65,15 +65,11 @@ export default function BentoSafetyGrid() {
 
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-[#E5A93C] text-xs font-semibold uppercase tracking-wider mb-4">
-            <Lock className="w-3.5 h-3.5" />
-            The Swati Trust Protocol
-          </div>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-4 leading-tight">
-            How We Protect Your Child's Safety &amp; Progress
+            Your Child's Safety is Our First Responsibility
           </h2>
-          <p className="text-base sm:text-lg text-white/75 font-normal leading-relaxed">
-            Hiring a home tutor shouldn't feel like a gamble. We operate Patna's most rigorous 4-pillar verification and safety standard.
+          <p className="text-base sm:text-lg text-white/75 font-normal leading-relaxed max-w-2xl mx-auto">
+            Inviting a teacher into your home requires trust. Every educator registered with Swati Home Tuition Bureau is physically verified in person before visiting any Patna household.
           </p>
         </div>
 
@@ -121,7 +117,7 @@ export default function BentoSafetyGrid() {
                 {/* Card Highlight Badge */}
                 <div className="mt-8 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-white/50">
                   <span className="font-medium text-[#E5A93C]">{pillar.highlight}</span>
-                  <span className="text-white/40">Pillar 0{idx + 1}</span>
+                  <span className="text-white/40">Check 0{idx + 1}</span>
                 </div>
 
               </div>
@@ -133,17 +129,17 @@ export default function BentoSafetyGrid() {
         <div className="mt-12 bg-white/5 border border-white/10 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
           <div>
             <h4 className="font-display text-lg font-bold text-white mb-1">
-              Want to inspect our tutor verification documentation?
+              Have questions about our tutor verification?
             </h4>
             <p className="text-sm text-white/70">
-              Speak directly with our academic coordinators or request a sample Teacher Passport.
+              Speak directly with our Patna team or message us on WhatsApp anytime.
             </p>
           </div>
           <Link
             href="/book-demo"
             className="shrink-0 px-6 py-3 bg-[#E5A93C] hover:bg-[#D49228] text-[#0B192C] font-extrabold text-sm rounded-xl transition-all border-b-[2px] border-[#B87C1C] flex items-center gap-2 shadow-md hover:-translate-y-0.5 active:translate-y-0"
           >
-            Schedule Free In-Home Demo
+            Book Free Trial Class
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

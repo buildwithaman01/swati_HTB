@@ -6,51 +6,51 @@ import Link from "next/link";
 
 const courses = [
   {
-    title: "Class 11 & 12 Board Mastery",
+    title: "Class 11 & 12 Board Preparation",
     slug: "class-11-12-boards",
-    badge: "Senior Secondary",
+    badge: "Classes 11–12",
     subjects: ["Physics", "Chemistry", "Mathematics", "Biology"],
-    description: "Rigorous board preparation tailored for CBSE, ICSE & BSEB. Deep conceptual clarity, NCERT mastery, and previous 10-year paper analysis.",
+    description: "Focused preparation for CBSE, ICSE, and Bihar Board. Complete NCERT coverage, clear concepts, and practice with past 10 years' exam papers.",
     icon: BookOpen,
-  },
-  {
-    title: "JEE Main & Advanced Mentorship",
-    slug: "jee-main-advanced",
-    badge: "Engineering Entrance",
-    subjects: ["Advanced Physics", "Organic/Inorganic Chem", "Higher Math"],
-    description: "One-on-one problem solving strategies led by top-tier engineering alumni. Focus on speed, precision, and multi-concept application.",
-    icon: Atom,
-  },
-  {
-    title: "NEET Medical Entrance Coaching",
-    slug: "neet-medical",
-    badge: "Medical Entrance",
-    subjects: ["Core Biology", "Medical Physics", "Targeted Chemistry"],
-    description: "Precision-driven coaching targeting 680+ NEET scores. Line-by-line NCERT breakdown with weekly test simulations at home.",
-    icon: Microscope,
   },
   {
     title: "Class 9 & 10 Board Foundation",
     slug: "class-9-10-foundation",
-    badge: "Secondary Foundation",
-    subjects: ["Science", "Mathematics", "Social Studies", "English"],
-    description: "Building unshakeable analytical fundamentals before board exams. Eliminates exam anxiety and trains students in structured answer writing.",
+    badge: "Classes 9–10",
+    subjects: ["Science", "Mathematics", "Social Science", "English"],
+    description: "Building strong fundamentals before board exams. We help students overcome math and science anxiety through patient, one-on-one guidance.",
     icon: Beaker,
   },
   {
-    title: "Class 1 to 8 Holistic All Subjects",
+    title: "Class 1 to 8 (All Subjects)",
     slug: "class-1-to-8-all-subjects",
-    badge: "Primary & Middle",
-    subjects: ["Maths", "Science", "English Grammar", "Hindi/Sanskrit"],
-    description: "Patient, encouraging home mentorship that instills disciplined study habits, improves handwriting, and fosters genuine curiosity.",
+    badge: "Classes 1–8",
+    subjects: ["Maths", "Science", "English", "Hindi / Sanskrit"],
+    description: "Caring home tutors who assist with daily homework, build disciplined study routines, and strengthen reading and basic arithmetic.",
     icon: GraduationCap,
   },
   {
-    title: "Commerce & Applied Economics",
+    title: "JEE Main & Advanced Mentorship",
+    slug: "jee-main-advanced",
+    badge: "Engineering",
+    subjects: ["Physics", "Chemistry", "Higher Mathematics"],
+    description: "One-on-one problem solving guidance by qualified engineering graduates. Focused on numerical speed, concept clarity, and test strategies.",
+    icon: Atom,
+  },
+  {
+    title: "NEET Medical Entrance Guidance",
+    slug: "neet-medical",
+    badge: "Medical",
+    subjects: ["Botany & Zoology", "Medical Physics", "Chemistry"],
+    description: "Thorough NCERT line-by-line coverage for medical aspirants. In-home test practice and concept revision designed for high NEET scores.",
+    icon: Microscope,
+  },
+  {
+    title: "Commerce & Economics",
     slug: "commerce-11-12",
-    badge: "Senior Secondary",
+    badge: "Commerce 11–12",
     subjects: ["Accountancy", "Business Studies", "Economics", "Applied Math"],
-    description: "Specialized commerce faculties bridging ledger mechanics, balance-sheet balancing, and practical economic theory for 95%+ board scores.",
+    description: "Clear understanding of ledger mechanics, balance sheets, and economic theory tailored for Class 11 and 12 board examinations.",
     icon: LineChart,
   },
 ];
@@ -75,14 +75,11 @@ export default function AcademicsGrid() {
 
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <p className="text-xs font-bold uppercase tracking-widest text-[#005F56] mb-3">
-            Comprehensive Academic Programs
-          </p>
           <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0B192C] tracking-tight mb-4 leading-tight">
-            Curricula Designed for Measurable Academic Growth
+            Classes &amp; Subjects We Cover
           </h2>
           <p className="text-base sm:text-lg text-[#5A6578] font-normal leading-relaxed">
-            Every program is calibrated to your child’s specific syllabus and school pace. From foundational reading to competitive entrance exams.
+            From Class 1 foundational support to Class 10 &amp; 12 board preparations and JEE/NEET mentorship. Every tutor follows your child's school syllabus and pace.
           </p>
         </div>
 
@@ -137,7 +134,7 @@ export default function AcademicsGrid() {
 
                     {/* Footer Link */}
                     <div className="mt-6 pt-5 border-t border-[#E8E6DF] flex items-center justify-between text-xs font-bold text-[#0B192C] group-hover:text-[#E5A93C] transition-colors uppercase tracking-wider">
-                      <span>View Program Syllabus</span>
+                      <span>View Program Details</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
 
@@ -151,9 +148,9 @@ export default function AcademicsGrid() {
         {/* Bottom Fast Action */}
         <div className="mt-14 text-center">
           <p className="text-sm text-[#5A6578]">
-            Need tuition for a specific competitive exam or language?{" "}
+            Looking for a tutor for a specific language or subject?{" "}
             <Link href="/find-tutor" className="font-bold text-[#0B192C] underline decoration-[#E5A93C] decoration-2 hover:text-[#005F56]">
-              Request a Custom Subject Tutor →
+              Request a Custom Tutor →
             </Link>
           </p>
         </div>
