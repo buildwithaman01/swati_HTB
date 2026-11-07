@@ -55,16 +55,10 @@ export async function POST(req: NextRequest) {
     const cleanHomework = homework_given || homework_assigned || null;
     const cleanNotes = teacher_notes || notes || null;
 
-    // Explicit unique identifiers prevent PostgreSQL triggers or column defaults from
-    // attempting to evaluate NEXTVAL('session_seq'), which triggers "permission denied for sequence session_seq"
-    const explicitId = id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : randomUUID());
-    const explicitSessionId = session_id || `SES-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-
     // Use live Postgres schema column names as primary:
     // Live table has: homework_given (TEXT), session_start (TIME), session_end (TIME), teacher_notes (TEXT)
+    // Keep session_id database-generated so that public.session_seq increments naturally without artificially inflated IDs.
     const payload: Record<string, any> = {
-      id: explicitId,
-      session_id: explicitSessionId,
       assignment_id: asgn.id,
       student_id: resolvedStudentId,
       teacher_id: resolvedTeacherId,
@@ -74,6 +68,9 @@ export async function POST(req: NextRequest) {
       student_attendance: student_attendance || "present",
       status: status || "completed",
     };
+
+    if (id) payload.id = id;
+    if (session_id) payload.session_id = session_id;
 
     if (cleanHomework) {
       payload.homework_given = cleanHomework;

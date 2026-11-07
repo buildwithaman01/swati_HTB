@@ -75,16 +75,10 @@ export default function SessionLoggerForm({ assignments, teacherId }: Props) {
     setSuccess("");
 
     try {
-      // Explicit unique session_id and UUID prevent triggers from evaluating NEXTVAL('session_seq')
-      const explicitSessionId = `SES-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-      const explicitId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : undefined;
-
       const res = await fetch("/api/teacher/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: explicitId,
-          session_id: explicitSessionId,
           assignment_id: assignmentId,
           student_id: studentId,
           teacher_id: teacherId,
