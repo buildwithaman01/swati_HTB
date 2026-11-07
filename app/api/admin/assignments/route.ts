@@ -34,13 +34,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const commissionPct = parseFloat(bureau_commission_pct) || 25;
-    const commissionAmt = bureau_commission_amt !== undefined && bureau_commission_amt !== null
-      ? parseFloat(bureau_commission_amt)
-      : Math.round((fee * commissionPct) / 100);
-    const teacherEarning = teacher_earning !== undefined && teacher_earning !== null
-      ? parseFloat(teacher_earning)
-      : Math.max(0, fee - commissionAmt);
+    // Note: bureau_commission_amt and teacher_earning are GENERATED ALWAYS AS (...) STORED
+    // columns in PostgreSQL. They cannot be inserted or updated directly.
+    // We only store monthly_fee and bureau_commission_pct.
+    const effectiveCommissionPct =
+      bureau_commission_pct !== undefined && bureau_commission_pct !== null
+        ? parseFloat(bureau_commission_pct)
+        : bureau_commission_amt !== undefined && bureau_commission_amt !== null && fee > 0
+        ? Math.round(((parseFloat(bureau_commission_amt) / fee) * 100) * 100) / 100
+        : 25;
 
     const adminDb = await createAdminClient();
 
@@ -78,9 +80,7 @@ export async function POST(req: NextRequest) {
       student_id,
       subject: subject.trim(),
       monthly_fee: fee,
-      bureau_commission_pct: commissionPct,
-      bureau_commission_amt: commissionAmt,
-      teacher_earning: teacherEarning,
+      bureau_commission_pct: effectiveCommissionPct,
       classes_per_week: parseInt(classes_per_week) || 3,
       session_duration_mins: parseInt(session_duration_mins) || 60,
       session_days: daysArray,
@@ -165,9 +165,13 @@ export async function PATCH(req: NextRequest) {
       updateData.cancellation_reason = cancellation_reason || null;
     }
     if (monthly_fee !== undefined) updateData.monthly_fee = parseFloat(monthly_fee) || 0;
-    if (bureau_commission_pct !== undefined) updateData.bureau_commission_pct = parseFloat(bureau_commission_pct) || 0;
-    if (bureau_commission_amt !== undefined) updateData.bureau_commission_amt = parseFloat(bureau_commission_amt) || 0;
-    if (teacher_earning !== undefined) updateData.teacher_earning = parseFloat(teacher_earning) || 0;
+    if (bureau_commission_pct !== undefined) {
+      updateData.bureau_commission_pct = parseFloat(bureau_commission_pct) || 0;
+    } else if (bureau_commission_amt !== undefined && monthly_fee !== undefined && parseFloat(monthly_fee) > 0) {
+      updateData.bureau_commission_pct = Math.round(((parseFloat(bureau_commission_amt) / parseFloat(monthly_fee)) * 100) * 100) / 100;
+    }
+    // Note: bureau_commission_amt and teacher_earning are GENERATED ALWAYS AS (...) STORED
+    // columns in PostgreSQL and cannot be written directly.
 
     let { data, error } = await adminDb
       .from("assignments")

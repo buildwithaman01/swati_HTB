@@ -46,25 +46,37 @@ export async function POST(req: NextRequest) {
     const resolvedTeacherId = teacher_id || asgn.teacher_id;
     const resolvedStudentId = student_id || asgn.student_id;
     const cleanDate = session_date && session_date.trim() !== "" ? session_date.trim() : new Date().toISOString().slice(0, 10);
-    const cleanStartTime = (start_time || session_start || "16:00").slice(0, 5);
+    const cleanStartTime = (session_start || start_time || "16:00").slice(0, 5);
+    const cleanEndTime = session_end ? session_end.slice(0, 5) : null;
     const cleanDuration = parseInt(duration_mins) || 60;
-    const cleanHomework = homework_assigned || homework_given || null;
-    const cleanNotes = notes || teacher_notes || null;
+    const cleanHomework = homework_given || homework_assigned || null;
+    const cleanNotes = teacher_notes || notes || null;
 
-    // Adaptive payload matching public.sessions schema
+    // Use live Postgres schema column names as primary:
+    // Live table has: homework_given (TEXT), session_start (TIME), session_end (TIME), teacher_notes (TEXT)
     const payload: Record<string, any> = {
       assignment_id: asgn.id,
       student_id: resolvedStudentId,
       teacher_id: resolvedTeacherId,
       session_date: cleanDate,
-      start_time: cleanStartTime,
       duration_mins: cleanDuration,
       topics_covered: topics_covered.trim(),
-      homework_assigned: cleanHomework,
       student_attendance: student_attendance || "present",
       status: status || "completed",
-      notes: cleanNotes,
     };
+
+    if (cleanHomework) {
+      payload.homework_given = cleanHomework;
+    }
+    if (cleanStartTime) {
+      payload.session_start = cleanStartTime;
+    }
+    if (cleanEndTime) {
+      payload.session_end = cleanEndTime;
+    }
+    if (cleanNotes) {
+      payload.teacher_notes = cleanNotes;
+    }
 
     let sessionRecord: any = null;
     let insertErr: any = null;
@@ -94,10 +106,16 @@ export async function POST(req: NextRequest) {
         console.warn(`[sessions POST] Dynamically adapting around missing column '${col}'...`);
         delete payload[col];
 
-        if (col === "homework_assigned" && cleanHomework) {
+        if (col === "homework_given" && cleanHomework) {
+          payload.homework_assigned = cleanHomework;
+        } else if (col === "homework_assigned" && cleanHomework) {
           payload.homework_given = cleanHomework;
+        } else if (col === "session_start" && cleanStartTime) {
+          payload.start_time = cleanStartTime;
         } else if (col === "start_time" && cleanStartTime) {
           payload.session_start = cleanStartTime;
+        } else if (col === "teacher_notes" && cleanNotes) {
+          payload.notes = cleanNotes;
         } else if (col === "notes" && cleanNotes) {
           payload.teacher_notes = cleanNotes;
         }
