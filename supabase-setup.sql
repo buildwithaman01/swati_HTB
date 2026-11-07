@@ -662,57 +662,46 @@ ALTER TABLE public.payments ADD CONSTRAINT payments_teacher_id_fkey
 -- maps all input properties directly to these canonical columns.
 
 -- =============================================================================
--- 18. SEQUENCE PERMISSIONS & TRIGGER SECURITY DEFINER HARDENING
+-- 18. LEAST-PRIVILEGE SEQUENCE PERMISSIONS & FUNCTION HARDENING
 -- =============================================================================
--- Immunize against "permission denied for sequence" errors across all roles:
-GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO postgres, anon, authenticated, service_role;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO postgres, anon, authenticated, service_role;
-ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO postgres, anon, authenticated, service_role;
+CREATE SEQUENCE IF NOT EXISTS public.session_seq START 1;
+CREATE SEQUENCE IF NOT EXISTS public.review_seq START 1;
 
--- Dynamic PL/pgSQL block to grant ALL PRIVILEGES on all sequences in information_schema.sequences
+-- Least-privilege sequence access: USAGE & SELECT only to appropriate roles
+GRANT USAGE, SELECT ON SEQUENCE public.session_seq TO authenticated, service_role;
+GRANT USAGE, SELECT ON SEQUENCE public.assignment_id_seq TO authenticated, service_role;
+GRANT USAGE, SELECT ON SEQUENCE public.review_seq TO anon, authenticated, service_role;
+GRANT USAGE, SELECT ON SEQUENCE public.teacher_id_seq TO anon, authenticated, service_role;
+GRANT USAGE, SELECT ON SEQUENCE public.student_id_seq TO anon, authenticated, service_role;
+
+-- Surgical SECURITY DEFINER hardening with pinned search_path
 DO $$
 DECLARE
-    seq_record RECORD;
+    f RECORD;
 BEGIN
-    FOR seq_record IN 
-        SELECT sequence_schema, sequence_name 
-        FROM information_schema.sequences 
-        WHERE sequence_schema = 'public'
-    LOOP
-        EXECUTE format(
-            'GRANT ALL PRIVILEGES ON SEQUENCE %I.%I TO postgres, anon, authenticated, service_role',
-            seq_record.sequence_schema,
-            seq_record.sequence_name
-        );
-    END LOOP;
-END $$;
-
--- Dynamic PL/pgSQL block to ensure ALL trigger functions in public schema run as SECURITY DEFINER
-DO $$
-DECLARE
-    func_record RECORD;
-BEGIN
-    FOR func_record IN
+    FOR f IN
         SELECT 
             n.nspname AS schema_name,
             p.proname AS func_name,
-            COALESCE(pg_get_function_identity_arguments(p.oid), '') AS args
+            COALESCE(pg_get_function_identity_arguments(p.oid), '') AS func_args
         FROM pg_proc p
         JOIN pg_namespace n ON p.pronamespace = n.oid
         WHERE n.nspname = 'public'
-          AND (
-              p.prorettype = 'trigger'::regtype
-              OR p.prorettype = 'pg_catalog.trigger'::regtype
-              OR p.proname IN ('set_student_id', 'set_teacher_id', 'set_assignment_id', 'set_session_id')
-              OR p.proname LIKE 'set_%_id'
-              OR p.proname LIKE 'trg_%'
+          AND p.proname IN (
+              'set_teacher_id',
+              'set_student_id',
+              'set_assignment_id',
+              'set_session_id',
+              'set_review_id',
+              'generate_payment_id',
+              'generate_commission_id'
           )
     LOOP
         EXECUTE format(
-            'ALTER FUNCTION %I.%I(%s) SECURITY DEFINER',
-            func_record.schema_name,
-            func_record.func_name,
-            func_record.args
+            'ALTER FUNCTION %I.%I(%s) SECURITY DEFINER SET search_path = public, pg_temp;',
+            f.schema_name,
+            f.func_name,
+            f.func_args
         );
     END LOOP;
 END $$;
