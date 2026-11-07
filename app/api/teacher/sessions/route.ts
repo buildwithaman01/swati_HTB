@@ -51,8 +51,8 @@ export async function POST(req: NextRequest) {
     const cleanHomework = homework_assigned || homework_given || null;
     const cleanNotes = notes || teacher_notes || null;
 
-    // Canonical payload matching public.sessions schema
-    const canonicalPayload: Record<string, any> = {
+    // Adaptive payload matching public.sessions schema
+    const payload: Record<string, any> = {
       assignment_id: asgn.id,
       student_id: resolvedStudentId,
       teacher_id: resolvedTeacherId,
@@ -66,42 +66,70 @@ export async function POST(req: NextRequest) {
       notes: cleanNotes,
     };
 
-    // Primary insert using canonical columns
-    let { data: sessionRecord, error: insertErr } = await adminDb
-      .from("sessions")
-      .insert(canonicalPayload)
-      .select(`
-        *,
-        students:student_id ( id, full_name, parent_name, parent_phone, parent_whatsapp, whatsapp )
-      `)
-      .single();
+    let sessionRecord: any = null;
+    let insertErr: any = null;
 
-    // If schema in live DB has compatibility columns (or if canonical failed on column), try fallback
-    if (insertErr) {
-      console.warn("[sessions POST canonical insert warning, trying fallback]:", insertErr.message);
-      const fallbackPayload: Record<string, any> = {
-        ...canonicalPayload,
-        session_start: cleanStartTime,
-        session_end: session_end || null,
-        homework_given: cleanHomework,
-        teacher_notes: cleanNotes,
-      };
-
-      const fallbackRes = await adminDb
+    // Resilient adaptive loop to handle schema differences in live Supabase DB
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const res = await adminDb
         .from("sessions")
-        .insert(fallbackPayload)
+        .insert(payload)
         .select()
-        .single();
+        .maybeSingle();
 
-      if (!fallbackRes.error && fallbackRes.data) {
-        sessionRecord = fallbackRes.data;
+      if (!res.error && res.data) {
+        sessionRecord = res.data;
         insertErr = null;
+        break;
       }
+
+      insertErr = res.error;
+      const msg = res.error?.message || "";
+      console.warn(`[sessions POST attempt ${attempt + 1} warning]:`, msg);
+
+      // Detect missing column error: "Could not find the '...' column of 'sessions' in the schema cache"
+      const missingColMatch = msg.match(/Could not find the '([^']+)' column/i);
+      if (missingColMatch) {
+        const col = missingColMatch[1];
+        console.warn(`[sessions POST] Dynamically adapting around missing column '${col}'...`);
+        delete payload[col];
+
+        if (col === "homework_assigned" && cleanHomework) {
+          payload.homework_given = cleanHomework;
+        } else if (col === "start_time" && cleanStartTime) {
+          payload.session_start = cleanStartTime;
+        } else if (col === "notes" && cleanNotes) {
+          payload.teacher_notes = cleanNotes;
+        }
+        continue;
+      }
+
+      // If error is about student_attendance or status default
+      if (msg.includes("student_attendance")) {
+        delete payload.student_attendance;
+        continue;
+      }
+
+      break;
     }
 
-    if (insertErr) {
+    if (insertErr || !sessionRecord) {
       console.error("[sessions POST fatal insert error]:", insertErr);
-      return NextResponse.json({ error: insertErr.message || "Failed to record session in database." }, { status: 500 });
+      return NextResponse.json(
+        { error: insertErr?.message || "Failed to record session in database." },
+        { status: 400 }
+      );
+    }
+
+    // Attach student details safely without relying on PostgREST embed aliases
+    if (sessionRecord && sessionRecord.student_id) {
+      const { data: st } = await adminDb
+        .from("students")
+        .select("id, full_name, parent_name, parent_phone, parent_whatsapp, whatsapp")
+        .eq("id", sessionRecord.student_id)
+        .maybeSingle();
+      sessionRecord.students = st || null;
+      sessionRecord.student = st || null;
     }
 
     revalidatePath("/teacher/dashboard/sessions");
@@ -140,7 +168,22 @@ export async function GET(req: NextRequest) {
     if (teacherId) query = query.eq("teacher_id", teacherId);
     if (studentId) query = query.eq("student_id", studentId);
 
-    const { data: sessions, error } = await query;
+    let { data: sessions, error } = await query;
+    if (error) {
+      console.warn("[sessions GET embed query failed, trying flat fallback]:", error.message);
+      let flatQuery = adminDb
+        .from("sessions")
+        .select("*")
+        .order("session_date", { ascending: false });
+      if (teacherId) flatQuery = flatQuery.eq("teacher_id", teacherId);
+      if (studentId) flatQuery = flatQuery.eq("student_id", studentId);
+      const flatRes = await flatQuery;
+      if (!flatRes.error && flatRes.data) {
+        sessions = flatRes.data;
+        error = null;
+      }
+    }
+
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }

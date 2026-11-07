@@ -1,4 +1,5 @@
 import { createClient, createAdminClient, getTeacherProfile } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 import {
   Users,
   IndianRupee,
@@ -20,47 +21,55 @@ export default async function TeacherDashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) return null;
+  if (!user) redirect("/teacher/login");
 
   const teacher = await getTeacherProfile(user.id, user.email);
   const resolvedTeacherId = teacher?.id;
 
-  if (!resolvedTeacherId) return null;
+  if (!resolvedTeacherId) redirect("/teacher/login");
 
-  // Fetch assignments
-  const { data: assignments } = await supabase
+  const adminClient = await createAdminClient();
+
+  // 1. Fetch active assignments with teacher earnings using adminClient
+  const { data: assignmentsData } = await adminClient
     .from("assignments")
     .select(`
-      id, monthly_fee, status, teacher_earning,
-      students:student_id ( full_name )
+      id, student_id, monthly_fee, status, teacher_earning, subject,
+      student:students ( id, full_name, class_studying, parent_name )
     `)
     .eq("teacher_id", resolvedTeacherId)
     .eq("status", "active");
 
-  const activeStudentsCount = assignments?.length || 0;
-  const expectedMonthlyEarnings = assignments?.reduce((acc, curr) => acc + (curr.teacher_earning || 0), 0) || 0;
+  const assignments = assignmentsData || [];
+  const activeStudentsCount = assignments.length;
+  const expectedMonthlyEarnings = assignments.reduce((acc, curr) => {
+    const fee = Number(curr.monthly_fee) || 0;
+    const earning = curr.teacher_earning !== null && curr.teacher_earning !== undefined
+      ? Number(curr.teacher_earning)
+      : Math.round(fee * 0.75);
+    return acc + earning;
+  }, 0);
 
-  // Fetch Payouts (Commissions)
-  const { data: payouts } = await supabase
+  // 2. Fetch Payouts (Commissions)
+  const { data: payouts } = await adminClient
     .from("commissions")
     .select("*")
     .eq("teacher_id", resolvedTeacherId)
     .order("created_at", { ascending: false })
     .limit(3);
 
-  // Fetch recent sessions
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
+  // 3. Fetch recent sessions this month
+  const now = new Date();
+  const startOfMonthStr = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
 
-  const { count: sessionCountThisMonth } = await supabase
+  const { count: sessionCountThisMonth } = await adminClient
     .from("sessions")
     .select("*", { count: "exact", head: true })
     .eq("teacher_id", resolvedTeacherId)
-    .gte("session_date", startOfMonth.toISOString());
+    .gte("session_date", startOfMonthStr);
 
-  // Fetch total tests conducted
-  const { count: totalTestsCount } = await supabase
+  // 4. Fetch total tests & progress evaluations conducted
+  const { count: totalTestsCount } = await adminClient
     .from("progress_reports")
     .select("*", { count: "exact", head: true })
     .eq("teacher_id", resolvedTeacherId);
@@ -223,17 +232,19 @@ export default async function TeacherDashboard() {
                   <div key={asg.id} className="p-5 flex items-center justify-between hover:bg-[#F9F8F5] transition-colors">
                     <div>
                       <h3 className="font-bold text-[#0B192C] text-sm">
-                        {Array.isArray(asg.students)
-                          ? (asg.students as any)[0]?.full_name
-                          : (asg.students as any)?.full_name || "Enrolled Student"}
+                        {(asg.student as any)?.full_name || (asg.students as any)?.full_name || "Enrolled Student"}
                       </h3>
-                      <p className="text-xs text-emerald-700 font-semibold mt-0.5 flex items-center gap-1">
+                      <p className="text-xs text-[#5A6578] font-medium mt-0.5">
+                        {asg.subject || "All Subjects"}
+                        {(asg.student as any)?.class_studying ? ` · Class ${(asg.student as any).class_studying}` : ""}
+                      </p>
+                      <p className="text-xs text-emerald-700 font-semibold mt-1 flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" /> Active Enrollment
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-[#0B192C]">
-                        ₹{asg.teacher_earning} <span className="text-xs text-[#5A6578] font-normal">/ mo</span>
+                        ₹{asg.teacher_earning !== null && asg.teacher_earning !== undefined ? asg.teacher_earning : Math.round((Number(asg.monthly_fee) || 0) * 0.75)} <span className="text-xs text-[#5A6578] font-normal">/ mo</span>
                       </p>
                     </div>
                   </div>

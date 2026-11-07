@@ -14,6 +14,7 @@ export default async function AdminFinance() {
     { data: payments },
     { data: assignments },
     { data: commissions },
+    { data: teachers },
   ] = await Promise.all([
     supabase
       .from("payments")
@@ -27,16 +28,21 @@ export default async function AdminFinance() {
     supabase
       .from("assignments")
       .select(`
-        id, assignment_id, monthly_fee, bureau_commission_amt, teacher_earning, subject, status,
-        teacher:teachers(full_name, teacher_id),
-        student:students(full_name, student_id, parent_name)
+        id, assignment_id, monthly_fee, bureau_commission_pct, bureau_commission_amt, teacher_earning, subject, status,
+        teacher:teachers(id, full_name, teacher_id),
+        student:students(id, full_name, student_id, parent_name)
       `)
       .eq("status", "active"),
     supabase
       .from("commissions")
       .select(`*, teacher:teachers(full_name, teacher_id)`)
       .order("created_at", { ascending: false })
-      .limit(30),
+      .limit(50),
+    supabase
+      .from("teachers")
+      .select("id, full_name, teacher_id")
+      .eq("is_active", true)
+      .order("full_name"),
   ]);
 
   async function recordPayment(formData: FormData) {
@@ -48,13 +54,27 @@ export default async function AdminFinance() {
     // Get student_id from assignment
     const { data: asgn } = await adminSupabase
       .from("assignments")
-      .select("student_id, bureau_commission_pct, bureau_commission_amt, teacher_earning, teacher_id, teacher_earning")
+      .select("student_id, bureau_commission_pct, bureau_commission_amt, teacher_earning, teacher_id")
       .eq("id", assignmentId)
       .single();
 
     if (!asgn) return;
 
     const payMonth = formData.get("payment_month") as string;
+    const rawCommPct = formData.get("custom_commission_pct") as string;
+    const rawCommAmt = formData.get("custom_commission_amt") as string;
+
+    const commPct = rawCommPct && !isNaN(parseFloat(rawCommPct))
+      ? parseFloat(rawCommPct)
+      : asgn.bureau_commission_pct || 25;
+
+    const commAmt = rawCommAmt && !isNaN(parseFloat(rawCommAmt))
+      ? parseFloat(rawCommAmt)
+      : asgn.bureau_commission_amt !== null && asgn.bureau_commission_amt !== undefined
+      ? Number(asgn.bureau_commission_amt)
+      : Math.round((amount * commPct) / 100);
+
+    const teacherPayout = Math.max(0, amount - commAmt);
 
     // Insert payment
     await adminSupabase.from("payments").insert({
@@ -69,19 +89,54 @@ export default async function AdminFinance() {
       received_by: "Admin",
     });
 
-    // Auto-create commission record
+    // Auto-create commission record with custom or standard split
     await adminSupabase.from("commissions").insert({
       teacher_id: asgn.teacher_id,
       assignment_id: assignmentId,
       month: payMonth,
       gross_amount: amount,
-      commission_pct: asgn.bureau_commission_pct,
-      commission_amount: asgn.bureau_commission_amt,
-      teacher_payout: asgn.teacher_earning,
+      commission_pct: commPct,
+      commission_amount: commAmt,
+      teacher_payout: teacherPayout,
       status: "pending",
     });
 
     revalidatePath("/admin/finance");
+    revalidatePath("/teacher/dashboard");
+  }
+
+  async function createCustomCommission(formData: FormData) {
+    "use server";
+    const adminSupabase = await createAdminClient();
+    const teacherId = formData.get("teacher_id") as string;
+    const assignmentId = (formData.get("assignment_id") as string) || null;
+    const grossAmount = parseFloat(formData.get("gross_amount") as string) || 0;
+    const commissionPct = parseFloat(formData.get("commission_pct") as string) || 25;
+    const customAmt = formData.get("commission_amount") ? parseFloat(formData.get("commission_amount") as string) : null;
+    const commissionAmt = customAmt !== null && !isNaN(customAmt)
+      ? customAmt
+      : Math.round((grossAmount * commissionPct) / 100);
+    const teacherPayout = parseFloat(formData.get("teacher_payout") as string) || Math.max(0, grossAmount - commissionAmt);
+    const month = (formData.get("month") as string) || new Date().toISOString().slice(0, 7);
+    const status = (formData.get("status") as string) || "pending";
+    const notes = (formData.get("notes") as string) || "Manual custom commission";
+
+    if (!teacherId) return;
+
+    await adminSupabase.from("commissions").insert({
+      teacher_id: teacherId,
+      assignment_id: assignmentId,
+      month,
+      gross_amount: grossAmount,
+      commission_pct: commissionPct,
+      commission_amount: commissionAmt,
+      teacher_payout: teacherPayout,
+      status,
+      notes,
+    });
+
+    revalidatePath("/admin/finance");
+    revalidatePath("/teacher/dashboard");
   }
 
   async function markCommissionPaid(formData: FormData) {
@@ -197,13 +252,99 @@ export default async function AdminFinance() {
           </div>
 
           <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Custom Bureau % (Optional)</label>
+            <input name="custom_commission_pct" type="number" min="0" max="100" placeholder="Default: standard 25%" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Custom Bureau Amt ₹ (Optional)</label>
+            <input name="custom_commission_amt" type="number" min="0" placeholder="Override commission ₹" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
             <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">UPI Ref / Transaction ID</label>
             <input name="upi_ref" placeholder="Optional" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0F4C5C]/20" />
           </div>
 
           <div className="lg:col-span-3">
             <button type="submit" className="bg-[#0F4C5C] hover:bg-[#0a3a47] text-white font-bold px-6 py-2.5 rounded-xl text-sm transition-colors shadow-md flex items-center gap-2">
-              <CreditCard size={16} /> Record Payment
+              <CreditCard size={16} /> Record Payment & Commission
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* Custom Commission & Payout Adjustment Card */}
+      <div className="bg-white rounded-3xl border border-neutral-200/60 p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-neutral-100 gap-2 mb-5">
+          <div>
+            <h2 className="font-bold text-[#1F2937] text-lg flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#E5A93C]" />
+              Custom Commission & Payout Management
+            </h2>
+            <p className="text-xs text-neutral-500 mt-0.5">
+              Record custom teacher commission splits, first-month bureau shares (e.g. 50%), adjustments, or manual payouts.
+            </p>
+          </div>
+          <span className="text-xs font-bold text-[#0B192C] bg-amber-50 border border-amber-200 px-3 py-1 rounded-full self-start sm:self-auto">
+            Admin Financial Control
+          </span>
+        </div>
+
+        <form action={createCustomCommission} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="flex flex-col gap-1.5 lg:col-span-2">
+            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Select Teacher *</label>
+            <select name="teacher_id" required className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#E5A93C]/30">
+              <option value="">Choose teacher...</option>
+              {teachers?.map(t => (
+                <option key={t.id} value={t.id}>
+                  {t.full_name} ({t.teacher_id || "ID"})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Gross Amount (₹) *</label>
+            <input name="gross_amount" type="number" required placeholder="e.g. 6000" min="0" step="100" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E5A93C]/30" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Month *</label>
+            <input name="month" type="month" required defaultValue={currentMonth} className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E5A93C]/30" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Bureau Commission % *</label>
+            <input name="commission_pct" type="number" defaultValue="25" min="0" max="100" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E5A93C]/30" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Bureau Commission ₹ (Optional Override)</label>
+            <input name="commission_amount" type="number" min="0" placeholder="Auto-calculated if blank" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E5A93C]/30" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Teacher Net Payout ₹ (Optional Override)</label>
+            <input name="teacher_payout" type="number" min="0" placeholder="Auto-calculated if blank" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E5A93C]/30" />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Payout Status *</label>
+            <select name="status" required className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#E5A93C]/30">
+              <option value="pending">Pending Settlement</option>
+              <option value="paid">Already Paid to Teacher</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5 lg:col-span-3">
+            <label className="text-xs font-semibold text-neutral-600 uppercase tracking-wide">Notes / Reason</label>
+            <input name="notes" placeholder="e.g. First month 50% bureau share, special subject bonus, or custom rate agreement" className="px-3 py-2.5 border border-neutral-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#E5A93C]/30" />
+          </div>
+
+          <div className="lg:col-span-1 flex items-end">
+            <button type="submit" className="w-full bg-[#0B192C] hover:bg-[#1E3E62] text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-colors shadow-md flex items-center justify-center gap-2">
+              <Plus size={16} className="text-[#E5A93C]" /> Record Commission
             </button>
           </div>
         </form>

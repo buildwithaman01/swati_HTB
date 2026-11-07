@@ -33,8 +33,7 @@ export default async function ParentReports() {
   // Fetch both assignment-linked reports and directly student-linked reports
   let query = adminClient
     .from("progress_reports")
-    .select("*")
-    .eq("sent_to_parent", true);
+    .select("*");
 
   if (assignmentIds.length > 0) {
     query = query.or(`student_id.eq.${student.id},assignment_id.in.(${assignmentIds.join(",")})`);

@@ -39,28 +39,46 @@ export default async function TeacherTestsPage() {
 
   const assignmentIds = (assignments || []).map((a) => a.id);
 
-  // Fetch tests/reports for these assignments
+  // Fetch tests/reports for this teacher with robust resilient hydration
   let tests: any[] = [];
-  if (assignmentIds.length > 0) {
-    const { data: testRows } = await adminClient
-      .from("progress_reports")
-      .select(`
-        id,
-        report_month,
-        topics_covered,
-        test_scores,
-        overall_rating,
-        strengths,
-        areas_of_improvement,
-        teacher_remarks,
-        created_at,
-        assignment:assignments (id, subject),
-        student:students (id, full_name, class_studying, parent_name, parent_phone, whatsapp)
-      `)
-      .in("assignment_id", assignmentIds)
-      .order("created_at", { ascending: false });
+  let testQuery = adminClient.from("progress_reports").select(`
+    id,
+    report_month,
+    topics_covered,
+    test_scores,
+    overall_rating,
+    strengths,
+    areas_of_improvement,
+    teacher_remarks,
+    created_at,
+    student_id,
+    assignment_id
+  `);
 
-    tests = testRows || [];
+  if (assignmentIds.length > 0) {
+    testQuery = testQuery.or(`teacher_id.eq.${teacher.id},assignment_id.in.(${assignmentIds.join(",")})`);
+  } else {
+    testQuery = testQuery.eq("teacher_id", teacher.id);
+  }
+
+  const { data: testRows } = await testQuery.order("created_at", { ascending: false });
+
+  if (testRows && testRows.length > 0) {
+    const stIds = Array.from(new Set(testRows.map((t) => t.student_id).filter(Boolean)));
+    const { data: stList } = stIds.length > 0
+      ? await adminClient
+          .from("students")
+          .select("id, full_name, class_studying, parent_name, parent_phone, whatsapp")
+          .in("id", stIds)
+      : { data: [] };
+    const stMap = new Map((stList || []).map((s) => [s.id, s]));
+    const asgMap = new Map((assignments || []).map((a) => [a.id, a]));
+
+    tests = testRows.map((t) => ({
+      ...t,
+      student: stMap.get(t.student_id) || (t.assignment_id && asgMap.get(t.assignment_id)?.student) || null,
+      assignment: asgMap.get(t.assignment_id) || { id: t.assignment_id, subject: "General Assessment" },
+    }));
   }
 
   return (

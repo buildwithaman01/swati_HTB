@@ -35,6 +35,13 @@ export async function POST(req: NextRequest) {
     }
 
     const commissionPct = parseFloat(bureau_commission_pct) || 25;
+    const commissionAmt = bureau_commission_amt !== undefined && bureau_commission_amt !== null
+      ? parseFloat(bureau_commission_amt)
+      : Math.round((fee * commissionPct) / 100);
+    const teacherEarning = teacher_earning !== undefined && teacher_earning !== null
+      ? parseFloat(teacher_earning)
+      : Math.max(0, fee - commissionAmt);
+
     const adminDb = await createAdminClient();
 
     // Verify teacher exists
@@ -72,6 +79,8 @@ export async function POST(req: NextRequest) {
       subject: subject.trim(),
       monthly_fee: fee,
       bureau_commission_pct: commissionPct,
+      bureau_commission_amt: commissionAmt,
+      teacher_earning: teacherEarning,
       classes_per_week: parseInt(classes_per_week) || 3,
       session_duration_mins: parseInt(session_duration_mins) || 60,
       session_days: daysArray,
@@ -131,7 +140,15 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, status, cancellation_reason } = body;
+    const {
+      id,
+      status,
+      cancellation_reason,
+      monthly_fee,
+      bureau_commission_pct,
+      bureau_commission_amt,
+      teacher_earning,
+    } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Assignment ID is required" }, { status: 400 });
@@ -147,6 +164,10 @@ export async function PATCH(req: NextRequest) {
     if (cancellation_reason !== undefined) {
       updateData.cancellation_reason = cancellation_reason || null;
     }
+    if (monthly_fee !== undefined) updateData.monthly_fee = parseFloat(monthly_fee) || 0;
+    if (bureau_commission_pct !== undefined) updateData.bureau_commission_pct = parseFloat(bureau_commission_pct) || 0;
+    if (bureau_commission_amt !== undefined) updateData.bureau_commission_amt = parseFloat(bureau_commission_amt) || 0;
+    if (teacher_earning !== undefined) updateData.teacher_earning = parseFloat(teacher_earning) || 0;
 
     let { data, error } = await adminDb
       .from("assignments")

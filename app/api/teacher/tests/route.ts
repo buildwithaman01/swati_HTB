@@ -98,43 +98,93 @@ export async function POST(req: NextRequest) {
       .filter(Boolean)
       .join(" | ");
 
-    // Insert into progress_reports table
-    const { data: record, error: insertErr } = await adminDb
-      .from("progress_reports")
-      .insert({
-        assignment_id: asgn.id,
-        teacher_id: resolvedTeacherId,
-        student_id: resolvedStudentId,
-        report_month: formattedDate,
-        topics_covered: fullTopicsString,
-        test_scores: scoreString,
-        overall_rating: rating,
-        strengths:
-          percentage >= 80
-            ? "Strong conceptual clarity, accurate problem-solving, and good test presentation."
-            : percentage >= 60
-            ? "Solid understanding of standard questions; active participation in doubt-clearing."
-            : "Shows sincere effort; responsive to guided corrections and hints.",
-        areas_of_improvement:
-          percentage < 60
-            ? "Needs focused revision of core formulas, step-by-step derivations, and speed practice."
-            : percentage < 80
-            ? "Work on reducing silly calculation errors and handling higher-order thinking problems."
-            : "Continue regular mock papers to maintain top percentile in school examinations.",
-        teacher_remarks: remarksFormatted,
-        sent_to_parent: true,
-        sent_at: new Date().toISOString(),
-      })
-      .select(`
-        *,
-        assignment:assignments (id, subject),
-        student:students (id, full_name, class_studying, parent_name, parent_phone, whatsapp)
-      `)
-      .single();
+    // Adaptive insert into progress_reports table
+    const testPayload: Record<string, any> = {
+      assignment_id: asgn.id,
+      teacher_id: resolvedTeacherId,
+      student_id: resolvedStudentId,
+      report_month: formattedDate,
+      topics_covered: fullTopicsString,
+      test_scores: scoreString,
+      overall_rating: rating,
+      strengths:
+        percentage >= 80
+          ? "Strong conceptual clarity, accurate problem-solving, and good test presentation."
+          : percentage >= 60
+          ? "Solid understanding of standard questions; active participation in doubt-clearing."
+          : "Shows sincere effort; responsive to guided corrections and hints.",
+      areas_of_improvement:
+        percentage < 60
+          ? "Needs focused revision of core formulas, step-by-step derivations, and speed practice."
+          : percentage < 80
+          ? "Work on reducing silly calculation errors and handling higher-order thinking problems."
+          : "Continue regular mock papers to maintain top percentile in school examinations.",
+      teacher_remarks: remarksFormatted,
+      sent_to_parent: true,
+      sent_at: new Date().toISOString(),
+    };
 
-    if (insertErr) {
-      console.error("[teacher/tests POST error]:", insertErr);
-      return NextResponse.json({ error: insertErr.message }, { status: 400 });
+    let record: any = null;
+    let insertErr: any = null;
+
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const res = await adminDb
+        .from("progress_reports")
+        .insert(testPayload)
+        .select()
+        .maybeSingle();
+
+      if (!res.error && res.data) {
+        record = res.data;
+        insertErr = null;
+        break;
+      }
+
+      insertErr = res.error;
+      const msg = res.error?.message || "";
+      console.warn(`[teacher/tests POST attempt ${attempt + 1} warning]:`, msg);
+
+      const missingColMatch = msg.match(/Could not find the '([^']+)' column/i);
+      if (missingColMatch) {
+        const col = missingColMatch[1];
+        console.warn(`[teacher/tests POST] Dropping missing column '${col}' and retrying...`);
+        delete testPayload[col];
+        continue;
+      }
+
+      if (msg.includes("overall_rating")) {
+        delete testPayload.overall_rating;
+        continue;
+      }
+
+      break;
+    }
+
+    if (insertErr || !record) {
+      console.error("[teacher/tests POST fatal error]:", insertErr);
+      return NextResponse.json({ error: insertErr?.message || "Failed to record test in database." }, { status: 400 });
+    }
+
+    // Attach student and assignment details safely
+    if (record) {
+      const [{ data: stData }, { data: asData }] = await Promise.all([
+        record.student_id
+          ? adminDb
+              .from("students")
+              .select("id, full_name, class_studying, parent_name, parent_phone, whatsapp")
+              .eq("id", record.student_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        record.assignment_id
+          ? adminDb
+              .from("assignments")
+              .select("id, subject")
+              .eq("id", record.assignment_id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+      record.student = stData || null;
+      record.assignment = asData || null;
     }
 
     revalidatePath("/teacher/dashboard/tests");
@@ -175,7 +225,22 @@ export async function GET(req: NextRequest) {
     if (teacherId) query = query.eq("teacher_id", teacherId);
     if (studentId) query = query.eq("student_id", studentId);
 
-    const { data: tests, error } = await query;
+    let { data: tests, error } = await query;
+    if (error) {
+      console.warn("[teacher/tests GET embed query failed, trying flat fallback]:", error.message);
+      let flatQuery = adminDb
+        .from("progress_reports")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (teacherId) flatQuery = flatQuery.eq("teacher_id", teacherId);
+      if (studentId) flatQuery = flatQuery.eq("student_id", studentId);
+      const flatRes = await flatQuery;
+      if (!flatRes.error && flatRes.data) {
+        tests = flatRes.data;
+        error = null;
+      }
+    }
+
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }

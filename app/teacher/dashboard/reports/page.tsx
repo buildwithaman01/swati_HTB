@@ -59,23 +59,34 @@ export default async function TeacherReportsPage() {
     }
   }
 
-  // Get past reports
+  // Get past reports with robust fallback
   const assignmentIds = assignments.map(a => a.id);
   let reports: any[] = [];
-  if (assignmentIds.length > 0) {
-    const { data: repData } = await adminClient
-      .from("progress_reports")
-      .select(`
-        *,
-        assignment:assignments (
-          subject,
-          student:students (full_name)
-        )
-      `)
-      .in("assignment_id", assignmentIds)
-      .order("created_at", { ascending: false });
+  let repQuery = adminClient.from("progress_reports").select(`
+    *,
+    assignment:assignments (
+      subject,
+      student:students (full_name)
+    )
+  `);
 
-    reports = repData || [];
+  if (assignmentIds.length > 0) {
+    repQuery = repQuery.or(`teacher_id.eq.${resolvedTeacherId},assignment_id.in.(${assignmentIds.join(",")})`);
+  } else {
+    repQuery = repQuery.eq("teacher_id", resolvedTeacherId);
+  }
+
+  const { data: repData, error: repErr } = await repQuery.order("created_at", { ascending: false });
+  if (!repErr && repData) {
+    reports = repData;
+  } else {
+    // Resilient flat fallback
+    const { data: flatReps } = await adminClient
+      .from("progress_reports")
+      .select("*")
+      .eq("teacher_id", resolvedTeacherId)
+      .order("created_at", { ascending: false });
+    reports = flatReps || [];
   }
 
   // Add new report action
@@ -97,7 +108,7 @@ export default async function TeacherReportsPage() {
       // Format as date: YYYY-MM-01
       const normalizedMonth = reportMonth.length === 7 ? `${reportMonth}-01` : reportMonth;
 
-      await adminDb.from("progress_reports").insert({
+      const reportPayload: Record<string, any> = {
         assignment_id: assignmentId,
         teacher_id: asg?.teacher_id || resolvedTeacherId,
         student_id: asg?.student_id,
@@ -108,7 +119,20 @@ export default async function TeacherReportsPage() {
         teacher_remarks: formData.get("tutor_message") || "Monthly progress evaluation submitted.",
         sent_to_parent: true,
         sent_at: new Date().toISOString(),
-      });
+      };
+
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const { error: insErr } = await adminDb.from("progress_reports").insert(reportPayload);
+        if (!insErr) break;
+
+        const msg = insErr.message || "";
+        const missingColMatch = msg.match(/Could not find the '([^']+)' column/i);
+        if (missingColMatch) {
+          delete reportPayload[missingColMatch[1]];
+          continue;
+        }
+        break;
+      }
 
       revalidatePath("/teacher/dashboard/reports");
       revalidatePath("/portal/reports");

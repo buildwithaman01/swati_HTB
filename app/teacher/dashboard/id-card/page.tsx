@@ -16,6 +16,7 @@ import {
 import { GoogleGIcon, InstagramIcon, FacebookIcon } from "@/components/shared/SocialIcons";
 import { CANONICAL_LINKS, BUREAU_INFO } from "@/lib/constants";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import QRCode from "qrcode";
 import IDCardDownloader from "./IDCardDownloader";
 
@@ -28,11 +29,15 @@ export default async function TeacherIDCardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return null;
+  if (!user) {
+    redirect("/teacher/login");
+  }
 
   const teacher = await getTeacherProfile(user.id, user.email);
 
-  if (!teacher) return null;
+  if (!teacher) {
+    redirect("/teacher/login");
+  }
 
   const isVerified = teacher.verification_status === "approved";
   const teacherId = teacher.teacher_id || "TCH-2026-001";
@@ -59,8 +64,21 @@ export default async function TeacherIDCardPage() {
   const validUntilYear = currentYear + 1;
   const validUntilFormatted = `31-DEC-${validUntilYear}`;
 
-  const subjectsDisplay = (teacher.subjects || []).slice(0, 3).join(", ") || "All Subjects";
-  const classesDisplay = (teacher.classes_taught || []).slice(0, 2).join(", ") || "Classes 1-12";
+  const formatList = (val: any, limit: number, fallback: string) => {
+    if (!val) return fallback;
+    if (Array.isArray(val)) {
+      const items = val.filter(Boolean).map(String).slice(0, limit);
+      return items.length > 0 ? items.join(", ") : fallback;
+    }
+    if (typeof val === "string") {
+      const parts = val.split(",").map((s) => s.trim()).filter(Boolean);
+      return parts.length > 0 ? parts.slice(0, limit).join(", ") : val.trim() || fallback;
+    }
+    return String(val) || fallback;
+  };
+
+  const subjectsDisplay = formatList(teacher.subjects, 3, "All Subjects");
+  const classesDisplay = formatList(teacher.classes_taught, 2, "Classes 1-12");
 
   return (
     <div className="space-y-8">
@@ -264,7 +282,7 @@ export default async function TeacherIDCardPage() {
                       {validUntilFormatted}
                     </p>
                     <p className="text-[8px] text-[#5A6578] font-mono pt-1">
-                      SEC: {teacher.id ? teacher.id.slice(0, 8).toUpperCase() : "SWATI2026"}
+                      SEC: {teacher.id ? String(teacher.id).slice(0, 8).toUpperCase() : "SWATI2026"}
                     </p>
                   </div>
 

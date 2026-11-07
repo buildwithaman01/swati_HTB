@@ -85,9 +85,16 @@ export default function AssignmentCreationForm({
       ? rawTeacherSubs
       : "General";
 
+  const [commissionMode, setCommissionMode] = useState<"percent" | "flat">("percent");
+  const [commissionPct, setCommissionPct] = useState<number>(25);
+  const [customFlatAmt, setCustomFlatAmt] = useState<string>("");
+
   const feeNum = parseFloat(monthlyFee) || 0;
-  const bureauCommission = Math.round(feeNum * 0.25);
-  const teacherPayout = feeNum - bureauCommission;
+  const bureauCommission = commissionMode === "percent"
+    ? Math.round((feeNum * (commissionPct || 25)) / 100)
+    : Math.min(feeNum, Math.max(0, parseFloat(customFlatAmt) || 0));
+  const effectiveCommissionPct = feeNum > 0 ? Math.round((bureauCommission / feeNum) * 100) : commissionPct;
+  const teacherPayout = Math.max(0, feeNum - bureauCommission);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -122,7 +129,9 @@ export default function AssignmentCreationForm({
           session_time: sessionTime,
           start_date: startDate,
           notes,
-          bureau_commission_pct: 25,
+          bureau_commission_pct: effectiveCommissionPct,
+          bureau_commission_amt: bureauCommission,
+          teacher_earning: teacherPayout,
         }),
       });
 
@@ -454,6 +463,92 @@ export default function AssignmentCreationForm({
         </div>
       </div>
 
+      {/* Custom Commission Management */}
+      <div className="p-4 bg-amber-50/50 rounded-2xl border border-amber-200/60 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h4 className="text-xs font-bold text-neutral-800 uppercase tracking-wide flex items-center gap-1.5">
+              <span>🏛️ Bureau Commission Management</span>
+            </h4>
+            <p className="text-[11px] text-neutral-500 mt-0.5">
+              Set standard bureau commission rate or configure a custom split for this teacher.
+            </p>
+          </div>
+          <div className="inline-flex p-1 bg-white rounded-xl border border-neutral-200 text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => setCommissionMode("percent")}
+              className={`px-3 py-1 rounded-lg transition-all ${
+                commissionMode === "percent"
+                  ? "bg-[#0B192C] text-white shadow-xs"
+                  : "text-neutral-600 hover:text-neutral-900"
+              }`}
+            >
+              Percentage (%)
+            </button>
+            <button
+              type="button"
+              onClick={() => setCommissionMode("flat")}
+              className={`px-3 py-1 rounded-lg transition-all ${
+                commissionMode === "flat"
+                  ? "bg-[#0B192C] text-white shadow-xs"
+                  : "text-neutral-600 hover:text-neutral-900"
+              }`}
+            >
+              Flat Fee (₹)
+            </button>
+          </div>
+        </div>
+
+        {commissionMode === "percent" ? (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            {[20, 25, 30, 35, 50].map((pct) => (
+              <button
+                type="button"
+                key={pct}
+                onClick={() => setCommissionPct(pct)}
+                className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all ${
+                  commissionPct === pct
+                    ? "bg-[#E5A93C] text-[#0B192C] border-[#E5A93C] shadow-xs"
+                    : "bg-white text-neutral-700 border-neutral-300 hover:border-neutral-400"
+                }`}
+              >
+                {pct}% {pct === 25 ? "(Standard)" : pct === 50 ? "(First Month)" : ""}
+              </button>
+            ))}
+            <div className="flex items-center gap-1 bg-white px-2.5 py-1 rounded-xl border border-neutral-300 text-xs">
+              <span className="text-neutral-400 font-bold">Custom:</span>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={commissionPct}
+                onChange={(e) => setCommissionPct(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+                className="w-12 font-bold text-neutral-800 outline-none"
+              />
+              <span className="font-bold text-neutral-500">%</span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 pt-1">
+            <div className="relative max-w-xs w-full">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 font-bold text-xs">₹</span>
+              <input
+                type="number"
+                min="0"
+                value={customFlatAmt}
+                onChange={(e) => setCustomFlatAmt(e.target.value)}
+                placeholder="e.g. 1500 (Flat Bureau Share)"
+                className="w-full pl-7 pr-3 py-2 text-xs font-bold rounded-xl border border-neutral-300 bg-white focus:ring-2 focus:ring-[#0B192C]/20 outline-none"
+              />
+            </div>
+            <p className="text-xs text-neutral-500">
+              Fixed bureau commission deducted monthly.
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Live Financial Breakdown Card */}
       <div className="p-4 bg-neutral-50 rounded-2xl border border-neutral-200/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
@@ -464,11 +559,11 @@ export default function AssignmentCreationForm({
         </div>
         <div className="flex gap-4">
           <div className="text-left sm:text-right">
-            <p className="text-xs text-neutral-500">Teacher Earning (75%)</p>
+            <p className="text-xs text-neutral-500">Teacher Earning ({100 - effectiveCommissionPct}%)</p>
             <p className="text-base font-bold text-emerald-600">₹{teacherPayout.toLocaleString("en-IN")}</p>
           </div>
           <div className="text-left sm:text-right">
-            <p className="text-xs text-neutral-500">Bureau Commission (25%)</p>
+            <p className="text-xs text-neutral-500">Bureau Commission ({effectiveCommissionPct}%)</p>
             <p className="text-base font-bold text-purple-600">₹{bureauCommission.toLocaleString("en-IN")}</p>
           </div>
         </div>

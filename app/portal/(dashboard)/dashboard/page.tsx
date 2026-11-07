@@ -65,8 +65,7 @@ export default async function ParentDashboard() {
   // Fetch sessions, latest report, and latest payment
   let reportQuery = adminClient
     .from("progress_reports")
-    .select("*")
-    .eq("sent_to_parent", true);
+    .select("*");
 
   if (assignmentIds.length > 0) {
     reportQuery = reportQuery.or(`student_id.eq.${student.id},assignment_id.in.(${assignmentIds.join(",")})`);

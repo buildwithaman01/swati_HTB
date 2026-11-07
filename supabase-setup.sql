@@ -635,3 +635,31 @@ ALTER TABLE public.payments ADD CONSTRAINT payments_assignment_id_fkey
 ALTER TABLE public.payments DROP CONSTRAINT IF EXISTS payments_teacher_id_fkey;
 ALTER TABLE public.payments ADD CONSTRAINT payments_teacher_id_fkey 
     FOREIGN KEY (teacher_id) REFERENCES public.teachers(id) ON DELETE SET NULL;
+
+-- =============================================================================
+-- 17. IDEMPOTENT SCHEMA EXTENSIONS & COMPATIBILITY COLUMNS
+-- =============================================================================
+
+-- Ensure all session timing and homework columns exist
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS homework_assigned TEXT;
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS homework_given TEXT;
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS start_time TIME;
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS session_start TEXT;
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS session_end TEXT;
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS teacher_notes TEXT;
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS student_attendance TEXT DEFAULT 'present';
+
+-- Ensure all progress report columns exist
+ALTER TABLE public.progress_reports ADD COLUMN IF NOT EXISTS sent_to_parent BOOLEAN DEFAULT true;
+ALTER TABLE public.progress_reports ADD COLUMN IF NOT EXISTS sent_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+ALTER TABLE public.progress_reports ADD COLUMN IF NOT EXISTS teacher_remarks TEXT;
+ALTER TABLE public.progress_reports ADD COLUMN IF NOT EXISTS overall_rating INT DEFAULT 5;
+ALTER TABLE public.progress_reports ADD COLUMN IF NOT EXISTS strengths TEXT;
+ALTER TABLE public.progress_reports ADD COLUMN IF NOT EXISTS areas_of_improvement TEXT;
+ALTER TABLE public.progress_reports ADD COLUMN IF NOT EXISTS test_scores TEXT;
+
+-- Ensure assignment commission columns exist
+ALTER TABLE public.assignments ADD COLUMN IF NOT EXISTS bureau_commission_pct NUMERIC(5,2) DEFAULT 25;
+ALTER TABLE public.assignments ADD COLUMN IF NOT EXISTS bureau_commission_amt NUMERIC(10,2);
+ALTER TABLE public.assignments ADD COLUMN IF NOT EXISTS teacher_earning NUMERIC(10,2);

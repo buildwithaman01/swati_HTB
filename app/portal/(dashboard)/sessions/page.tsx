@@ -23,23 +23,35 @@ export default async function ParentSessions() {
 
   if (!student) redirect("/portal/login");
 
-  // Fetch all historical sessions for this student regardless of whether assignment is active or completed
-  const [{ data: sessions }, { data: assignments }] = await Promise.all([
-    adminClient
+  let sessionsData: any[] = [];
+  const { data: sessWithTeacher, error: sErr } = await adminClient
+    .from("sessions")
+    .select(`
+      *,
+      teacher:teachers(id, full_name, phone, whatsapp)
+    `)
+    .eq("student_id", student.id)
+    .order("session_date", { ascending: false });
+
+  if (!sErr && sessWithTeacher) {
+    sessionsData = sessWithTeacher;
+  } else {
+    const { data: flatSess } = await adminClient
       .from("sessions")
-      .select(`
-        *,
-        teacher:teachers(id, full_name, phone, whatsapp)
-      `)
+      .select("*")
       .eq("student_id", student.id)
-      .order("session_date", { ascending: false }),
-    adminClient
-      .from("assignments")
-      .select("id, subject, status, teacher:teachers(id, full_name)")
-      .eq("student_id", student.id)
-      .order("created_at", { ascending: false })
-      .limit(1),
-  ]);
+      .order("session_date", { ascending: false });
+    sessionsData = flatSess || [];
+  }
+
+  const { data: assignments } = await adminClient
+    .from("assignments")
+    .select("id, subject, status, teacher:teachers(id, full_name)")
+    .eq("student_id", student.id)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  const sessions = sessionsData;
 
   const activeAssignment = assignments?.[0];
   const activeTeacher = (activeAssignment?.teacher as any)?.full_name || (sessions?.[0]?.teacher as any)?.full_name || "Your Home Tutor";
