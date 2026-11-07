@@ -12,9 +12,9 @@ import {
   Star,
   FileText,
 } from "lucide-react";
-import { useState } from "react";
-import html2canvas from "html2canvas";
+import { useState, useEffect } from "react";
 import { InstagramIcon, GoogleGIcon } from "@/components/shared/SocialIcons";
+import { CANONICAL_LINKS, BUREAU_INFO } from "@/lib/constants";
 import {
   preprocessCardImages,
   drawBadgeCanvasFallback,
@@ -106,6 +106,8 @@ export default function IDCardDownloader({
       await new Promise((r) => setTimeout(r, 80));
 
       // Step 2: Render via html2canvas with strict allowTaint: false and high DPI scale
+      const html2canvasModule = await import("html2canvas");
+      const html2canvas = html2canvasModule.default || html2canvasModule;
       const canvas = await html2canvas(el, {
         scale: 3, // 300+ DPI equivalent for ultra-crisp physical print quality
         useCORS: true,

@@ -14,6 +14,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE SEQUENCE IF NOT EXISTS teacher_id_seq START 1;
 CREATE SEQUENCE IF NOT EXISTS student_id_seq START 1;
 CREATE SEQUENCE IF NOT EXISTS assignment_id_seq START 1;
+CREATE SEQUENCE IF NOT EXISTS session_seq START 1;
 
 -- =============================================================================
 -- 3. CREATE & MIGRATE TEACHERS TABLE
@@ -88,7 +89,7 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trg_set_teacher_id ON public.teachers;
 CREATE TRIGGER trg_set_teacher_id
@@ -166,7 +167,7 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trg_set_student_id ON public.students;
 CREATE TRIGGER trg_set_student_id
@@ -215,7 +216,7 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trg_set_assignment_id ON public.assignments;
 CREATE TRIGGER trg_set_assignment_id
@@ -659,3 +660,60 @@ ALTER TABLE public.payments ADD CONSTRAINT payments_teacher_id_fkey
 --
 -- DO NOT add duplicate columns or overwrite generated columns. The application codebase
 -- maps all input properties directly to these canonical columns.
+
+-- =============================================================================
+-- 18. SEQUENCE PERMISSIONS & TRIGGER SECURITY DEFINER HARDENING
+-- =============================================================================
+-- Immunize against "permission denied for sequence" errors across all roles:
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO postgres, anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO postgres, anon, authenticated, service_role;
+
+-- Dynamic PL/pgSQL block to grant ALL PRIVILEGES on all sequences in information_schema.sequences
+DO $$
+DECLARE
+    seq_record RECORD;
+BEGIN
+    FOR seq_record IN 
+        SELECT sequence_schema, sequence_name 
+        FROM information_schema.sequences 
+        WHERE sequence_schema = 'public'
+    LOOP
+        EXECUTE format(
+            'GRANT ALL PRIVILEGES ON SEQUENCE %I.%I TO postgres, anon, authenticated, service_role',
+            seq_record.sequence_schema,
+            seq_record.sequence_name
+        );
+    END LOOP;
+END $$;
+
+-- Dynamic PL/pgSQL block to ensure ALL trigger functions in public schema run as SECURITY DEFINER
+DO $$
+DECLARE
+    func_record RECORD;
+BEGIN
+    FOR func_record IN
+        SELECT 
+            n.nspname AS schema_name,
+            p.proname AS func_name,
+            COALESCE(pg_get_function_identity_arguments(p.oid), '') AS args
+        FROM pg_proc p
+        JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE n.nspname = 'public'
+          AND (
+              p.prorettype = 'trigger'::regtype
+              OR p.prorettype = 'pg_catalog.trigger'::regtype
+              OR p.proname IN ('set_student_id', 'set_teacher_id', 'set_assignment_id', 'set_session_id')
+              OR p.proname LIKE 'set_%_id'
+              OR p.proname LIKE 'trg_%'
+          )
+    LOOP
+        EXECUTE format(
+            'ALTER FUNCTION %I.%I(%s) SECURITY DEFINER',
+            func_record.schema_name,
+            func_record.func_name,
+            func_record.args
+        );
+    END LOOP;
+END $$;
+

@@ -4,17 +4,25 @@ import QRCode from "qrcode";
  * Converts a Blob to a base64 Data URL
  */
 export function blobToDataUrl(blob: Blob): Promise<string> {
+  if (typeof window === "undefined" || typeof FileReader === "undefined") {
+    return Promise.resolve("");
+  }
+
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      if (typeof reader.result === "string") {
-        resolve(reader.result);
-      } else {
-        reject(new Error("Failed to convert blob to data URL string"));
-      }
-    };
-    reader.onerror = () => reject(reader.error || new Error("FileReader error"));
-    reader.readAsDataURL(blob);
+    try {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === "string") {
+          resolve(reader.result);
+        } else {
+          reject(new Error("Failed to convert blob to data URL string"));
+        }
+      };
+      reader.onerror = () => reject(reader.error || new Error("FileReader error"));
+      reader.readAsDataURL(blob);
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -28,13 +36,17 @@ export async function fetchImageAsDataUrl(url: string): Promise<string> {
   if (url.startsWith("data:") || url.startsWith("blob:")) {
     return url;
   }
+  if (typeof window === "undefined") {
+    return url;
+  }
 
   // Layer 1: Direct CORS fetch
   try {
     const res = await fetch(url, { mode: "cors", cache: "force-cache" });
     if (res.ok) {
       const blob = await res.blob();
-      return await blobToDataUrl(blob);
+      const dataUrl = await blobToDataUrl(blob);
+      if (dataUrl) return dataUrl;
     }
   } catch (directErr) {
     console.warn("Direct CORS fetch failed for badge image, falling back to proxy:", directErr);
@@ -46,31 +58,56 @@ export async function fetchImageAsDataUrl(url: string): Promise<string> {
     const res = await fetch(proxyUrl);
     if (res.ok) {
       const blob = await res.blob();
-      return await blobToDataUrl(blob);
+      const dataUrl = await blobToDataUrl(blob);
+      if (dataUrl) return dataUrl;
     }
   } catch (proxyErr) {
     console.warn("Image proxy fetch failed, falling back to Canvas draw:", proxyErr);
   }
 
   // Layer 3: Image element crossOrigin draw fallback
+  if (
+    typeof window === "undefined" ||
+    typeof Image === "undefined" ||
+    typeof document === "undefined"
+  ) {
+    return url;
+  }
+
   return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth || img.width || 300;
-        canvas.height = img.naturalHeight || img.height || 300;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) throw new Error("Could not acquire 2D context");
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL("image/png"));
-      } catch (canvasErr) {
-        reject(canvasErr);
-      }
-    };
-    img.onerror = () => reject(new Error(`Failed to load image from ${url}`));
-    img.src = url;
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          if (typeof document === "undefined") {
+            resolve(url);
+            return;
+          }
+          const canvas = document.createElement("canvas");
+          if (!canvas || typeof canvas.getContext !== "function") {
+            resolve(url);
+            return;
+          }
+          if (typeof HTMLCanvasElement !== "undefined" && !(canvas instanceof HTMLCanvasElement)) {
+            resolve(url);
+            return;
+          }
+          canvas.width = img.naturalWidth || img.width || 300;
+          canvas.height = img.naturalHeight || img.height || 300;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("Could not acquire 2D context");
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        } catch (canvasErr) {
+          reject(canvasErr);
+        }
+      };
+      img.onerror = () => reject(new Error(`Failed to load image from ${url}`));
+      img.src = url;
+    } catch (imgErr) {
+      reject(imgErr);
+    }
   });
 }
 
@@ -80,6 +117,15 @@ export async function fetchImageAsDataUrl(url: string): Promise<string> {
  * Returns a restoration function to revert the DOM once rasterization is complete.
  */
 export async function preprocessCardImages(container: HTMLElement): Promise<() => void> {
+  if (
+    typeof window === "undefined" ||
+    typeof document === "undefined" ||
+    !container ||
+    typeof container.querySelectorAll !== "function"
+  ) {
+    return () => {};
+  }
+
   const images = Array.from(container.querySelectorAll("img"));
   const originalSources = new Map<HTMLImageElement, string>();
 
@@ -95,7 +141,7 @@ export async function preprocessCardImages(container: HTMLElement): Promise<() =
         if (dataUrl) {
           img.src = dataUrl;
           // Ensure image is decoded before html2canvas inspects it
-          if (img.decode) {
+          if (typeof img.decode === "function") {
             await img.decode().catch(() => {});
           }
         }
@@ -117,6 +163,12 @@ export async function preprocessCardImages(container: HTMLElement): Promise<() =
  * Generates an offline base64 Data URL for a QR Code
  */
 export async function generateQrDataUrl(text: string): Promise<string> {
+  const fallbackUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(text)}`;
+
+  if (typeof window === "undefined") {
+    return fallbackUrl;
+  }
+
   try {
     return await QRCode.toDataURL(text, {
       width: 240,
@@ -129,8 +181,7 @@ export async function generateQrDataUrl(text: string): Promise<string> {
     });
   } catch (err) {
     console.error("Failed to generate offline QR code Data URL:", err);
-    // Fallback to external qrserver if library fails
-    return `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
+    return fallbackUrl;
   }
 }
 
@@ -153,13 +204,27 @@ export interface BadgeDrawData {
  * Generates a pixel-perfect, crisp 640x980 official badge if html2canvas ever encounters errors.
  */
 export async function drawBadgeCanvasFallback(data: BadgeDrawData): Promise<string> {
+  if (
+    typeof window === "undefined" ||
+    typeof document === "undefined" ||
+    typeof document.createElement !== "function"
+  ) {
+    return "";
+  }
+
   const width = 640;
   const height = 980;
   const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
 
+  if (!canvas || typeof canvas.getContext !== "function") {
+    throw new Error("Unable to create 2D canvas context for ID card fallback");
+  }
+
+  if (typeof HTMLCanvasElement !== "undefined" && !(canvas instanceof HTMLCanvasElement)) {
+    throw new Error("Created element is not an HTMLCanvasElement");
+  }
+
+  const ctx = canvas.getContext("2d");
   if (!ctx) {
     throw new Error("Unable to create 2D canvas context for ID card fallback");
   }
@@ -262,7 +327,7 @@ export async function drawBadgeCanvasFallback(data: BadgeDrawData): Promise<stri
   const photoY = 175;
 
   let photoRendered = false;
-  if (data.photoUrl) {
+  if (data.photoUrl && typeof Image !== "undefined") {
     try {
       const photoDataUrl = await fetchImageAsDataUrl(data.photoUrl);
       const img = new Image();
@@ -277,7 +342,11 @@ export async function drawBadgeCanvasFallback(data: BadgeDrawData): Promise<stri
 
       ctx.save();
       ctx.beginPath();
-      ctx.roundRect(photoX, photoY, photoSize, photoSize, 16);
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(photoX, photoY, photoSize, photoSize, 16);
+      } else {
+        ctx.rect(photoX, photoY, photoSize, photoSize);
+      }
       ctx.clip();
       ctx.drawImage(img, photoX, photoY, photoSize, photoSize);
       ctx.restore();
@@ -426,16 +495,18 @@ export async function drawBadgeCanvasFallback(data: BadgeDrawData): Promise<stri
   const qrY = secY - 5;
   drawRoundedRect(qrX - 4, qrY - 4, qrSize + 8, qrSize + 8, 12, "#FFFFFF", "rgba(11, 25, 44, 0.2)");
 
-  try {
-    const qrImg = new Image();
-    qrImg.src = data.qrDataUrl;
-    await new Promise<void>((res, rej) => {
-      qrImg.onload = () => res();
-      qrImg.onerror = () => rej();
-    });
-    ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
-  } catch (qrErr) {
-    console.warn("Could not draw QR code onto fallback canvas:", qrErr);
+  if (data.qrDataUrl && typeof Image !== "undefined") {
+    try {
+      const qrImg = new Image();
+      qrImg.src = data.qrDataUrl;
+      await new Promise<void>((res, rej) => {
+        qrImg.onload = () => res();
+        qrImg.onerror = () => rej();
+      });
+      ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+    } catch (qrErr) {
+      console.warn("Could not draw QR code onto fallback canvas:", qrErr);
+    }
   }
 
   // 9. Card Footer (Deep Oxford Navy #0B192C) with Social Badges
@@ -463,6 +534,10 @@ export async function drawBadgeCanvasFallback(data: BadgeDrawData): Promise<stri
   ctx.font = "normal 12px sans-serif";
   ctx.textAlign = "center";
   ctx.fillText("Scan QR code or visit swatihometuition.in to verify faculty identity.", width / 2, footerY + 58);
+
+  if (typeof canvas.toDataURL !== "function") {
+    return "";
+  }
 
   return canvas.toDataURL("image/png");
 }

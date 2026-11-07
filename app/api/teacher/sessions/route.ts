@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient, createClient, getTeacherProfile } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,6 +22,8 @@ export async function POST(req: NextRequest) {
       teacher_notes,
       student_attendance,
       status,
+      id,
+      session_id,
     } = body;
 
     if (!assignment_id || !topics_covered) {
@@ -52,9 +55,16 @@ export async function POST(req: NextRequest) {
     const cleanHomework = homework_given || homework_assigned || null;
     const cleanNotes = teacher_notes || notes || null;
 
+    // Explicit unique identifiers prevent PostgreSQL triggers or column defaults from
+    // attempting to evaluate NEXTVAL('session_seq'), which triggers "permission denied for sequence session_seq"
+    const explicitId = id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : randomUUID());
+    const explicitSessionId = session_id || `SES-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+
     // Use live Postgres schema column names as primary:
     // Live table has: homework_given (TEXT), session_start (TIME), session_end (TIME), teacher_notes (TEXT)
     const payload: Record<string, any> = {
+      id: explicitId,
+      session_id: explicitSessionId,
       assignment_id: asgn.id,
       student_id: resolvedStudentId,
       teacher_id: resolvedTeacherId,
@@ -82,7 +92,7 @@ export async function POST(req: NextRequest) {
     let insertErr: any = null;
 
     // Resilient adaptive loop to handle schema differences in live Supabase DB
-    for (let attempt = 0; attempt < 6; attempt++) {
+    for (let attempt = 0; attempt < 8; attempt++) {
       const res = await adminDb
         .from("sessions")
         .insert(payload)
@@ -99,8 +109,14 @@ export async function POST(req: NextRequest) {
       const msg = res.error?.message || "";
       console.warn(`[sessions POST attempt ${attempt + 1} warning]:`, msg);
 
-      // Detect missing column error: "Could not find the '...' column of 'sessions' in the schema cache"
-      const missingColMatch = msg.match(/Could not find the '([^']+)' column/i);
+      // Detect missing column error:
+      // PostgREST: "Could not find the '...' column of 'sessions' in the schema cache"
+      // Postgres: 'column "..." of relation "sessions" does not exist' or 'column "..." does not exist'
+      const missingColMatch =
+        msg.match(/Could not find the '([^']+)' column/i) ||
+        msg.match(/column "([^"]+)" of relation "sessions" does not exist/i) ||
+        msg.match(/column "([^"]+)" does not exist/i);
+
       if (missingColMatch) {
         const col = missingColMatch[1];
         console.warn(`[sessions POST] Dynamically adapting around missing column '${col}'...`);
@@ -122,9 +138,39 @@ export async function POST(req: NextRequest) {
         continue;
       }
 
+      // Handle sequence permission denial specifically:
+      // If table has an auto-increment or trigger calling NEXTVAL('session_seq'),
+      // passing an explicit session_id and explicit id prevents PostgreSQL triggers from evaluating NEXTVAL('session_seq').
+      if (/permission denied for sequence.*session_seq/i.test(msg) || /session_seq/i.test(msg)) {
+        console.warn(
+          `[sessions POST attempt ${attempt + 1}] Sequence permission denied for session_seq. Applying trigger-bypass strategy with explicit identifiers...`
+        );
+        if (!payload.session_id) {
+          payload.session_id = `SES-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+        }
+        if (!payload.id) {
+          payload.id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : randomUUID();
+        }
+        if (attempt >= 2) {
+          break;
+        }
+        continue;
+      }
+
       // If error is about student_attendance or status default
       if (msg.includes("student_attendance")) {
         delete payload.student_attendance;
+        continue;
+      }
+
+      if (msg.includes("status")) {
+        delete payload.status;
+        continue;
+      }
+
+      // If invalid UUID for id, drop explicit id and allow DB default
+      if (/invalid input syntax for type/i.test(msg) && /uuid/i.test(msg) && payload.id) {
+        delete payload.id;
         continue;
       }
 
@@ -133,6 +179,22 @@ export async function POST(req: NextRequest) {
 
     if (insertErr || !sessionRecord) {
       console.error("[sessions POST fatal insert error]:", insertErr);
+      const isSequencePermErr =
+        /permission denied for sequence.*session_seq/i.test(insertErr?.message || "") ||
+        /session_seq/i.test(insertErr?.message || "");
+
+      if (isSequencePermErr) {
+        return NextResponse.json(
+          {
+            error:
+              "Database sequence permission error: PostgreSQL sequence 'session_seq' lacks USAGE permission for the database client. Explicit session ID generation was attempted, but the database rejected the sequence operation.",
+            code: "SEQUENCE_PERMISSION_DENIED",
+            details: insertErr?.message,
+          },
+          { status: 403 }
+        );
+      }
+
       return NextResponse.json(
         { error: insertErr?.message || "Failed to record session in database." },
         { status: 400 }

@@ -75,10 +75,16 @@ export default function SessionLoggerForm({ assignments, teacherId }: Props) {
     setSuccess("");
 
     try {
+      // Explicit unique session_id and UUID prevent triggers from evaluating NEXTVAL('session_seq')
+      const explicitSessionId = `SES-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+      const explicitId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : undefined;
+
       const res = await fetch("/api/teacher/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          id: explicitId,
+          session_id: explicitSessionId,
           assignment_id: assignmentId,
           student_id: studentId,
           teacher_id: teacherId,
@@ -97,7 +103,7 @@ export default function SessionLoggerForm({ assignments, teacherId }: Props) {
         }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       setLoading(false);
 
       if (res.ok && data.success) {
@@ -108,7 +114,19 @@ export default function SessionLoggerForm({ assignments, teacherId }: Props) {
         router.refresh();
         setTimeout(() => setSuccess(""), 6000);
       } else {
-        setError(data.error || "Failed to log session. Please try again.");
+        const errorMsg = data.error || data.message || "Failed to log session. Please try again.";
+        const isPermissionErr =
+          data.code === "SEQUENCE_PERMISSION_DENIED" ||
+          /permission denied.*sequence/i.test(errorMsg) ||
+          /session_seq/i.test(errorMsg);
+
+        if (isPermissionErr) {
+          setError(
+            "Database sequence permission error: The system attempted to generate a unique session identifier, but the database sequence 'session_seq' lacks usage permissions. Please try clicking 'Save & Record Class' again to retry with an alternate identifier, or contact bureau tech support."
+          );
+        } else {
+          setError(errorMsg);
+        }
       }
     } catch (err: any) {
       setLoading(false);
@@ -130,9 +148,23 @@ export default function SessionLoggerForm({ assignments, teacherId }: Props) {
       )}
 
       {error && (
-        <div className="mb-4 p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs font-bold text-rose-900 flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-          {error}
+        <div className="mb-4 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-900 shadow-sm">
+          <div className="flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+            <div className="space-y-1.5 flex-1">
+              <p className="font-bold text-rose-950">Notice Logging Class Session</p>
+              <p className="font-medium text-rose-800 leading-relaxed">{error}</p>
+              {/permission|session_seq|sequence/i.test(error) && (
+                <div className="mt-2.5 pt-2.5 border-t border-rose-200/70 text-[11px] text-rose-800">
+                  <p className="font-bold text-rose-900 mb-1">Recommended action:</p>
+                  <ul className="list-disc list-inside space-y-1 text-rose-700">
+                    <li>Click <strong>&ldquo;Save & Record Class&rdquo;</strong> again — the form automatically dispatches an explicit session identifier.</li>
+                    <li>If it persists, contact Bureau Support on WhatsApp / Call: <strong>+91 92297 38307</strong>.</li>
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   GraduationCap,
@@ -14,10 +14,7 @@ import {
   ExternalLink,
   Award,
   Search,
-  Filter,
-  TrendingUp,
   Percent,
-  Check,
   Tag,
   BookOpen,
 } from "lucide-react";
@@ -117,6 +114,23 @@ export function getPerformanceBadge(percentage: number): {
   }
 }
 
+// Safely format date strings
+export function formatReportDate(dateStr?: string): string {
+  if (!dateStr) return "Recent Assessment";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString("en-IN", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
 // Parse embedded metadata from remarks or parse test_scores string
 export function parseTestDetails(test: TestRecord) {
   let meta: any = null;
@@ -194,8 +208,8 @@ export default function TeacherTestsClient({
 }: Props) {
   const router = useRouter();
 
-  // Form State
-  const [assignmentId, setAssignmentId] = useState(assignments[0]?.id || "");
+  // Form State - default safely to the first assignment if available
+  const [assignmentId, setAssignmentId] = useState(assignments?.[0]?.id || "");
   const [testTitle, setTestTitle] = useState("");
   const [testDate, setTestDate] = useState(new Date().toISOString().slice(0, 10));
   const [totalMarks, setTotalMarks] = useState("50");
@@ -209,15 +223,27 @@ export default function TeacherTestsClient({
   const [error, setError] = useState("");
   const [tests, setTests] = useState<TestRecord[]>(initialTests);
 
+  // Auto-sync assignmentId if assignments change or when assignments load
+  useEffect(() => {
+    if (
+      (!assignmentId || !assignments.some((a) => a.id === assignmentId)) &&
+      assignments &&
+      assignments.length > 0
+    ) {
+      setAssignmentId(assignments[0].id);
+    }
+  }, [assignments, assignmentId]);
+
   // Filter State
   const [filterStudentId, setFilterStudentId] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const selectedAssignment = assignments.find((a) => a.id === assignmentId);
+  const selectedAssignment =
+    assignments.find((a) => a.id === assignmentId) || assignments[0] || null;
 
   // Live Percentage Calculation
-  const tot = parseFloat(totalMarks) || 100;
-  const obt = parseFloat(obtainedMarks) || 0;
+  const tot = Math.max(1, parseFloat(totalMarks) || 100);
+  const obt = Math.max(0, parseFloat(obtainedMarks) || 0);
   const pct = tot > 0 ? Math.round((obt / tot) * 100) : 0;
   const liveBadge = getPerformanceBadge(pct);
 
@@ -252,7 +278,7 @@ export default function TeacherTestsClient({
       const q = searchQuery.toLowerCase().trim();
       const queryMatch =
         !q ||
-        t.topics_covered.toLowerCase().includes(q) ||
+        (t.topics_covered || "").toLowerCase().includes(q) ||
         (t.student?.full_name || "").toLowerCase().includes(q) ||
         (t.teacher_remarks || "").toLowerCase().includes(q);
 
@@ -263,7 +289,7 @@ export default function TeacherTestsClient({
   async function handleCreateTest(e: React.FormEvent) {
     e.preventDefault();
     if (!assignmentId) {
-      setError("Please select a student assignment.");
+      setError("Please select a student assignment from the dropdown.");
       return;
     }
     if (!testTitle.trim()) {
@@ -272,6 +298,14 @@ export default function TeacherTestsClient({
     }
     if (obtainedMarks === "" || isNaN(obt)) {
       setError("Please enter valid marks obtained by the student.");
+      return;
+    }
+    if (obt < 0) {
+      setError("Marks obtained cannot be negative.");
+      return;
+    }
+    if (tot <= 0) {
+      setError("Maximum marks must be greater than zero.");
       return;
     }
     if (obt > tot) {
@@ -302,12 +336,14 @@ export default function TeacherTestsClient({
         }),
       });
 
-      const data = await res.json();
+      const data = await res
+        .json()
+        .catch(() => ({ error: "Server returned an unexpected response. Please try again." }));
       setLoading(false);
 
       if (res.ok && data.success) {
         setSuccess(
-          `Test published successfully: "${testTitle}" · Score: ${obt}/${tot} (${liveBadge.badgeText})`
+          `Test published successfully: "${testTitle.trim()}" · Score: ${obt}/${tot} (${liveBadge.badgeText})`
         );
         setTestTitle("");
         setObtainedMarks("");
@@ -319,23 +355,23 @@ export default function TeacherTestsClient({
           setTests((prev) => [
             {
               ...data.test,
-              student: selectedAssignment?.student,
-              assignment: {
-                id: selectedAssignment?.id || "",
-                subject: selectedAssignment?.subject || "",
+              student: data.test.student || selectedAssignment?.student,
+              assignment: data.test.assignment || {
+                id: selectedAssignment?.id || assignmentId,
+                subject: selectedAssignment?.subject || "Tuition",
               },
             },
             ...prev,
           ]);
         }
         router.refresh();
-        setTimeout(() => setSuccess(""), 6000);
+        setTimeout(() => setSuccess(""), 7000);
       } else {
-        setError(data.error || "Failed to record test.");
+        setError(data.error || "Failed to record test in database.");
       }
     } catch (err: any) {
       setLoading(false);
-      setError(err.message || "Network error. Please try again.");
+      setError(err.message || "Network error. Please check your internet connection and try again.");
     }
   }
 
@@ -420,9 +456,38 @@ export default function TeacherTestsClient({
             )}
 
             {error && (
-              <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-sm font-bold text-rose-900 flex items-center gap-2.5">
-                <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
-                {error}
+              <div className="p-4 sm:p-5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 space-y-3">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-rose-950">Unable to Save Test Record</p>
+                      <button
+                        type="button"
+                        onClick={() => setError("")}
+                        className="text-xs text-rose-700 hover:text-rose-950 font-bold underline cursor-pointer"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                    <p className="text-xs font-semibold text-rose-900">{error}</p>
+                    <div className="bg-white/80 border border-rose-200 rounded-xl p-3 text-xs text-rose-800 space-y-1">
+                      <p className="font-bold text-rose-950 flex items-center gap-1.5">
+                        <span>💡</span> Recommended Action:
+                      </p>
+                      <p className="leading-relaxed font-medium">
+                        {error.toLowerCase().includes("assignment")
+                          ? "Ensure an active tuition assignment is selected in the dropdown. If you do not see your student, ask bureau admin to verify your assignment status."
+                          : error.toLowerCase().includes("permission") ||
+                            error.toLowerCase().includes("sequence")
+                          ? "A database sequence permission check occurred. The system has automatically adapted to bypass sequence calls with client UUIDs. Try resubmitting now, or contact Bureau Support at +91 92297 38307."
+                          : error.toLowerCase().includes("marks")
+                          ? "Check that marks obtained is a valid non-negative number and does not exceed maximum marks."
+                          : "Verify test date and topics covered, then click Publish again. If this issue persists, contact Swati Home Tuition Bureau Admin."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -434,15 +499,22 @@ export default function TeacherTestsClient({
                 </label>
                 <select
                   value={assignmentId}
-                  onChange={(e) => setAssignmentId(e.target.value)}
+                  onChange={(e) => {
+                    setAssignmentId(e.target.value);
+                    if (error) setError("");
+                  }}
                   required
                   className="w-full text-sm font-semibold rounded-xl border border-[#E8E6DF] p-3 bg-white focus:ring-2 focus:ring-[#0B192C]/20 outline-none text-[#0B192C]"
                 >
-                  {assignments.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.student.full_name} ({a.subject}) · Class {a.student.class_studying || "?"}
-                    </option>
-                  ))}
+                  {assignments.length === 0 ? (
+                    <option value="" disabled>No active assignments</option>
+                  ) : (
+                    assignments.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.student?.full_name || "Student"} ({a.subject || "Tuition"}) · Class {a.student?.class_studying || "N/A"}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 
@@ -614,7 +686,7 @@ export default function TeacherTestsClient({
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-[#0B192C] hover:bg-[#1E3E62] disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
+                className="bg-[#0B192C] hover:bg-[#1E3E62] disabled:opacity-50 text-white font-bold px-8 py-3.5 rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -656,8 +728,8 @@ export default function TeacherTestsClient({
               >
                 <option value="all">All Students</option>
                 {assignments.map((a) => (
-                  <option key={a.id} value={a.student.id}>
-                    {a.student.full_name}
+                  <option key={a.id} value={a.student?.id || a.id}>
+                    {a.student?.full_name || "Student"}
                   </option>
                 ))}
               </select>
@@ -734,12 +806,7 @@ export default function TeacherTestsClient({
                       <div className="flex items-center gap-3 text-xs text-[#5A6578] mt-1">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-3.5 h-3.5 text-[#E5A93C]" />
-                          {new Date(test.report_month).toLocaleDateString("en-IN", {
-                            weekday: "short",
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {formatReportDate(test.report_month)}
                         </span>
                         {test.assignment?.subject && (
                           <span className="flex items-center gap-1 font-semibold text-[#1E3E62]">

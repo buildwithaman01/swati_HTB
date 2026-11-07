@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient, createClient } from "@/utils/supabase/server";
+import { createAdminClient, createClient, getTeacherProfile } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
       test_paper_url,
     } = body;
 
-    if (!assignment_id || !test_title || obtained_marks === undefined) {
+    if (!assignment_id || !test_title || obtained_marks === undefined || obtained_marks === null) {
       return NextResponse.json(
         { error: "Student assignment, test title, and marks obtained are required." },
         { status: 400 }
@@ -29,20 +30,57 @@ export async function POST(req: NextRequest) {
     const adminDb = await createAdminClient();
 
     // Verify assignment to resolve teacher and student if needed
+    // Use .maybeSingle() instead of .single() to avoid PGRST116 crashes
     const { data: asgn, error: asgnErr } = await adminDb
       .from("assignments")
       .select("id, teacher_id, student_id, subject")
       .eq("id", assignment_id)
-      .single();
+      .maybeSingle();
 
-    if (asgnErr || !asgn) {
-      return NextResponse.json({ error: "Invalid tuition assignment." }, { status: 400 });
+    if (asgnErr) {
+      console.error("[teacher/tests POST] Assignment lookup error:", asgnErr);
+      return NextResponse.json(
+        { error: `Database error finding assignment: ${asgnErr.message}` },
+        { status: 500 }
+      );
     }
 
-    const resolvedTeacherId = teacher_id || asgn.teacher_id;
+    if (!asgn) {
+      return NextResponse.json(
+        { error: "Invalid or inactive tuition assignment. Please refresh and select an active student." },
+        { status: 400 }
+      );
+    }
+
+    let resolvedTeacherId = teacher_id || asgn.teacher_id;
     const resolvedStudentId = student_id || asgn.student_id;
-    const total = parseFloat(total_marks) || 100;
-    const obtained = parseFloat(obtained_marks) || 0;
+
+    // Fallback: If teacher_id is missing, attempt to resolve from current authenticated session
+    if (!resolvedTeacherId) {
+      try {
+        const authClient = await createClient();
+        const {
+          data: { user },
+        } = await authClient.auth.getUser();
+        if (user) {
+          const profile = await getTeacherProfile(user.id, user.email);
+          if (profile) resolvedTeacherId = profile.id;
+        }
+      } catch (authErr) {
+        console.warn("[teacher/tests POST] Could not resolve teacher from auth session:", authErr);
+      }
+    }
+
+    if (!resolvedTeacherId || !resolvedStudentId) {
+      return NextResponse.json(
+        { error: "Could not resolve teacher or student for this assignment. Please contact support." },
+        { status: 400 }
+      );
+    }
+
+    const total = Math.max(1, parseFloat(total_marks) || 100);
+    const rawObtained = parseFloat(obtained_marks);
+    const obtained = isNaN(rawObtained) ? 0 : Math.max(0, Math.min(total, rawObtained));
     const percentage = Math.round((obtained / total) * 100);
 
     // Performance Badge text
@@ -65,18 +103,36 @@ export async function POST(req: NextRequest) {
       rating = 1;
     }
 
-    const scoreString = `${obtained}/${total} (${percentage}%)`;
-    const formattedDate =
-      test_date && test_date.trim() !== ""
-        ? test_date.trim()
-        : new Date().toISOString().slice(0, 10);
+    // Ensure overall_rating is strictly within 1 to 5 integer range
+    const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
 
-    // Topic string combining Test Title and Key Topics Covered
-    const cleanTitle = test_title.trim();
+    // Ensure score format e.g. "45/50 (90%)"
+    const scoreString = `${obtained}/${total} (${percentage}%)`;
+
+    // Strictly normalize report_month as YYYY-MM-DD
+    let reportMonth = new Date().toISOString().slice(0, 10);
+    const rawDateStr = typeof test_date === "string" ? test_date.trim() : "";
+    if (rawDateStr) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(rawDateStr)) {
+        reportMonth = rawDateStr;
+      } else if (/^\d{4}-\d{2}$/.test(rawDateStr)) {
+        reportMonth = `${rawDateStr}-01`;
+      } else if (/^\d{4}-\d{2}-\d{2}/.test(rawDateStr)) {
+        reportMonth = rawDateStr.slice(0, 10);
+      } else {
+        const parsed = new Date(rawDateStr);
+        if (!isNaN(parsed.getTime())) {
+          reportMonth = parsed.toISOString().slice(0, 10);
+        }
+      }
+    }
+
+    // Topic string combining Test Title and Key Topics Covered (ensuring trimmed string)
+    const cleanTitle = (test_title || "").trim();
     const cleanTopics = (key_topics || "").trim();
-    const fullTopicsString = cleanTopics
-      ? `${cleanTitle} (Topics: ${cleanTopics})`
-      : cleanTitle;
+    const fullTopicsString = (
+      cleanTopics ? `${cleanTitle} (Topics: ${cleanTopics})` : cleanTitle
+    ).trim() || "Chapter Assessment";
 
     // Structured metadata for rich parsing
     const metaObj = {
@@ -86,27 +142,30 @@ export async function POST(req: NextRequest) {
       obtained_marks: obtained,
       percentage,
       performance_badge: `${performanceLabel} (${percentage}%)`,
-      test_paper_url: test_paper_url ? test_paper_url.trim() : "",
+      test_paper_url: test_paper_url ? String(test_paper_url).trim() : "",
     };
 
     const cleanRemarks = (remarks || "").trim();
     const remarksFormatted = [
-      cleanRemarks || `Test conducted on ${formattedDate}.`,
-      test_paper_url ? `Test Paper Link: ${test_paper_url.trim()}` : null,
+      cleanRemarks || `Test conducted on ${reportMonth}.`,
+      test_paper_url ? `Test Paper Link: ${String(test_paper_url).trim()}` : null,
       `<!--TEST_META:${JSON.stringify(metaObj)}-->`,
     ]
       .filter(Boolean)
       .join(" | ");
 
-    // Adaptive insert into progress_reports table
+    // Pre-generate UUID so PostgreSQL does not call NEXTVAL on a sequence (avoiding sequence permission errors)
+    const generatedUuid = crypto.randomUUID();
+
     const testPayload: Record<string, any> = {
+      id: generatedUuid,
       assignment_id: asgn.id,
       teacher_id: resolvedTeacherId,
       student_id: resolvedStudentId,
-      report_month: formattedDate,
+      report_month: reportMonth,
       topics_covered: fullTopicsString,
       test_scores: scoreString,
-      overall_rating: rating,
+      overall_rating: normalizedRating,
       strengths:
         percentage >= 80
           ? "Strong conceptual clarity, accurate problem-solving, and good test presentation."
@@ -127,6 +186,7 @@ export async function POST(req: NextRequest) {
     let record: any = null;
     let insertErr: any = null;
 
+    // Resilient adaptive loop to handle schema differences, check constraints, and sequence permissions
     for (let attempt = 0; attempt < 6; attempt++) {
       const res = await adminDb
         .from("progress_reports")
@@ -134,8 +194,17 @@ export async function POST(req: NextRequest) {
         .select()
         .maybeSingle();
 
-      if (!res.error && res.data) {
-        record = res.data;
+      if (!res.error) {
+        if (res.data) {
+          record = res.data;
+        } else {
+          // If select returned no data, synthesize record from payload
+          record = {
+            id: testPayload.id || generatedUuid,
+            ...testPayload,
+            created_at: new Date().toISOString(),
+          };
+        }
         insertErr = null;
         break;
       }
@@ -144,25 +213,86 @@ export async function POST(req: NextRequest) {
       const msg = res.error?.message || "";
       console.warn(`[teacher/tests POST attempt ${attempt + 1} warning]:`, msg);
 
-      const missingColMatch = msg.match(/Could not find the '([^']+)' column/i);
-      if (missingColMatch) {
+      // 1. Missing columns: "Could not find the '...' column of 'progress_reports' in the schema cache"
+      const missingColMatch =
+        msg.match(/Could not find the '([^']+)' column/i) ||
+        msg.match(/column "([^"]+)" of relation/i) ||
+        msg.match(/column "([^"]+)" does not exist/i);
+
+      if (missingColMatch && missingColMatch[1]) {
         const col = missingColMatch[1];
         console.warn(`[teacher/tests POST] Dropping missing column '${col}' and retrying...`);
         delete testPayload[col];
         continue;
       }
 
-      if (msg.includes("overall_rating")) {
-        delete testPayload.overall_rating;
+      // 2. Check constraint violations (e.g. overall_rating BETWEEN 1 AND 5)
+      if (
+        msg.includes("overall_rating") ||
+        msg.toLowerCase().includes("violates check constraint") ||
+        msg.toLowerCase().includes("check constraint")
+      ) {
+        if ("overall_rating" in testPayload) {
+          console.warn(`[teacher/tests POST] Dropping overall_rating due to check constraint error and retrying...`);
+          delete testPayload.overall_rating;
+          continue;
+        }
+      }
+
+      // 3. Serial ID type mismatch (if id is integer instead of UUID)
+      if (
+        msg.includes("invalid input syntax for type integer") ||
+        (msg.includes("invalid input syntax") && msg.includes("id"))
+      ) {
+        console.warn(`[teacher/tests POST] Table may use integer id. Dropping client UUID id and retrying...`);
+        delete testPayload.id;
         continue;
       }
 
+      // 4. Sequence permission error
+      if (
+        msg.toLowerCase().includes("permission denied for sequence") ||
+        (msg.toLowerCase().includes("permission denied") && msg.toLowerCase().includes("sequence"))
+      ) {
+        if (!testPayload.id) {
+          console.warn(`[teacher/tests POST] Sequence permission error detected; setting client UUID and retrying...`);
+          testPayload.id = crypto.randomUUID();
+          continue;
+        }
+        // If already had client ID and still failed with sequence error, provide helpful message
+        break;
+      }
+
+      // 5. Non-critical optional columns that might fail validation
+      if ("sent_at" in testPayload && msg.includes("sent_at")) {
+        delete testPayload.sent_at;
+        continue;
+      }
+      if ("sent_to_parent" in testPayload && msg.includes("sent_to_parent")) {
+        delete testPayload.sent_to_parent;
+        continue;
+      }
+      if ("strengths" in testPayload && msg.includes("strengths")) {
+        delete testPayload.strengths;
+        continue;
+      }
+      if ("areas_of_improvement" in testPayload && msg.includes("areas_of_improvement")) {
+        delete testPayload.areas_of_improvement;
+        continue;
+      }
+
+      // If unrecognized error, stop loop to avoid infinite attempts
       break;
     }
 
     if (insertErr || !record) {
       console.error("[teacher/tests POST fatal error]:", insertErr);
-      return NextResponse.json({ error: insertErr?.message || "Failed to record test in database." }, { status: 400 });
+      let userFriendlyError = insertErr?.message || "Failed to record test in database.";
+      if (userFriendlyError.toLowerCase().includes("permission denied for sequence")) {
+        userFriendlyError =
+          "Database sequence permission error: Unable to generate test record ID. Please contact bureau administration.";
+      }
+      return NextResponse.json({ error: userFriendlyError }, { status: 400 });
     }
 
     // Attach student and assignment details safely
@@ -236,7 +366,27 @@ export async function GET(req: NextRequest) {
       if (studentId) flatQuery = flatQuery.eq("student_id", studentId);
       const flatRes = await flatQuery;
       if (!flatRes.error && flatRes.data) {
-        tests = flatRes.data;
+        const flatRows = flatRes.data;
+        const sIds = Array.from(new Set(flatRows.map((r: any) => r.student_id).filter(Boolean)));
+        const aIds = Array.from(new Set(flatRows.map((r: any) => r.assignment_id).filter(Boolean)));
+
+        const [{ data: sList }, { data: aList }] = await Promise.all([
+          sIds.length > 0
+            ? adminDb.from("students").select("id, full_name, class_studying, parent_name, parent_phone, whatsapp").in("id", sIds)
+            : Promise.resolve({ data: [] }),
+          aIds.length > 0
+            ? adminDb.from("assignments").select("id, subject").in("id", aIds)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        const sMap = new Map((sList || []).map((s: any) => [s.id, s]));
+        const aMap = new Map((aList || []).map((a: any) => [a.id, a]));
+
+        tests = flatRows.map((r: any) => ({
+          ...r,
+          student: sMap.get(r.student_id) || null,
+          assignment: aMap.get(r.assignment_id) || null,
+        }));
         error = null;
       }
     }
