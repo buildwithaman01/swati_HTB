@@ -37,7 +37,7 @@ interface Assignment {
 interface TestRecord {
   id: string;
   report_month: string;
-  topics_covered: string;
+  topics_covered: string | string[];
   test_scores: string;
   overall_rating?: number;
   strengths?: string;
@@ -176,15 +176,19 @@ export function parseTestDetails(test: TestRecord) {
   const paperMatch = (test.teacher_remarks || "").match(/Test Paper Link:\s*(https?:\/\/[^\s|]+)/i);
   const paperUrl = meta?.test_paper_url || (paperMatch ? paperMatch[1] : "");
 
-  // Extract key topics
-  let topics = meta?.key_topics || "";
-  let title = meta?.test_title || test.topics_covered;
+  // Extract key topics safely whether topics_covered is string or string[]
+  const rawTopics = Array.isArray(test.topics_covered)
+    ? test.topics_covered.join(", ")
+    : String(test.topics_covered || "");
 
-  if (!topics && test.topics_covered) {
-    const topicsMatch = test.topics_covered.match(/\(Topics:\s*([^)]+)\)/i);
+  let topics = meta?.key_topics || "";
+  let title = meta?.test_title || rawTopics;
+
+  if (!topics && rawTopics) {
+    const topicsMatch = rawTopics.match(/\(Topics:\s*([^)]+)\)/i);
     if (topicsMatch) {
       topics = topicsMatch[1];
-      title = test.topics_covered.replace(/\(Topics:\s*[^)]+\)/i, "").trim();
+      title = rawTopics.replace(/\(Topics:\s*[^)]+\)/i, "").trim();
     }
   }
 
@@ -276,9 +280,13 @@ export default function TeacherTestsClient({
         t.assignment?.id === filterStudentId;
 
       const q = searchQuery.toLowerCase().trim();
+      const topicsStr = Array.isArray(t.topics_covered)
+        ? t.topics_covered.join(" ")
+        : String(t.topics_covered || "");
+
       const queryMatch =
         !q ||
-        (t.topics_covered || "").toLowerCase().includes(q) ||
+        topicsStr.toLowerCase().includes(q) ||
         (t.student?.full_name || "").toLowerCase().includes(q) ||
         (t.teacher_remarks || "").toLowerCase().includes(q);
 

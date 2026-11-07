@@ -99,7 +99,9 @@ export default async function ParentReports() {
                     </span>
                     <div>
                       <h2 className="font-bold text-[#1F2937] text-base sm:text-lg">
-                        {report.topics_covered || report.report_month || "Assessment"}
+                        {Array.isArray(report.topics_covered)
+                          ? report.topics_covered.join(", ")
+                          : report.topics_covered || report.report_month || "Assessment"}
                       </h2>
                       <p className="text-xs text-neutral-400 flex items-center gap-1 mt-0.5">
                         <Calendar className="w-3 h-3" />

@@ -157,13 +157,15 @@ export async function POST(req: NextRequest) {
     // Pre-generate UUID so PostgreSQL does not call NEXTVAL on a sequence (avoiding sequence permission errors)
     const generatedUuid = crypto.randomUUID();
 
+    // In live PostgreSQL, topics_covered is TEXT[] (array of text).
+    // PostgREST maps JSON arrays directly to PostgreSQL text[] types.
     const testPayload: Record<string, any> = {
       id: generatedUuid,
       assignment_id: asgn.id,
       teacher_id: resolvedTeacherId,
       student_id: resolvedStudentId,
       report_month: reportMonth,
-      topics_covered: fullTopicsString,
+      topics_covered: [fullTopicsString],
       test_scores: scoreString,
       overall_rating: normalizedRating,
       strengths:
@@ -213,6 +215,26 @@ export async function POST(req: NextRequest) {
       const msg = res.error?.message || "";
       console.warn(`[teacher/tests POST attempt ${attempt + 1} warning]:`, msg);
 
+      // 0. Array type vs scalar string variations (PostgreSQL TEXT[] column)
+      if (
+        /malformed array literal/i.test(msg) ||
+        (msg.toLowerCase().includes("array") && msg.toLowerCase().includes("literal"))
+      ) {
+        console.warn(`[teacher/tests POST] Malformed array literal detected on attempt ${attempt + 1}. Retrying with array payload...`);
+        testPayload.topics_covered = [fullTopicsString];
+        continue;
+      }
+
+      if (
+        /cannot cast type text\[\] to text/i.test(msg) ||
+        /is of type text but expression is of type text\[\]/i.test(msg) ||
+        (msg.toLowerCase().includes("type text") && msg.toLowerCase().includes("text[]"))
+      ) {
+        console.warn(`[teacher/tests POST] Column is scalar text; converting topics_covered to scalar string and retrying...`);
+        testPayload.topics_covered = fullTopicsString;
+        continue;
+      }
+
       // 1. Missing columns: "Could not find the '...' column of 'progress_reports' in the schema cache"
       const missingColMatch =
         msg.match(/Could not find the '([^']+)' column/i) ||
@@ -221,7 +243,37 @@ export async function POST(req: NextRequest) {
 
       if (missingColMatch && missingColMatch[1]) {
         const col = missingColMatch[1];
-        console.warn(`[teacher/tests POST] Dropping missing column '${col}' and retrying...`);
+        console.warn(`[teacher/tests POST] Handling missing column '${col}' and retrying...`);
+        if (col === "areas_of_improvement") {
+          delete testPayload.areas_of_improvement;
+          testPayload.gap_areas =
+            percentage < 60
+              ? "Needs focused revision of core formulas, step-by-step derivations, and speed practice."
+              : percentage < 80
+              ? "Work on reducing silly calculation errors and handling higher-order thinking problems."
+              : "Continue regular mock papers to maintain top percentile in school examinations.";
+          continue;
+        }
+        if (col === "gap_areas") {
+          delete testPayload.gap_areas;
+          testPayload.areas_of_improvement =
+            percentage < 60
+              ? "Needs focused revision of core formulas, step-by-step derivations, and speed practice."
+              : percentage < 80
+              ? "Work on reducing silly calculation errors and handling higher-order thinking problems."
+              : "Continue regular mock papers to maintain top percentile in school examinations.";
+          continue;
+        }
+        if (col === "teacher_remarks") {
+          delete testPayload.teacher_remarks;
+          testPayload.tutor_message = remarksFormatted;
+          continue;
+        }
+        if (col === "tutor_message") {
+          delete testPayload.tutor_message;
+          testPayload.teacher_remarks = remarksFormatted;
+          continue;
+        }
         delete testPayload[col];
         continue;
       }

@@ -84,17 +84,25 @@ export async function POST(req: NextRequest) {
 
     const cleanRemarks = (teacher_remarks || tutor_message || "Monthly progress evaluation submitted.").trim();
 
+    // In live PostgreSQL, topics_covered is TEXT[] (array of text).
+    // PostgREST maps JSON arrays directly to PostgreSQL text[] types.
+    const cleanTopicsList = cleanTopics
+      .split(/\n|,/)
+      .map((s: string) => s.trim())
+      .filter(Boolean);
+    const topicsArray = cleanTopicsList.length > 0 ? cleanTopicsList : [cleanTopics];
+
     // Explicit UUID generation to prevent sequence permission errors in Supabase
     const reportId = crypto.randomUUID();
 
-    // Primary payload targeting standard canonical schema
+    // Primary payload targeting standard canonical schema with topics_covered as array
     const reportPayload: Record<string, any> = {
       id: reportId,
       assignment_id: asgn.id,
       teacher_id: resolvedTeacherId,
       student_id: resolvedStudentId,
       report_month: normalizedMonth,
-      topics_covered: cleanTopics,
+      topics_covered: topicsArray,
       strengths: cleanStrengths,
       areas_of_improvement: cleanImprovement,
       teacher_remarks: cleanRemarks,
@@ -175,6 +183,23 @@ export async function POST(req: NextRequest) {
         reportPayload.tutor_message = cleanRemarks;
         continue;
       }
+
+      // Handle array type vs scalar string column variations
+      if (/malformed array literal/i.test(msg) || (msg.toLowerCase().includes("array") && msg.toLowerCase().includes("literal"))) {
+        console.warn(`[teacher/reports POST] Malformed array literal detected on attempt ${attempt + 1}. Ensuring array format...`);
+        reportPayload.topics_covered = topicsArray;
+        continue;
+      }
+      if (
+        /cannot cast type text\[\] to text/i.test(msg) ||
+        /is of type text but expression is of type text\[\]/i.test(msg) ||
+        (msg.toLowerCase().includes("type text") && msg.toLowerCase().includes("text[]"))
+      ) {
+        console.warn(`[teacher/reports POST] Database column expects scalar text. Converting to string...`);
+        reportPayload.topics_covered = cleanTopics;
+        continue;
+      }
+
       if (msg.toLowerCase().includes("overall_rating")) {
         delete reportPayload.overall_rating;
         continue;
